@@ -8,7 +8,7 @@ n=["GaAs"];
 len_n=length(n);
 
 for i=1:length(materials)
-    FileName=strcat(["ri/refractive indices.xlsx - "],materials{i},".csv");
+    FileName=strcat(["../ri/refractive indices.xlsx - "],materials{i},".csv");
   x{i} = csvread(FileName(1,1));
 end
 
