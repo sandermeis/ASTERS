@@ -8,7 +8,7 @@ n=["GaAs"];
 len_n=length(n);
 
 for i=1:length(materials)
-    FileName=strcat(["refractive indices.xlsx - "],materials{i},".csv");
+    FileName=strcat(["ri/refractive indices.xlsx - "],materials{i},".csv");
   x{i} = csvread(FileName(1,1));
 end
 
@@ -21,10 +21,6 @@ for iter=1:length(lam0)
 
 %% Constants
 
-eps_r1     = 1+0i;                % Permittivity reflection medium
-eps_r2     = 1+0i;                % Permittivity transmission medium
-mu_r1     = 1+0i;                % Permeability reflection medium
-mu_r2     = 1+0i;                % Permeability transmission medium
 theta	= 0;                % Angle with respect to normal 0<theta<pi/2
 phi     = 0;                % Angle with respect to -x 0<theta<2pi
 pte     = 1;                % TE component
@@ -36,9 +32,10 @@ k_0=2*pi/lam;
 % Permittivity vector
 
 for i=1:len_n
-  eps_r(i)=getdata(x,materials,n(i),lam);
+  eps_rk(i)=getdata(x,materials,n(i),lam);
 end
-eps_r = [1,eps_r(i),1];
+
+eps_r = [1,eps_rk,1];
 mu_r	= ones(1,len_n+2);           % Permeability vector
 L	= [0,300,0];	% Length vector (nm)
 
@@ -132,7 +129,7 @@ W_ref=Wr{1};
 W_trn=Wr{end};
 
 % Starting parameters
-k_inc = k_0*sqrt(eps_r1*mu_r1)*[sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta)]';
+k_inc = k_0*sqrt(eps_r(1)*mu_r(1))*[sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta)]';
 normal=[0;0;-1];
 
 TE_direction=cross(k_inc,normal)/norm(cross(k_inc,normal));
@@ -160,38 +157,28 @@ E_inc(3)=-(k_x*E_inc(1)+k_y*E_inc(2))/k_z(1);
 
 R(iter)=dot(E_ref,E_ref)/dot(E_inc,E_inc);
 
-T(iter)=dot(E_trn,E_trn)/dot(E_inc,E_inc)*real(mu_r1/mu_r2*k_z(end)/k_z(1));
+T(iter)=dot(E_trn,E_trn)/dot(E_inc,E_inc)*real(mu_r(1)/mu_r(end)*k_z(end)/k_z(1));
 
-% Loop through layers
-
-c_plus{1}=c_inc;
-c_min{1}=c_ref;
-for i=1:length(L)
-c_plus{i+1}=0.5*(Ar{i}*c_plus{i}*exp(-1i*k_z(i)*k_0*L(i))+Br{i}*c_min{i}*exp(1i*k_z(i)*k_0*L(i)));
-c_min{i+1}=0.5*(Br{i}*c_plus{i}*exp(-1i*k_z(i)*k_0*L(i))+Ar{i}*c_min{i}*exp(1i*k_z(i)*k_0*L(i)));
+% % Loop through layers
+% 
+% c_plus{1}=c_inc;
+% c_min{1}=c_ref;
+% for i=1:length(L)
+% c_plus{i+1}=0.5*(Ar{i}*c_plus{i}*exp(-1i*k_z(i)*k_0*L(i))+Br{i}*c_min{i}*exp(1i*k_z(i)*k_0*L(i)));
+% c_min{i+1}=0.5*(Br{i}*c_plus{i}*exp(-1i*k_z(i)*k_0*L(i))+Ar{i}*c_min{i}*exp(1i*k_z(i)*k_0*L(i)));
+% 
+% end
+% 
+% E_g=c_plus{2}+c_min{2};
+% E_g(3)=-(k_x*E_g(1)+k_y*E_g(2))/calc_kz(eps_r(2),mu_r(2),k_x,k_y);
+% 
+% G(iter)=dot(E_g,E_g)/dot(E_inc,E_inc);
 
 end
 
-E_g=c_plus{2}+c_min{2};
-E_g(3)=-(k_x*E_g(1)+k_y*E_g(2))/calc_kz(eps_r(2),mu_r(2),k_x,k_y);
-
-G(iter)=dot(E_g,E_g)/dot(E_inc,E_inc);
-
-end
-
-Abs(:,1)=G;
+Abs(:,1)=1-R-T;
 Abs(:,2)=R;
 Abs(:,3)=T;
 pll=[300:1000';300:1000';300:1000']';
 area(pll,Abs)
 legend("GaAs","R","T")
-
-
-function eps=getdata(x,materials,name,lab)
-
-index = find(strcmp(materials, name));
-ind=find(x{1,index}(:,1)==lab);
-
-eps=(x{1,index}(ind,2)+1i*x{1,index}(ind,3))^2;
-
-end

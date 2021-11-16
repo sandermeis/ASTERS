@@ -8,7 +8,7 @@ n=["GaAs"];
 len_n=length(n);
 
 for i0=1:length(materials)
-    FileName=strcat(["refractive indices.xlsx - "],materials{i0},".csv");
+    FileName=strcat(["ri/refractive indices.xlsx - "],materials{i0},".csv");
   x{i0} = csvread(FileName(1,1));
 end
 
@@ -123,13 +123,3 @@ Abs(:,3)=T;
 pll=[300:1000';300:1000';300:1000']';
 area(pll,Abs)
 legend("GaAs","R","T")
-
-
-function eps=getdata(x,materials,name,lab)
-
-index = find(strcmp(materials, name));
-ind=find(x{1,index}(:,1)==lab);
-
-eps=(x{1,index}(ind,2)+1i*x{1,index}(ind,3))^2;
-
-end
