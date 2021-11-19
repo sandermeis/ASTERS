@@ -10,7 +10,7 @@ Kx=sparse(kron(diag(k_x_inc(:)),eye(len)));
 Ky=sparse(kron(eye(len),diag(k_y_inc(:))));
 
 for i=1:size(eps_r,2)
-Kz{i}=conj(sqrt(eps_r{i}*mu_r{i}-Kx^2-Ky^2));
+Kz{i}=conj(sqrt(conj(eps_r{i})*conj(mu_r{i})-Kx^2-Ky^2));
 end
 
 end
