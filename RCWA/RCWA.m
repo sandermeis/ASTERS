@@ -2,91 +2,67 @@ clear all
 close all
 clc
 
-materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2","ZnS"];
-
-n=["GaAs"];
-len_n=length(n);
-
-for i0=1:length(materials)
-    FileName=strcat(["../ri/refractive indices.xlsx - "],materials{i0},".csv");
-  x{i0} = csvread(FileName(1,1));
-end
-
-lam0=300:1000;
-
-R=zeros(size(lam0));
-T=zeros(size(lam0));
-
-for iter=1:length(lam0)
-% Abs,          ref,             trn
-%0.5225478705	0.4774521289	5.57E-10
 %% Constants
 
-eps_r1     = 1+0i;                % Permittivity reflection medium
-eps_r2     = 1+0i;                % Permittivity transmission medium
-mu_r1     = 1+0i;                % Permeability reflection medium
-mu_r2     = 1+0i;                % Permeability transmission medium
 theta	= 0;                % Angle with respect to normal 0<theta<pi/2
-phi     = pi/4;                % Angle with respect to -x 0<theta<2pi
+phi     = 0;                % Angle with respect to -x 0<theta<2pi
 pte     = 1;                % TE component
 ptm     = 0;                % TM component
-lam     = lam0(iter);                % Vacuum wavelength (nm)
+lam0     = 300;                % Vacuum wavelength (nm)
+k_0=2*pi/lam0;
 
-k_0=2*pi/lam;
+labda_x=1000; % unit cell size (nm)
+labda_y=1000; % unit cell size (nm)
+lenx=512; % unit cell grid x
+leny=512; % unit cell grid y
+P=5;
+Q=5;
+num_H=P*Q;
+%harmonics=10*labda_x/lam
 
-for i1=1:len_n
-  eps_r(i1)=getdata(x,materials,n(i1),lam);
-end
-%eps_r	= [13.711+18.298*1i];      % Permittivity vector
-mu_r	= ones(1,len_n);           % Permeability vector
-L	= [300];	% Length vector (nm)
+% num_H=11;
+% 
+M=-(P-1)/2:(P-1)/2;
+N=-(Q-1)/2:(Q-1)/2;
+
+% Permittivity vector
+
+eps=conv_mat(epsmatrix(lenx,leny),P,Q);
+mu=1*eye(num_H);
+
+eps_ref=1*eye(num_H);
+eps_trn=1*eye(num_H);
+mu_ref=1*eye(num_H);
+mu_trn=1*eye(num_H);
+eps_r   = {eps_ref, eps, eps_trn};
+mu_r    = {mu_ref, mu, mu_trn};            % Permeability vector
+L       = [0, 300, 0];          % Length vector (nm)
 
 %% Simulation
 
 % Starting parameters
-k_x = sqrt(eps_r1*mu_r1)*sin(theta)*cos(phi);
-k_y = sqrt(eps_r1*mu_r1)*sin(theta)*sin(phi);
+[Kx,Ky,Kz] = calc_K(lam0,theta,phi,eps_r,mu_r,M,N,labda_x,labda_y);
 
-S_global = {zeros(2),eye(2);eye(2),zeros(2)};
+S_global = {zeros(2*num_H),eye(2*num_H);eye(2*num_H),zeros(2*num_H)};
 
-% add boundaries
-eps_rk=[1,eps_r,1];
-mu_rk=[1,mu_r,1];
+% Free space
+P_0 = calc_PQ(eye(size(Kx)),eye(size(Kx)),Kx,Ky);
+Q_0 = calc_PQ(eye(size(Kx)),eye(size(Kx)),Kx,Ky);
 
-% Loop through layers
-for i2=1:length(eps_rk)
-
-k_z(i2) = calc_kz(eps_rk(i2),mu_rk(i2),k_x,k_y);
-Q=calc_Q(eps_rk(i2),mu_rk(i2),k_x,k_y);
-V{i2}=Q*inv(1i*k_z(i2)*eye(2));
-
-end
+[W_0, eigval0]=eig(P_0*Q_0);
+V_0=Q_0*W_0*inv(sqrt(eigval0));
 
 % Loop through layers
-for il=1:length(L)
+for i=1:length(L)
 
-A1=eye(2)+inv(V{il+1})*V{il};
-A2=eye(2)+inv(V{il+1})*V{il+2};
-B1=eye(2)-inv(V{il+1})*V{il};
-B2=eye(2)-inv(V{il+1})*V{il+2};
-
-
-X=exp(1i*k_z(il+1)*k_0*L(il));
-
-S{1,1}=inv(A1-X*B2*inv(A2)*X*B1)*(X*B2*inv(A2)*X*A1-B1);
-S{1,2}=inv(A1-X*B2*inv(A2)*X*B1)*X*(A2-B2*inv(A2)*B2);
-S{2,1}=inv(A2-X*B1*inv(A1)*X*B2)*X*(A1-B1*inv(A1)*B1);
-S{2,2}=inv(A2-X*B1*inv(A1)*X*B2)*(X*B1*inv(A1)*X*A2-B2);
+[S,W{i}] = calc_layer(V_0,W_0,mu_r{i},eps_r{i},Kx,Ky,k_0*L(i));
 
 S_global = RH_star(S_global,S);
 
 end
 
-
-%%
-
-% Starting parameters
-k_inc = k_0*sqrt(eps_r1*mu_r1)*[sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta)]';
+n_inc=1; % needs generalization
+k_inc = k_0*n_inc*[sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta)]';
 normal=[0;0;-1];
 
 TE_direction=cross(k_inc,normal)/norm(cross(k_inc,normal));
@@ -99,27 +75,37 @@ p=pte*a_TE+ptm*a_TM;
 
 p=p/norm(p);
 
-c_inc=p(1:2);
+delta=zeros(num_H,1);
+delta(ceil(end/2))=1; %only central harmonic
+
+E_inc{1} = delta*p(1);
+E_inc{2} = delta*p(2);
+
+c_inc=inv(W{1})*[E_inc{1};E_inc{2}];
+
 c_ref=S_global{1,1}*c_inc;
 c_trn=S_global{2,1}*c_inc;
 
-E_ref=c_ref;
-E_trn=c_trn;
-E_inc=p;
+[E_ref{1},E_ref{2}]=split_xy(W{1}*c_ref);
+[E_trn{1},E_trn{2}]=split_xy(W{end}*c_trn);
 
-E_ref(3)=-(k_x*E_ref(1)+k_y*E_ref(2))/k_z(1);
-E_trn(3)=-(k_x*E_trn(1)+k_y*E_trn(2))/k_z(end);
-E_inc(3)=-(k_x*E_inc(1)+k_y*E_inc(2))/k_z(1);
+E_ref{3}=-inv(Kz{1})*(Kx*E_ref{1}+Ky*E_ref{2});
+E_trn{3}=-inv(Kz{end})*(Kx*E_trn{1}+Ky*E_trn{2});
+E_inc{3}=-inv(Kz{1})*(Kx*E_inc{1}+Ky*E_inc{2});
 
-R(iter)=dot(E_ref,E_ref)/dot(E_inc,E_inc); %maybe conj?
+Rmag=dot(E_ref{1},E_ref{1})+dot(E_ref{2},E_ref{2})+dot(E_ref{3},E_ref{3});
+R=real(Kz{1}/k_inc(3))*Rmag;
+Rtot=sum(sum(R));
 
-T(iter)=dot(E_trn,E_trn)/dot(E_inc,E_inc)*real(mu_r1/mu_r2*k_z(end)/k_z(1));
+Tmag=dot(E_trn{1},E_trn{1})+dot(E_trn{2},E_trn{2})+dot(E_trn{3},E_trn{3});
+T=real(mu_r{1}(1,1)/mu_r{end}(1,1)*Kz{end}/k_inc(3))*Tmag;
+Ttot=sum(sum(T));
 
-end
-
-Abs(:,1)=1-R-T;
-Abs(:,2)=R;
-Abs(:,3)=T;
-pll=[300:1000';300:1000';300:1000']';
-area(pll,Abs)
-legend("GaAs","R","T")
+% Abs(:,1)=1-Rtot-Ttot;
+% Abs(:,2)=Rtot;
+% Abs(:,3)=Ttot;
+% pll=[lab1:lab2';lab1:lab2';lab1:lab2']';
+% area(pll,Abs)
+% legend("GaAs","R","T")
+% ylim([-0.1,1.1])
+% xlim([lab1-0.1*(lab2-lab1),lab2+0.1*(lab2-lab1)])
