@@ -1,4 +1,4 @@
-function [S,W] = calc_layer(V_0,W_0,mu_r,eps_r,Kx,Ky,Lk)
+function [S,W,V,lam] = calc_layer(V_0,W_0,mu_r,eps_r,Kx,Ky,Lk)
 
 P = calc_PQ(mu_r,eps_r,Kx,Ky);
 Q = calc_PQ(eps_r,mu_r,Kx,Ky);

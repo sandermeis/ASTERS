@@ -1,5 +1,5 @@
 function eps_lab=get_lab(lab1,lab2)
-%% import and check data
+% import and check data
 
 materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2","ZnS"];
 
@@ -17,7 +17,7 @@ for i0=1:length(materials)
     ind1=find(x{1,i0}(:,1)==lab1);
     ind2=find(x{1,i0}(:,1)==lab2);
     
-    eps_lab{i0}=(x{1,i0}(ind1:ind2,2)-1i*x{1,i0}(ind1:ind2,3)).^2; %(second row-i*third row)^2
+    eps_lab{i0}=(x{1,i0}(ind1:ind2,2)).^2;%-1i*x{1,i0}(ind1:ind2,3)).^2; %(second row-i*third row)^2
 
 end
 
