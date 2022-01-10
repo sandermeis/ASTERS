@@ -1,6 +1,4 @@
-function [eps_r,mu_r]=build_perm(n,shape,lenx,leny,P,Q,eps_lab,iter)
-RoughDim=10;
-Roughness=3;
+function [eps_r,mu_r]=build_perm(n,shape,lenx,leny,P,Q,eps_lab,iter,roughdim,roughness)
 r=0;
 
 materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2","ZnS","GaP"];
@@ -40,7 +38,7 @@ for i=1:len_n
     elseif shape_f(i)=="Rough"
         epsprev=eps_lab{find(strcmp(materials, n_f(i-1)))}(iter);
         r=i;
-        eps_r{i}=conv_mat(roughsurf(eps,epsprev,lenx,leny,RoughDim,Roughness),P,Q);
+        eps_r{i}=conv_mat(roughsurf(eps,epsprev,lenx,leny,roughdim,roughness),P,Q);
         mu_r{i}=mu*eye(num_H);
     end
     
@@ -48,7 +46,7 @@ end
 
 if r
     eps_r=[eps_r(1:r-1),squeeze(num2cell(eps_r{r},[1 2]))',eps_r(r+1:end)];
-    mu_r=[mu_r(1:r-1),repmat({mu_r{r}},1,RoughDim),mu_r(r+1:end)];
+    mu_r=[mu_r(1:r-1),repmat({mu_r{r}},1,roughdim),mu_r(r+1:end)];
 end
 
 end
