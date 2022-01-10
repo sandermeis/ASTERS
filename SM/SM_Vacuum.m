@@ -4,8 +4,9 @@ clc
 
 materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2","ZnS"];
 
-n=["GaAs"];
-len_n=length(n);
+n = ["GaAs"];
+L = [300];	% Length vector (nm)
+len_n=length(L);
 
 for i=1:length(materials)
     FileName=strcat(["../ri/refractive indices.xlsx - "],materials{i},".csv");
@@ -35,9 +36,8 @@ for i=1:len_n
   eps_rk(i)=getdata(x,materials,n(i),lam);
 end
 
-eps_r = [1,eps_rk,1];
-mu_r	= ones(1,len_n+2);           % Permeability vector
-L	= [0,300,0];	% Length vector (nm)
+eps_r = [eps_rk];
+mu_r	= ones(len_n);           % Permeability vector
 
 %% Simulation
 
@@ -67,12 +67,9 @@ A=inv(W)*W_0+inv(V)*V_0;
 B=inv(W)*W_0-inv(V)*V_0;
 
 Wr{i}=W;
-Ar{i}=A;
-Br{i}=B;
+Vr{i}=V;
 
-lam=1i*k_z(i)*k_0*L(i);
-
-X=exp(lam);
+X=exp(-1i*k_z(i)*k_0*L(i));
 
 S{1,1}=inv(A-X*B*inv(A)*X*B)*(X*B*inv(A)*X*A-B);
 S{2,2}=S{1,1};
@@ -82,51 +79,12 @@ S{2,1}=S{1,2};
 
 S_global = RH_star(S_global,S);
 
+Sg{i}=S_global;
+
 end
 
-% %% ref
-% 
-% k_z_ref = calc_kz(eps_r1,mu_r1,k_x,k_y);
-% Q_ref=calc_Q(eps_r1,mu_r1,k_x,k_y);
-% 
-% Omega_ref=1i*k_z_ref*eye(2);
-% 
-% V_ref=Q_ref*inv(Omega_ref);
-% W_ref=eye(2);
-% 
-% A_ref=inv(W_0)*W_ref+inv(V_0)*V_ref;
-% B_ref=inv(W_0)*W_ref-inv(V_0)*V_ref;
-% 
-% S_ref{1,1}=-A_ref\B_ref;
-% S_ref{1,2}=2*inv(A_ref);
-% S_ref{2,1}=0.5*(A_ref-B_ref/A_ref*B_ref);
-% S_ref{2,2}=B_ref/A_ref;
-% 
-% %% trn
-% 
-% k_z_trn = calc_kz(eps_r2,mu_r2,k_x,k_y);
-% Q_trn=calc_Q(eps_r2,mu_r2,k_x,k_y);
-% 
-% Omega_trn=1i*k_z_trn*eye(2);
-% 
-% V_trn=Q_trn*inv(Omega_trn);
-% 
-% W_trn=eye(2);
-% 
-% A_trn=inv(W_0)*W_trn+inv(V_0)*V_trn;
-% B_trn=inv(W_0)*W_trn-inv(V_0)*V_trn;
-% 
-% S_trn{1,1}=B_trn*inv(A_trn);
-% S_trn{1,2}=0.5*(A_trn-B_trn*inv(A_trn)*B_trn);
-% S_trn{2,1}=2*inv(A_trn);
-% S_trn{2,2}=-inv(A_trn)*B_trn;
-% 
-% %%
-% S_global = RH_star(S_ref,S_global);
-% S_global = RH_star(S_global,S_trn);
-
-W_ref=Wr{1};
-W_trn=Wr{end};
+W_ref=W_0;
+W_trn=W_0;
 
 % Starting parameters
 k_inc = k_0*sqrt(eps_r(1)*mu_r(1))*[sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta)]';
@@ -155,28 +113,26 @@ E_ref(3)=-(k_x*E_ref(1)+k_y*E_ref(2))/k_z(1);
 E_trn(3)=-(k_x*E_trn(1)+k_y*E_trn(2))/k_z(end);
 E_inc(3)=-(k_x*E_inc(1)+k_y*E_inc(2))/k_z(1);
 
+
+c_mn=(Sg{1}{1,2})\(c_ref-Sg{1}{1,1}*c_inc);
+c_pl=Sg{1}{2,1}*c_inc+Sg{1}{2,2}*c_mn;
+c{1}=0.5*A*c_pl+0.5*B*c_mn;
+c{2}=0.5*B*c_pl+0.5*A*c_mn;
+
+s=W*c{1}+W*c{2};
+u=-V*c{1}+V*c{2};
+lab=1i*k_z*eye(2);
+s2=W*expm(-lab*k_0*L)*c{1}+W*expm(lab*k_0*L)*c{2};
+u2=-V*expm(-lab*k_0*L)*c{1}+V*expm(lab*k_0*L)*c{2};
+
+J(iter)=real(s(1).*conj(1i*u(2))-s(2).*conj(1i*u(1)))-real(s2(1).*conj(1i*u2(2))-s2(2).*conj(1i*u2(1)));
+     
+
 R(iter)=dot(E_ref,E_ref)/dot(E_inc,E_inc);
-
 T(iter)=dot(E_trn,E_trn)/dot(E_inc,E_inc)*real(mu_r(1)/mu_r(end)*k_z(end)/k_z(1));
-
-% % Loop through layers
-% 
-% c_plus{1}=c_inc;
-% c_min{1}=c_ref;
-% for i=1:length(L)
-% c_plus{i+1}=0.5*(Ar{i}*c_plus{i}*exp(-1i*k_z(i)*k_0*L(i))+Br{i}*c_min{i}*exp(1i*k_z(i)*k_0*L(i)));
-% c_min{i+1}=0.5*(Br{i}*c_plus{i}*exp(-1i*k_z(i)*k_0*L(i))+Ar{i}*c_min{i}*exp(1i*k_z(i)*k_0*L(i)));
-% 
-% end
-% 
-% E_g=c_plus{2}+c_min{2};
-% E_g(3)=-(k_x*E_g(1)+k_y*E_g(2))/calc_kz(eps_r(2),mu_r(2),k_x,k_y);
-% 
-% G(iter)=dot(E_g,E_g)/dot(E_inc,E_inc);
-
 end
 
-Abs(:,1)=1-R-T;
+Abs(:,1)=J;
 Abs(:,2)=R;
 Abs(:,3)=T;
 pll=[300:1000';300:1000';300:1000']';
