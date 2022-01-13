@@ -1,5 +1,6 @@
-function plot_results(lam0_r,n,J,Rtot,Ttot)
+function [h] = plot_results(lam0_r,n,J,Rtot,Ttot)
 
+h = figure;
 lab1 = lam0_r(1);
 lab2 = lam0_r(end);
 
