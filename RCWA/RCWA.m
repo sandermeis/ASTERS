@@ -66,7 +66,7 @@ for iter=1:len_lab
     for i=1:length(L)
         [S,W{i},V{i},l{i}] = calc_layer(V_0,W_0,mu_r{i},eps_r{i},Kx,Ky,k_0*L(i));
         Sg{i} = S_global;
-        S_global = RH_star(S_global,S{i});
+        S_global = RH_star(S_global,S);
     end
     
 

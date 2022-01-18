@@ -1,4 +1,6 @@
-function [h] = plot_results(lam0_r,n,J,Rtot,Ttot)
+function [h] = plot_results(lam0_r,n,shape,J,Rtot,Ttot)
+
+n(shape~=0)="Rough "+n(shape~=0);
 
 h = figure;
 lab1 = lam0_r(1);

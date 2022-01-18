@@ -10,6 +10,7 @@ num_H=P*Q;
 
 n_f=[ref_medium,n,trn_medium];
 shape_f=[0,shape,0];
+roughdim_f=[0,roughdim,0];
 len_n=length(n_f);
 
 for i=1:len_n
@@ -37,21 +38,22 @@ for i=1:len_n
         mu_r{i}=mu*eye(num_H);
     elseif shape_f(i)==6
         epsprev=eps_lab{find(strcmp(materials, n_f(i-1)))}(iter);
-        r=i;
-        eps_r{i}=conv_mat(roughsurf(eps,epsprev,lenx,leny,roughdim,roughness),P,Q);
+        eps_r{i}=conv_mat(roughsurf(eps,epsprev,lenx,leny,roughdim_f(i),roughness),P,Q);
         mu_r{i}=mu*eye(num_H);
     elseif shape_f(i)==7
         epsprev=eps_lab{find(strcmp(materials, n_f(i-1)))}(iter);
-        r=i;
-        eps_r{i}=conv_mat(realsurf(eps,epsprev,roughdim),P,Q);
+        eps_r{i}=conv_mat(realsurf(eps,epsprev,roughdim_f(i)),P,Q);
         mu_r{i}=mu*eye(num_H);
     end
     
 end
 
-if r
-    eps_r=[eps_r(1:r-1),squeeze(num2cell(eps_r{r},[1 2]))',eps_r(r+1:end)];
-    mu_r=[mu_r(1:r-1),repmat({mu_r{r}},1,roughdim),mu_r(r+1:end)];
+
+for i=find(shape_f==6|shape_f==7)
+    eps_r(1:roughdim_f(i),i)=squeeze(num2cell(eps_r{i},[1 2]))';
+    mu_r(1:roughdim_f(i),i)=repmat({mu_r{i}},1,roughdim_f(i));
 end
+eps_r=eps_r(~cellfun(@isempty,eps_r)).';
+mu_r=mu_r(~cellfun(@isempty,mu_r)).';
 
 end

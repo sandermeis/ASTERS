@@ -1,7 +1,9 @@
-function [Kx,Ky,Kz,beta] = calc_K(k_0,theta,phi,eps_r,mu_r,M,N,labda_x,labda_y)
+function [Kx,Ky,Kz,beta] = calc_K(k_0,theta,phi,eps_r,mu_r,P,Q,labda_x,labda_y)
 
 %%% NEED TO USE SPARSE
 
+M       = -(P-1)/2:(P-1)/2;
+N       = -(Q-1)/2:(Q-1)/2;
 
 n_inc=sqrt(eps_r{1}(1,1)*mu_r{1}(1,1));
 beta(1)=k_0*n_inc*cos(phi)*sin(theta);

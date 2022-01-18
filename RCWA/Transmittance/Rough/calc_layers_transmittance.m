@@ -1,11 +1,19 @@
-function [r,t,J] = calc_layers_transmittance(num_H,mu_r0,eps_r0,Kx,Ky,Kz,k_0,L0,s_inc)
+function [r,t,J] = calc_layers_transmittance(num_H,mu_r0,eps_r0,Kx,Ky,Kz,k_0,s_inc,L,shape,roughdim)
+
+indicator=ones(size(L));
+for i=find(shape==6|shape==7)
+    L(1:roughdim(i),i)=L(1,i)/roughdim(i)*ones(1,roughdim(i));
+    indicator(1:roughdim(i),i)=2*ones(1,roughdim(i));
+end
+indicator=indicator(indicator~=0).';
+indicator=indicator-1;
+L=L(L~=0).';
 
 mu_r_ref=mu_r0{1};
 mu_r_trn=mu_r0{end};
 
 eps_r=eps_r0(2:end-1);
 mu_r=mu_r0(2:end-1);
-L=L0(2:end-1);
 
 N=length(eps_r);
 
@@ -47,14 +55,50 @@ r=mat2cell(res{1},[num_H,num_H]);
 
 tN{1}=res{2};
 
+j=1;
+
+% for i=1:N
+%     tN{i+1}=inv(a{i})*X{i}*tN{i};
+%     c_im=[eye(2*num_H);b{i}*inv(a{i})*X{i}]*tN{i};
+%     
+%     field_begin=F{i}*[eye(2*num_H),zeros(2*num_H);zeros(2*num_H),X{i}]*c_im;
+%     field_end=F{i}*[X{i},zeros(2*num_H);zeros(2*num_H),eye(2*num_H)]*c_im;
+%     J{i}=(sum(Sz_field(field_begin))-sum(Sz_field(field_end)))/sum(Sz_field(s_inc));
+%     
+% end
+
 for i=1:N
-tN{i+1}=inv(a{i})*X{i}*tN{i};
-c_im=[eye(2*num_H);b{i}*inv(a{i})*X{i}]*tN{i};
-
-field_begin=F{i}*[eye(2*num_H),zeros(2*num_H);zeros(2*num_H),X{i}]*c_im;
-field_end=F{i}*[X{i},zeros(2*num_H);zeros(2*num_H),eye(2*num_H)]*c_im;
-J{i}=(sum(Sz_field(field_begin))-sum(Sz_field(field_end)))/sum(Sz_field(s_inc));
-
+    
+    tN{i+1}=inv(a{i})*X{i}*tN{i};
+    c_im=[eye(2*num_H);b{i}*inv(a{i})*X{i}]*tN{i};
+    
+    if indicator(i)==1
+        try
+            if indicator(i-1)==0
+                field_begin=F{i}*[eye(2*num_H),zeros(2*num_H);zeros(2*num_H),X{i}]*c_im;
+            elseif indicator(i+1)==0
+                field_end=F{i}*[X{i},zeros(2*num_H);zeros(2*num_H),eye(2*num_H)]*c_im;
+                J{j}=(sum(Sz_field(field_begin))-sum(Sz_field(field_end)))/sum(Sz_field(s_inc));
+                j=j+1;
+            end
+        catch ME
+            if strcmp(ME.message,'Array indices must be positive integers or logical values.')
+                field_begin=F{i}*[eye(2*num_H),zeros(2*num_H);zeros(2*num_H),X{i}]*c_im;
+            elseif strcmp(ME.identifier,'MATLAB:badsubscript')
+                field_end=F{i}*[X{i},zeros(2*num_H);zeros(2*num_H),eye(2*num_H)]*c_im;
+                J{j}=(sum(Sz_field(field_begin))-sum(Sz_field(field_end)))/sum(Sz_field(s_inc));
+                j=j+1;
+            else
+                rethrow(ME)
+            end
+        end
+    else
+        field_begin=F{i}*[eye(2*num_H),zeros(2*num_H);zeros(2*num_H),X{i}]*c_im;
+        field_end=F{i}*[X{i},zeros(2*num_H);zeros(2*num_H),eye(2*num_H)]*c_im;
+        J{j}=(sum(Sz_field(field_begin))-sum(Sz_field(field_end)))/sum(Sz_field(s_inc));
+        j=j+1;
+    end
+    
 end
 
 t=mat2cell(inv(a{N})*X{N}*tN{N},[num_H,num_H]);
