@@ -9,7 +9,7 @@ trn_medium="Air";
 num_H=P*Q;
 
 n_f=[ref_medium,n,trn_medium];
-shape_f=["Uniform",shape,"Uniform"];
+shape_f=[0,shape,0];
 len_n=length(n_f);
 
 for i=1:len_n
@@ -17,28 +17,33 @@ for i=1:len_n
     eps=eps_lab{index}(iter);
     mu=1;
     
-    if shape_f(i)=="Uniform"
+    if shape_f(i)==0
         eps_r{i}=eps;
         mu_r{i}=mu;
-    elseif shape_f(i)=="GratingX"
+    elseif shape_f(i)==1
         eps_r{i}=conv_mat(epsmatrix(1,eps,lenx,leny),P,Q);
         mu_r{i}=mu*eye(num_H);
-    elseif shape_f(i)=="GratingY"
+    elseif shape_f(i)==2
         eps_r{i}=conv_mat(epsmatrix(2,eps,lenx,leny),P,Q);
         mu_r{i}=mu*eye(num_H);
-    elseif shape_f(i)=="GratingXY"
+    elseif shape_f(i)==3
         eps_r{i}=conv_mat(epsmatrix(3,eps,lenx,leny),P,Q);
         mu_r{i}=mu*eye(num_H);
-    elseif shape_f(i)=="Triangle"
+    elseif shape_f(i)==4
         eps_r{i}=conv_mat(epsmatrix(4,eps,lenx,leny),P,Q);
         mu_r{i}=mu*eye(num_H);
-    elseif shape_f(i)=="Circle"
+    elseif shape_f(i)==5
         eps_r{i}=conv_mat(epsmatrix(5,eps,lenx,leny),P,Q);
         mu_r{i}=mu*eye(num_H);
-    elseif shape_f(i)=="Rough"
+    elseif shape_f(i)==6
         epsprev=eps_lab{find(strcmp(materials, n_f(i-1)))}(iter);
         r=i;
         eps_r{i}=conv_mat(roughsurf(eps,epsprev,lenx,leny,roughdim,roughness),P,Q);
+        mu_r{i}=mu*eye(num_H);
+    elseif shape_f(i)==7
+        epsprev=eps_lab{find(strcmp(materials, n_f(i-1)))}(iter);
+        r=i;
+        eps_r{i}=conv_mat(realsurf(eps,epsprev,roughdim),P,Q);
         mu_r{i}=mu*eye(num_H);
     end
     

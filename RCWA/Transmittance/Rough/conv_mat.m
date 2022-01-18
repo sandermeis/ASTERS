@@ -3,29 +3,14 @@ function Cn=conv_mat(A,P,Q)
 [Nx,Ny,zdim] = size(A);
 
 for v=1:zdim
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Compute Number of Harmonics
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Nharmonics = P * Q;
 
-p = [-floor(P/2):+floor(P/2)];
-q = [-floor(Q/2):+floor(Q/2)];
+p = -floor(P/2):floor(P/2);
+q = -floor(Q/2):floor(Q/2);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Find Fourier Coefficients of A
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-B = fftshift(fftn(A)) / (Nx*Ny);
+B = fftshift(fft2(A))/(Nx*Ny);
 
-%%%%%%%%%%%%%%%%
-% Array Indicies
-%%%%%%%%%%%%%%%%
-p0 = floor(Nx/2) + 1; %Added 1
-q0 = floor(Ny/2) + 1; %because of
-
-%%%%%%%%%%%%%%%%%%%%%
-% Loop Over Harmonics
-%%%%%%%%%%%%%%%%%%%%%
+p0 = floor(Nx/2) + 1;
+q0 = floor(Ny/2) + 1;
 
 for qrow = 1:Q
     for prow = 1:P
@@ -37,10 +22,10 @@ for qrow = 1:Q
                 qfft = q(qrow) - q(qcol);
                 
                 C(row,col) = B(p0+pfft, q0+qfft);
-            end %pcol
-        end %qcol
-    end %prow
-end %qrow
+            end
+        end
+    end
+end
 
 Cn(:,:,v)=C;
 
