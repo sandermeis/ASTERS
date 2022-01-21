@@ -19,10 +19,16 @@ tic
 % roughdim=[0, 0, 0, 0, 0, 0, 0];
 % L=[94, 44, 20, 300, 100, 100, 100];
 
+% inverse cell
+% n=["GaP", "InGaP", "Al03GaAs", "InGaP", "GaAs"];
+% shape=[7, 0, 0, 0, 0];
+% roughdim=[25, 0, 0, 0, 0];
+% L=[550, 50, 50, 125, 5000];
+
 n           = ["InGaP","Al03GaAs","InGaP","GaP","Ag","Ag"];
 shape       = [0,0,0,0,7,0];
 roughdim	= [0,0,0,0,0,0];
-L           = [125,50,50,larray(j),3000];
+L           = [125,50,50,550,3000];
 
 roughness = 1;
 
@@ -93,6 +99,3 @@ Rfftj(j)=lam0_r(Rtot==min(Rtot));
 %filename="scale4harmonics9roughness"+roughness+".fig";
 %savefig(h,filename)
 %close(h)
-end
-figure
-plot(larray,Rfftj)
