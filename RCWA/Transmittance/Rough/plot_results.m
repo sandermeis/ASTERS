@@ -1,6 +1,16 @@
 function [h] = plot_results(lam0_r,n,shape,J,Rtot,Ttot)
 
-n(shape~=0)="Rough "+n(shape~=0);
+sh=(shape~=0);
+sh_shift = circshift(sh, -1, 2);
+sh_shift(:, end) = 0;
+
+if shape(1)~=0
+    n(1)="Rough Ref/"+n(1);
+    sh(1)=0;
+    n(sh)="Rough "+n(sh_shift)+"/"+n(sh);
+else
+n(sh)="Rough "+n(sh_shift)+"/"+n(sh);
+end
 
 h = figure;
 lab1 = lam0_r(1);

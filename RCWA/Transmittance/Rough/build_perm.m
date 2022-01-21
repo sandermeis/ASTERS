@@ -1,7 +1,7 @@
 function [eps_r,mu_r]=build_perm(n,shape,lenx,leny,P,Q,eps_lab,iter,roughdim,roughness)
 r=0;
 
-materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2","ZnS","GaP"];
+materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2","ZnS","GaP","AlInP"];
 
 ref_medium="Air";
 trn_medium="Air";
