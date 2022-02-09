@@ -21,6 +21,34 @@ im_700_STM_fixed(119,1:232)=im_700_STM_fixed(119,1:232)-165;
 %still some funky stuff going on
 %plotfig(im_650,im_700,im_730)
 
+
+%%
+tiledlayout('flow')
+rng(1337)
+N = [512, 512];
+H=1;
+[X,Y] = ndgrid(1:N(1),1:N(2));
+i = min(X-1,N(1)-(X-1));
+j = min(Y-1,N(2)-(Y-1));
+
+H=0.25;
+Z1 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
+H =2;
+Z2 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
+H =10;
+Z3 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
+nexttile
+[q , C, PSD] = psd_2D(Z1 , 1);
+loglog(q,C)
+nexttile
+[q , C, PSD] = psd_2D(Z2 , 1);
+loglog(q,C)
+nexttile
+[q , C, PSD] = psd_2D(Z3 , 1);
+loglog(q,C)
+
+
+%%
 % RD{1,1}=im_650.textdata(2,3);
 % RD{1,2}=im_650.textdata(2,4);
 % RD{1,3}=im_650.textdata(2,6);
@@ -50,17 +78,37 @@ im_700_STM_fixed(119,1:232)=im_700_STM_fixed(119,1:232)-165;
 % area(fsc.data.FullSolarCell(1:701,1),fsc.data.FullSolarCell(1:701,2:10));
 % legend(fsc.textdata.FullSolarCell(1,2:10))
 
-fscf=importdata("TMM_res_fix.xlsx");
-figure;
-area(fscf.data(1:701,1),fscf.data(1:701,2:10));
-legend(fscf.textdata(2,2:10))
+% fscf=importdata("TMM_res_fix.xlsx");
+% figure;
+% area(fscf.data(1:701,1),fscf.data(1:701,2:10));
+% legend(fscf.textdata(2,2:10))
 
-imagesc(100*([J,Rtot',Ttot']-fscf.data(1:701,2:10)));
-c = colorbar;  
-c.Ruler.TickLabelFormat='%g%%';
-title("Difference in TMM and RCWA Absorption")
-xticklabels([n,"R","T"])
-ylabel("Wavelength (Nm)")
+% load("A2.mat","A2","labda_range","layer_names");
+% figure
+% area(labda_range,A2);
+% title("TMM Absorption")
+% xlabel("Wavelength (nm)")
+% ylabel("Absorption (a.u.)")
+% legend([layer_names{2:8},"R","T"])
+% 
+% figure
+% area(labda_range,[J,Rtot',Ttot']);
+% title("RCWA Absorption")
+% xlabel("Wavelength (nm)")
+% ylabel("Absorption (a.u.)")
+% legend([n,"R","T"])
+% 
+% figure
+% imagesc(([J,Rtot',Ttot']-A2));
+% c = colorbar;  
+% % c.Ruler.TickLabelFormat='%.0e';
+% % c.Ruler.Exponent = 0;
+% title("Difference in TMM and RCWA Absorption")
+% kz=1:10:length(labda_range);
+% yticks(kz)
+% yticklabels(labda_range(kz))
+% xticklabels([n,"R","T"])
+% ylabel("Wavelength (nm)")
 
 function plotfig(varargin)
 switch nargin

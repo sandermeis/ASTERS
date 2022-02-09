@@ -1,5 +1,6 @@
 clear all
 close all
+for gap_length=360:1:360
 tic
 
 %%% SHAPE
@@ -14,6 +15,7 @@ tic
 %%% 7 = Real surface, only 512x512, 10x10 or 30umx30um
 
 % LayerObjects
+% Normal
 % n=["MgF2", "ZnS", "AlInP", "GaAs", "InGaP", "Al03GaAs", "Ag"];
 % shape=[0, 0, 0, 0, 0, 0, 0];
 % roughdim=[0, 0, 0, 0, 0, 0, 0];
@@ -23,25 +25,25 @@ tic
 % n=["GaP", "InGaP", "Al03GaAs", "InGaP", "GaAs"];
 % shape=[7, 0, 0, 0, 0];
 % roughdim=[25, 0, 0, 0, 0];
-% L=[550, 50, 50, 125, 5000];
+% L=[400, 50, 50, 125, 3000];
 
 n           = ["InGaP","Al03GaAs","InGaP","GaP","Ag","Ag"];
-shape       = [0,0,0,0,7,0];
-roughdim	= [0,0,0,0,0,0];
-L           = [125,50,50,550,3000];
+shape       = [0,0,0,0,6,0];
+roughdim	= [0,0,0,0,20,0];
+L           = [125,50,50,gap_length,213,3000];
 
-roughness = 1;
+roughness = 2;
 
-lab1 = 459;
-lab2 = 966;
-dlab = 1;
+lab1 = 650;
+lab2 = 700;
+dlab = 5;
 lam0_r = lab1:dlab:lab2;
 
 eps_lab = get_lab(lam0_r);
 
 wb = waitbar(0,'Please wait...');
 
-theta	= 82/360*2*pi;%pi/4;
+theta	= 0;%8/360*2*pi;%pi/4;
 phi     = 0;
 pte     = 0.5;
 ptm     = 0.5;
@@ -83,19 +85,27 @@ end
 toc
 delete(wb)
 
-% figure
-% [Er,Eth,Eph]=plot_field({reshape(r{1},P,Q),reshape(r{2},P,Q),reshape(r{3},P,Q)},beta,labda_x,labda_y,lenx,leny,P,Q);
-
-% plot_harmonics(Kx,Ky,Kz{1},R,true)
-
-%h(1) = plot_results(lam0_r,n,shape,J,Rtot,Ttot);
-%h(2) = figure;
-plot(lam0_r,Rtot)
-hold on
-Rfftj(j)=lam0_r(Rtot==min(Rtot));
-%plot(lam0_r,haze)
-
-%save("haze650ref.mat","haze")
-%filename="scale4harmonics9roughness"+roughness+".fig";
-%savefig(h,filename)
-%close(h)
+% % figure
+% % [Er,Eth,Eph]=plot_field({reshape(r{1},P,Q),reshape(r{2},P,Q),reshape(r{3},P,Q)},beta,labda_x,labda_y,lenx,leny,P,Q);
+% %%
+% plot_harmonics(Kx,Ky,Kz{1},r)
+% %
+ h(1) = plot_results(lam0_r,n,shape,J,Rtot,Ttot);
+% h(2) = figure;
+% plot(lam0_r,Rtot,'Marker', 'o')
+% hold on
+% plot(lam0_r,haze,'Marker', 'o')
+% load('RD.mat','RD');
+% plot(RD{2,7}(11:141),RD{2,8}(11:141),'Marker', 'o')
+% plot(RD{2,7}(11:141),RD{2,9}(11:141),'Marker', 'o')
+% xlabel("Wavelength (nm)")
+% ylabel("Absorption (a.u.)")
+% legend(["R_{RCWA}","Haze_{RCWA}","R_{measured}","Haze_{measured}"])
+% xlim([lam0_r(1), lam0_r(end)])
+%%
+% save("haze650ref.mat","haze")
+% filename="RCWA_ARough2_"+num_H+"_GaPthickness_"+gap_length+".fig";
+% savefig(h,filename)
+% clearvars
+% close all
+end

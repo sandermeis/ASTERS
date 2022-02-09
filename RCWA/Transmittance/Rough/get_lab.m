@@ -10,7 +10,7 @@ materials=["GaAs","Substrate","Air","Glass","InGaP","Ag","Au","Al03GaAs","MgF2",
 for i=1:length(materials)
     FileName=strcat(["../../../ri/refractive indices.xlsx - "],materials{i},".csv");
     x{i} = csvread(FileName(1,1)); %x{i0} is tab of material i0
-    
+    warning('off','backtrace')
     % check for range of input wavelengths
     if isempty(find(x{i}(:,1)==lab1,1))
         if lab1<x{i}(:,1)

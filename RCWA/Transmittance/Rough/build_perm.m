@@ -48,12 +48,13 @@ for i=1:len_n
     
 end
 
-
+if any(find(shape_f==6|shape_f==7))
 for i=find(shape_f==6|shape_f==7)
     eps_r(1:roughdim_f(i),i)=squeeze(num2cell(eps_r{i},[1 2]))';
     mu_r(1:roughdim_f(i),i)=repmat({mu_r{i}},1,roughdim_f(i));
 end
 eps_r=eps_r(~cellfun(@isempty,eps_r)).';
 mu_r=mu_r(~cellfun(@isempty,mu_r)).';
+end
 
 end
