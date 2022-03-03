@@ -22,31 +22,31 @@ im_700_STM_fixed(119,1:232)=im_700_STM_fixed(119,1:232)-165;
 %plotfig(im_650,im_700,im_730)
 
 
-%%
-tiledlayout('flow')
-rng(1337)
-N = [512, 512];
-H=1;
-[X,Y] = ndgrid(1:N(1),1:N(2));
-i = min(X-1,N(1)-(X-1));
-j = min(Y-1,N(2)-(Y-1));
-
-H=0.25;
-Z1 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
-H =2;
-Z2 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
-H =10;
-Z3 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
-nexttile
-[q , C, PSD] = psd_2D(Z1 , 1);
-loglog(q,C)
-nexttile
-[q , C, PSD] = psd_2D(Z2 , 1);
-loglog(q,C)
-nexttile
-[q , C, PSD] = psd_2D(Z3 , 1);
-loglog(q,C)
-
+% %%
+% tiledlayout('flow')
+% rng(1337)
+% N = [512, 512];
+% H=1;
+% [X,Y] = ndgrid(1:N(1),1:N(2));
+% i = min(X-1,N(1)-(X-1));
+% j = min(Y-1,N(2)-(Y-1));
+% 
+% H=0.25;
+% Z1 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
+% H =2;
+% Z2 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
+% H =10;
+% Z3 = real(ifft2(exp(-0.5*(i.^2+j.^2)/H^2).*fft2(randn(N))));
+% nexttile
+% [q , C, PSD] = psd_2D(Z1 , 1);
+% loglog(q,C)
+% nexttile
+% [q , C, PSD] = psd_2D(Z2 , 1);
+% loglog(q,C)
+% nexttile
+% [q , C, PSD] = psd_2D(Z3 , 1);
+% loglog(q,C)
+% 
 
 %%
 % RD{1,1}=im_650.textdata(2,3);
@@ -110,6 +110,54 @@ loglog(q,C)
 % xticklabels([n,"R","T"])
 % ylabel("Wavelength (nm)")
 
+%% FEATURE 1 DATA PROCESSSING
+a=im_700_STM_fixed;
+%a(im_650_STM>100)=NaN;
+t=tiledlayout('flow');
+nexttile
+mesh(linspace(0,10000,512),linspace(0,10000,512),a)
+%grid=linspace(10,5120,512);
+% mesh(grid(200:275),grid(256:382),a(256:382,200:275))
+% axis equal
+%writematrix(a(256:382,200:275),'feature1.csv')
+
+nexttile
+b=a(256:382,200:275);
+mesh(b)
+nexttile
+b=b-min(b(:));
+b(b<200)=NaN;
+rowgrid = linspace(0,10000/512*size(b,1),size(b,1));
+colgrid = linspace(0,10000/512*size(b,2),size(b,2));
+[X,Y] = meshgrid(rowgrid,colgrid);
+X=X';
+Y=Y';
+mesh(X,Y,b)
+nexttile
+%c=abs(gradient(abs(gradient(b))));
+%contourf(b,30,'ShowText','on')
+
+k = boundary(X(:),Y(:));
+[kx,ky]=ind2sub(size(b),k);
+% X(k) Y(k)
+u=find(~isnan(b));
+[ux,uy]=ind2sub(size(b),u);
+% [X,Y] = meshgrid(-3:3)
+% [Xq,Yq] = meshgrid(-3:0.25:3)
+Xk=[X(k);X(u)];
+Yk=[Y(k);Y(u)];
+bk=[zeros(size(b(k)));b(u)];
+V = scatteredInterpolant(Xk,Yk,bk);
+Z=V(X,Y);
+Z(Z<0)=0;
+scatter3(Xk,Yk,bk)
+nexttile
+mesh(X,Y,Z)
+% pad zeros
+Z2=zeros(128,128);
+Z2(1:127,27:102)=Z;
+writematrix(Z2,'Feature1_2500nm.csv')
+%%
 function plotfig(varargin)
 switch nargin
     case 1

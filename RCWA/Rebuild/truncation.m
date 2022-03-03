@@ -8,8 +8,10 @@ if device.truncateHarm
     TMAP = abs(m/((device.P-1)/2)).^(2*device.truncFactor) + abs(n/((device.Q-1)/2)).^(2*device.truncFactor);
     TMAP(isnan(TMAP))=1;
     TMAP = (TMAP <= 1);
+    if device.truncfig
     figure
     imagesc(TMAP);
+    end
 else
     TMAP = ones(size(m));
 end

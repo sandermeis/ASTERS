@@ -1,8 +1,8 @@
-function layer = import_permittivities(layer,lam0_r,plot_permfig)
+function layer = import_permittivities(layer,lam0_r,options)
     arguments
         layer (:,1) struct
         lam0_r (1,:) {mustBeNumeric,mustBeReal}
-        plot_permfig logical  = true
+        options.plot_permfig logical = false
     end
     
 lab1=lam0_r(1);
@@ -10,8 +10,8 @@ lab2=lam0_r(end);
 
 for i=1:numel(layer)
     mat = layer(i).material;
-    file_name = "../../ri/refractive indices.xlsx - "+mat+".csv";
-    x{i} = csvread(file_name(1,1));
+    file_name = "refractive_indices/"+mat+".csv";
+    x{i} = csvread(file_name);
     
     warning('off','backtrace')
     % check for range of input wavelengths
@@ -37,7 +37,7 @@ end
 
 [layer.permittivities]=deal(eps_lab{:});
 
-if plot_permfig
+if options.plot_permfig
     t = tiledlayout(1,2);
     title(t,'Material properties of layer stack')
     nexttile

@@ -1,18 +1,23 @@
-function RCWA_plot(layer,device,lam0_r,Sz)
-% 
-centralH = Sz((end+1)/2,:,:);
-sumH = sum(Sz,1);
-haze = squeeze((sumH-centralH)./sumH);
-%%     
+function h = RCWA_plot(layer,device,lam0_r,Sz)
+
+n = fixLayerString(layer, device);
+
+h(1) = tile_harmonics4d(Sz, lam0_r, n, device.P, device.Q, device.tr_ind);
+
+h(2) = plot_results(squeeze(sum(Sz,1)).', lam0_r, n);
+
+h(3) = plothaze(Sz, lam0_r, n);
+
+end
 
 % figure
 % [Er,Eth,Eph] = plot_field({reshape(r{1},P,Q),reshape(r{2},P,Q),reshape(r{3},P,Q)},beta,labda_x,labda_y,lenx,leny,P,Q);
-%%
-%plot_harmonics(Kx,Ky,Kz{1},r)
-%
-n = string({layer.material});
-
+% plot_harmonics(Kx,Ky,Kz{1},r)
 % h(2) = tile_harmonics(Sz,string({layer.material}));
+
+
+function n = fixLayerString(layer,device)
+n = string({layer.material});
 if device.calcAllRough
     for i = 1:numel(layer)
         
@@ -47,13 +52,29 @@ else
         n(sh)="Rough "+n(sh_shift)+"/"+n(sh);
     end
     
-    h(1) = tile_harmonics4d(Sz,lam0_r,n,device.P,device.Q,device.tr_ind);
+end
 end
 
-h(2) = plot_results(lam0_r,n,squeeze(sum(Sz,1)).');
-%%
 
-plothaze(n,haze,lam0_r)
+function h = plothaze(Sz, lam0_r, n)
+
+% why abs???
+centralH = squeeze(abs(Sz((end+1)/2,:,:)));
+sumH = squeeze(sum(abs(Sz),1));
+diffH = sumH - centralH;
+haze = arrayfun(@(a, b) a/b * (b>1e-12),diffH,sumH);
+
+n = [n, "R", "T"];
+h = figure;
+colororder(hsv(8))
+for i=1:size(haze,1)
+    hold on
+    plot(lam0_r,abs(haze(i,:)).','LineWidth',2)
+end
+xlabel('Wavelength (nm)')
+ylabel('Haze')
+legend(n,'location','eastoutside')
+
 
 %%
 % h(2) = figure;
@@ -69,52 +90,36 @@ plothaze(n,haze,lam0_r)
 % ylabel("Absorption (a.u.)")
 % legend(["R_{RCWA}","Haze_{RCWA}","R_{measured}","Haze_{measured}"])
 % xlim([lam0_r(1), lam0_r(end)])
-end
-
-function plothaze(n,haze,lam0_r)
-n=[n, "R", "T"];
-figure
-set(gca, 'ColorOrder', hsv(8))
-for i=1:size(haze,1)
-    hold on
-    plot(lam0_r,abs(haze(i,:)).','LineWidth',2)
-end
-xlabel('Wavelength (nm)')
-ylabel('Haze')
-legend(n,'location','eastoutside')
-end
-
-function h = tile_harmonics(Sz,n)
-
-n = [n, "R", "T"];
-h = tiledlayout('flow','TileSpacing','Compact');
-
-for i=1:size(Sz,2)
-    nexttile
-    imagesc(squeeze(Sz(:,i,:)))
-    xlabel("Wavelength (nm)")
-    ylabel("Harmonics")
-    title(n(i))
-end
 
 end
 
-function a = repair_harmonics(Sz,P,Q,tr_ind)
 
-num_lay = size(Sz,2);
-num_lab = size(Sz,3);
-a = zeros(P,Q,num_lay,num_lab);
+function h = plot_results(Sz, lam0_r, n)
 
-for i=1:num_lay
-    for j=1:num_lab
-        c=a(:,:,i,j);
-        c(tr_ind)=Sz(:,i,j);
-        a(:,:,i,j) = c;
-    end
+h = figure;
+lab1 = lam0_r(1);
+lab2 = lam0_r(end);
+
+N=size(Sz,2);
+
+x_grid=repmat(lam0_r',1,N);
+
+n(end+1)="R";
+n(end+1)="T";
+
+colororder(hsv(8))
+
+area(x_grid,Sz,'EdgeColor','none')
+% hold on
+% plot(lam0_r,real(eps_lab{1})/max(real(eps_lab{1})))
+% plot(lam0_r,imag(eps_lab{1})/max(real(eps_lab{1})))
+legend(n,'Location','eastoutside')
+%ylim([-0.5,1.5])
+xlim([lab1-0.1*(lab2-lab1),lab2+0.1*(lab2-lab1)])
 end
-end
 
-function h = tile_harmonics4d(Sz,lam0_r,n,P,Q,tr_ind)
+
+function h = tile_harmonics4d(Sz, lam0_r, n, P, Q, tr_ind)
 
 n = [n, "R", "T"];
 h = figure;
@@ -145,6 +150,28 @@ end
  cb.Layout.Tile = 'east';
 
 end
+
+
+function a = repair_harmonics(Sz,P,Q,tr_ind)
+
+num_lay = size(Sz,2);
+num_lab = size(Sz,3);
+a = zeros(P,Q,num_lay,num_lab);
+
+for i=1:num_lay
+    for j=1:num_lab
+        c=a(:,:,i,j);
+        c(tr_ind)=Sz(:,i,j);
+        a(:,:,i,j) = c;
+    end
+end
+end
+
+
+
+
+
+
 
 
 function [Er,Eth,Eph] = plot_field(s,beta,labda_x,labda_y,Nx,Ny,P,Q)
@@ -178,6 +205,22 @@ scatter3(Eth(:),Eph(:),Er(:))
 % ax = gca;
 % ax.YDir = 'normal';
 % %end
+end
+
+
+function h = tile_harmonics(Sz,n)
+
+n = [n, "R", "T"];
+h = tiledlayout('flow','TileSpacing','Compact');
+
+for i=1:size(Sz,2)
+    nexttile
+    imagesc(squeeze(Sz(:,i,:)))
+    xlabel("Wavelength (nm)")
+    ylabel("Harmonics")
+    title(n(i))
+end
+
 end
 
 
@@ -268,29 +311,6 @@ plot(thrange(2:end),thbin)
 % % q=quiver3(0*kx,0*ky,0*kz,real(Il.*kx),real(Il.*ky),real(Il.*kz),0);
 % % q.ShowArrowHead = 'off';
 % % end
-end
-
-
-function h = plot_results(lam0_r,n,J)
-
-h = figure;
-lab1 = lam0_r(1);
-lab2 = lam0_r(end);
-
-N=size(J,2);
-
-x_grid=repmat(lam0_r',1,N);
-
-n(end+1)="R";
-n(end+1)="T";
-
-area(x_grid,J,'EdgeColor','none')
-% hold on
-% plot(lam0_r,real(eps_lab{1})/max(real(eps_lab{1})))
-% plot(lam0_r,imag(eps_lab{1})/max(real(eps_lab{1})))
-legend(n,'Location','eastoutside')
-%ylim([-0.5,1.5])
-xlim([lab1-0.1*(lab2-lab1),lab2+0.1*(lab2-lab1)])
 end
 
 

@@ -1,0 +1,13 @@
+Sources refractive indices, extinction coefficients
+
+GaAs - 
+InGaP - 
+Al03GaAs - 
+Ag - 
+MgF2 - 
+AlInP - 
+GaP - 
+ZnS - 
+Glass - 
+Au - 
+Air - 
