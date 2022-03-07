@@ -84,7 +84,7 @@ classdef Feature
                     % 2D Triangle
                     obj.Z = obj.height * ((2*abs(obj.X-(obj.size/2))+obj.Y)<obj.size);
                 case "Circle"
-                    % 2D Circle
+                    % 2D Circle, 3D Cylinder
                     obj.Z = obj.height * ((obj.X-obj.size/2).^2+(obj.Y-obj.size/2).^2<=(obj.size/2).^2);
                 case "Sphere"
                     % 3D Half sphere
@@ -96,9 +96,21 @@ classdef Feature
                     obj.Z = obj.height * (1-2*arrayfun(blaat,obj.X,obj.Y)/obj.size);
                 case "RidgeX"
                     % 3D Ridge X
-                    
+                    blaat = @(a) max(abs(a-obj.size/2));
+                    obj.Z = obj.height * (1-2*arrayfun(blaat,obj.X)/obj.size);
                 case "RidgeY"
                     % 3D Ridge Y
+                    blaat = @(a) max(abs(a-obj.size/2));
+                    obj.Z = obj.height * (1-2*arrayfun(blaat,obj.Y)/obj.size);
+                case "WedgeX"
+                    % 3D Wedge
+                    obj.Z = obj.height * obj.X/max(obj.X(:));
+                case "WedgeY"
+                    % 3D Wedge
+                    obj.Z = obj.height * obj.Y/max(obj.Y(:));
+                case "Cone"
+                    tmp = (1-sqrt((obj.X-obj.size/2).^2+(obj.Y-obj.size/2).^2)/(obj.size/2));
+                    obj.Z = obj.height * (tmp+abs(tmp))/2;
                 case "Custom"
                     
                 otherwise

@@ -36,18 +36,22 @@ classdef Surface < handle
                 ypos (1,:) {mustBeInteger}
                 PBC logical = true
             end
-            if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
-                if isempty(obj.Features)
-                    obj.Features(1).fobj = fobj;
-                    obj.Features(1).xpos = xpos;
-                    obj.Features(1).ypos = ypos;
+            if (fobj.resolution<=obj.surfres)
+                if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
+                    if isempty(obj.Features)
+                        obj.Features(1).fobj = fobj;
+                        obj.Features(1).xpos = xpos;
+                        obj.Features(1).ypos = ypos;
+                    else
+                        obj.Features(end+1).fobj = fobj;
+                        obj.Features(end).xpos = xpos;
+                        obj.Features(end).ypos = ypos;
+                    end
                 else
-                    obj.Features(end+1).fobj = fobj;
-                    obj.Features(end).xpos = xpos;
-                    obj.Features(end).ypos = ypos;
+                    warning("Position is out of bounds, no object added")
                 end
             else
-                warning("Position is out of bounds, no object added")
+                warning("Feature larger than surface, no object added")
             end
             
         end
@@ -73,43 +77,66 @@ classdef Surface < handle
         end
         
         
-        function placeFeature(obj,i,x,y,PBC,mode)
+        %         function report(obj)
+        %             if ~isempty(obj.Features)
+        %                 fprintf("Surface ""%s"" consists of these Features:\n",inputname(1))
+        %                 fprintf("--------------------\n")
+        %                 for i=1:numel(obj.Features)
+        %                     %number
+        %                     % coordinates
+        %                     % type
+        %                     nr = length(obj.Features(i).xpos);
+        %                     fprintf("--------------------\n")
+        %                     fprintf("Feature %u\nType: ""%s""; Number: %u; Number density: %d num/um^2\nCoordinates: \n", i, obj.Features(i).fobj.shape, nr, nr/(obj.surfsize/1000)^2)
+        %                     fprintf("Copy %u: (%u, %u)\n",[1:length(obj.Features(i).xpos); obj.Features(i).xpos; obj.Features(i).ypos])
+        %                     fprintf("--------------------\n")
+        %                 end
+        %             else
+        %                 fprintf("Surface has no features")
+        %             end
+        %         end
+        
+        
+        function placeFeature(obj,i,xpos,ypos,PBC,mode)
             arguments
                 obj
                 i
-                x
-                y
+                xpos
+                ypos
                 PBC logical = true
                 mode string = "add" %add, replace, merge
             end
             
             nx = obj.Features(i).fobj.resolution;
             ny = obj.Features(i).fobj.resolution;
-            
-            if PBC
-                ind = ((y: y + ny-1).*ones(ny,1)-1)*obj.surfres*2+(x: x + nx-1)'.*ones(1,nx);
-                k = toPBC(obj.surfres*2,obj.surfres,obj.surfres,ind(:));
-                temp = zeros(obj.surfres);
-                temp(k) = obj.Features(i).fobj.Z;
-                if mode=="add"
-                    obj.surfMatrix = obj.surfMatrix + temp;
-                elseif mode=="merge"
-                    temp2 = temp - obj.surfMatrix;
-                    obj.surfMatrix = obj.surfMatrix + (temp2+abs(temp2))/2;
-                elseif mode=="replace"
-                    obj.surfMatrix(k) = obj.Features(i).fobj.Z;
-                else        %exclude mode?, only place when no other features in the way
-                    error('wrong mode')
-                end
-            else
-                if checkPlacement(obj,x,y,nx,ny)
-                    obj.surfMatrix(x: x + nx-1,y: y + ny-1) = obj.surfMatrix(x: x + nx-1,y: y + ny-1) + obj.Features(i).fobj.Z;
+            for pos=1:numel(xpos)
+                x = xpos(pos);
+                y = ypos(pos);
+                if PBC
+                    ind = ((y: y + ny-1).*ones(ny,1)-1)*obj.surfres*2+(x: x + nx-1)'.*ones(1,nx);
+                    k = toPBC(obj.surfres*2,obj.surfres,obj.surfres,ind(:));
+                    temp = zeros(obj.surfres);
+                    temp(k) = obj.Features(i).fobj.Z;
+                    if mode=="add"
+                        obj.surfMatrix = obj.surfMatrix + temp;
+                    elseif mode=="merge"
+                        temp2 = temp - obj.surfMatrix;
+                        obj.surfMatrix = obj.surfMatrix + (temp2+abs(temp2))/2;
+                    elseif mode=="replace"
+                        obj.surfMatrix(k) = obj.Features(i).fobj.Z;
+                    else        %exclude mode?, only place when no other features in the way
+                        error('wrong mode')
+                    end
                 else
-                    errorString = 'Placement of Feature ' + string(i) + ...
-                        ' at position x = ' + string(x) + ' of ' + string(obj.surfres) + ...
-                        ', y = ' + string(y) + ' of ' + string(obj.surfres) + ', with size ΔX = ' + ...
-                        string(nx) + ', ΔY = ' + string(ny) + ' failed, skipping.';
-                    warning(errorString)
+                    if checkPlacement(obj,x,y,nx,ny)
+                        obj.surfMatrix(x: x + nx-1,y: y + ny-1) = obj.surfMatrix(x: x + nx-1,y: y + ny-1) + obj.Features(i).fobj.Z;
+                    else
+                        errorString = 'Placement of Feature ' + string(i) + ...
+                            ' at position x = ' + string(x) + ' of ' + string(obj.surfres) + ...
+                            ', y = ' + string(y) + ' of ' + string(obj.surfres) + ', with size ΔX = ' + ...
+                            string(nx) + ', ΔY = ' + string(ny) + ' failed, skipping.';
+                        warning(errorString)
+                    end
                 end
             end
         end
@@ -171,6 +198,9 @@ classdef Surface < handle
         function plot(obj)
             figure
             mesh(obj.surfX, obj.surfY, obj.surfMatrix)
+            title("Surface Architecture")
+            xlabel("X (nm)")
+            xlabel("Y (nm)")
         end
         
         
@@ -211,7 +241,7 @@ classdef Surface < handle
             end
         end
     end
-       methods (Static)
+    methods (Static)
         function Z = roughsurf(Xres,Yres,height,F)
             N = [Xres Yres];
             [X,Y] = ndgrid(1:N(1),1:N(2));

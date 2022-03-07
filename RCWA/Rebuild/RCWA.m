@@ -15,23 +15,23 @@ else
 end
 
 issurf = cellfun(@(x) isa(x,"Surface"),{layer.input});
-k = [layer(issurf).input];
-k2 = [k.surfsize];
-k3 = [k.surfres];
-if ~all(k2 == k2(1))&&~all(k3 == k3(1))
-    error("Mismatching layer dimensions")
-end
-
-if ~device.forceResize
-    laynum = find(issurf,1);
-    if laynum
+laynum = find(issurf,1);
+if laynum
+    k = [layer(issurf).input];
+    k2 = [k.surfsize];
+    k3 = [k.surfres];
+    if ~all(k2 == k2(1))&&~all(k3 == k3(1))
+        error("Mismatching layer dimensions")
+    end
+    
+    if device.useSurfaceSize
         device.size_x       = layer(laynum).input.surfsize;
         device.size_y       = layer(laynum).input.surfsize;
         device.res_x        = layer(laynum).input.surfres;
-        device.res_y        = layer(laynum).input.surfres;
-    else
-        warning("No rough layers added, forcing resize to manually entered dimensions")
+        device.res_y        = layer(laynum).input.surfres;   
     end
+elseif device.useSurfaceSize
+    warning("No rough layers added, using manually entered dimensions")
 end
 
 lenHarmArray = length(harmArray);

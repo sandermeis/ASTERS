@@ -5,7 +5,7 @@ for i = 1:numel(layer)
     eps = layer(i).permittivities(iter);
     layer(i).geometry.eps = eps*layer(i).geometry.eps_struc;
     
-    if layer(i).shape~=0
+    if layer(i).input~=0
         if i==1
             epsprev = 1; %Air
         else

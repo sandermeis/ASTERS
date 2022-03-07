@@ -38,8 +38,7 @@ if device.calcAllRough
     n = rmmissing(n2(:));
 else
     
-    shape=[layer.shape];
-    
+    shape = cellfun(@(x) isa(x,"Surface"),{layer.input});
     sh=(shape~=0);
     sh_shift = circshift(sh, -1, 2);
     sh_shift(:, end) = 0;
