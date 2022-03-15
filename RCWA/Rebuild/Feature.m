@@ -1,14 +1,112 @@
 classdef Feature
+    %FEATURE Produces a specified feature geometry
+    %   f = FEATURE(r), if r is a scalar, produces a feature with resolution r
+    %   and default size and height.
+    %
+    %   f = FEATURE(A), if A is a matrix, produces a feature with the
+    %   matrix as feature magnitude and default size and height. The input 
+    %   matrix must be square.
+    %
+    %   f = FEATURE("/PATHNAME.csv"), if "/PATHNAME.csv" is a string, produces
+    %   a feature with imported data where the specified string is used as
+    %   a pathname. The imported matrix must be square.
+    %
+    %   f = FEATURE(..., sz) specifies the size of the feature in nanometers.
+    %
+    %   f = FEATURE(..., sz, h) specifies the height of the feature in
+    %   nanometers.
+    %
+    %   f = FEATURE(r, sz, h, "Shape") specifies the shape of the feature.
+    %   Only possible for non imported data.
+    %
+    %   Shape can be one of these strings:
+    %               "GratingX" - 2D Grating X
+    %               "GratingY" - 2D Grating Y
+    %              "GratingXY" - 2D Grating XY
+    %               "Triangle" - 2D Triangle, 3D Prism
+    %                 "Circle" - 2D Circle, 3D Cylinder
+    %                 "Sphere" - 3D Half sphere
+    %                "Pyramid" - 3D Pyramid
+    %                 "RidgeX" - 3D Ridge X
+    %                 "RidgeY" - 3D Ridge Y
+    %                 "WedgeX" - 3D Wedge X
+    %                 "WedgeY" - 3D Wedge Y
+    %                   "Cone" - 3D Cone
+    %
+    %   Feature properties:
+    %                    size - Size of the FEATURE in nanometers.
+    %              resolution - Resolution of the FEATURE in pixels.
+    %                  height - Height of the FEATURE in nanometers.
+    %                   shape - Shape of the feature.
+    %                       X - x coordinates of the feature matrix.   
+    %                       Y - y coordinates of the feature matrix.
+    %                       Z - Magnitude of the feature matrix.
+    %
+    %   Feature methods:
+    %                  rotate - Rotates the FEATURE matrix 90 degrees anticlockwise.
+    %                    plot - Displays the FEATURE.
+    %
+    
+    %   Copyright 2022 Sander Meis.
+    
     properties
+        %SIZE - Size of the FEATURE in nanometers.
+        %   Currently features can only be square, so SIZE represents both
+        %   the x and y length. 
+        %   On construction, the size can be chosen explicitly, else it
+        %   defaults to 625.
+        %
+        %   See also FEATURE
         size (1,1) {mustBeNumeric} = 625
+        
+        %RESOLUTION - Resolution of the FEATURE in pixels.
+        %   Currently features can only be square, so RESOLUTION represents both
+        %   the x and y resolution. 
+        %   On construction, the resolution can be chosen explicitly, else it
+        %   defaults to 32.
+        %
+        %   See also FEATURE
         resolution = 32 %pts/nm
+        
+        %HEIGHT - Height of the FEATURE in nanometers.
+        %   HEIGHT represents the maximum height of the FEATURE.
+        %   On construction, the height can be chosen explicitly, else it
+        %   defaults to 16.
+        %
+        %   See also FEATURE
         height (1,1) {mustBeNumeric} = 16
+        
+        %SHAPE - Shape of the feature.
+        %   SHAPE is a string describing the shape of the feature. SHAPE can
+        %   be one of:
+        %     "GratingX", "GratingY", "GratingXY", "Triangle", "Circle", "Sphere",
+        %     "Pyramid", "RidgeX", "RidgeY", "WedgeX", "WedgeY", "Cone", "Custom"
+        %
+        %   The shape is chosen on construction and cannot be modified. On
+        %   construction, the shape can be chosen explicitly, else it
+        %   defaults to "Pyramid".
+        %
+        %   See also FEATURE
         shape string = "Pyramid"
         
     end
-    properties (SetAccess = private)
+    properties (GetAccess = public, SetAccess = private)
+        %X - x coordinates of the feature matrix.
+        %   X is a matrix giving the x coordinates of the FEATURE.
+        %
+        %   See also FEATURE
         X
+        
+        %Y - y coordinates of the feature matrix.
+        %   Y is a matrix giving the y coordinates of the FEATURE.
+        %
+        %   See also FEATURE
         Y
+        
+        %Z - Magnitude of the feature matrix.
+        %   Z is a matrix giving the magnitude of the FEATURE.
+        %
+        %   See also FEATURE
         Z
     end
     
@@ -121,10 +219,14 @@ classdef Feature
         end
         
         function obj = rotate(obj)
+            %ROTATE Rotates FEATURE object 90 degrees anticlockwise.
+            %   Function has no input
             obj.Z = rot90(obj.Z);
         end
         
         function plot(obj)
+            %PLOT Displays FEATURE object.
+            %   Function has no input
             mesh(obj.X,obj.Y,obj.Z)
             xlabel('x')
             ylabel('y')

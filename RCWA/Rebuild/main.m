@@ -2,46 +2,18 @@ clear all
 close all
 %%
 % TODO
-%
+% progressbar parfor
 % overarching parameter space prepare, with saving data
-% check 1D features
-% Averaging
-% resolution matching
-% More shapes
-% resize with interpolation
+% save data, to average later manually
+% 
+% resolution matching feature/surface
+% fix Ref trn medium auto permittivity
+% Auto break on conv check
 % Grating test
-% report RMS roughness
 % image field inside layer
 % check my saves on matlab file exchange
-% save data, to average later manually
-
-%%% Layer shape
-%%%
-%%% Features:
-%%% "GratingX"
-%%% "GratingY"
-%%% "GratingXY"
-%%% "Triangle"
-%%% "Circle" 2D Circle, 3D Cylinder
-%%% "Sphere" 3D Half sphere
-%%% "Pyramid" 3D Pyramid
-%%% "RidgeX" 3D Ridge X
-%%% "RidgeY" 3D Ridge Y
-%%% "WedgeX" 3D Wedge X
-%%% "WedgeY" 3D Wedge Y
-%%% "Cone" 3D Cone
-%%% "Custom" Custom .csv input
-
-%%% Surface:
-%%% Rough1
-%%% Rough2
-
-%     650
-%         Z = RD{3,1}; %650 %max 487
-%     700
-%         Z = RD{3,4}; %700 %max 1800, intermax 700
-%     730
-%         Z = RD{3,7}; %730 %max 213
+% maarten stuff
+% fix haze 4d figure 
 
 % FSC
 % layer               = cell2struct(...
@@ -64,15 +36,32 @@ close all
 %                         {0, 0, 0, 0, 7, 0};...
 %                         {0, 0, 0, 0, 50, 0}], {'material','L','shape','roughdim'}, 1);
 
-% randsurf = Surface(10000,512);
+% Maarten
+
+% layer               = cell2struct(...
+%                         [{'GaAs','Al03GaAs','InGaP','GaAs'};...
+%                         {100,200,100,5000};...
+%                         {a,0, 0, 0};...
+%                         {10, 0, 0, 0}], {'material','L','input','roughdim'}, 1);
+
+% Test
+% layer               = cell2struct(...
+%                         [{'GaAs','GaAs','Ag'};...
+%                         {500,200,1000};...
+%                         {a,0, 0};...
+%                         {20,0, 0};...
+%                         {7,0, 0}], {'material','L','input','roughdim','shape'}, 1);
+
+
+% randsurf = Surface(512,10000);
 % randsurf.addRoughsurf('mode','Artificial','hurst',1)
 % randsurf.listFeatures()
 % randsurf.placeFeatures()
 % randsurf.plot()
 
 % Maarten
-% surf_algaas=Surface(10000,512);
-% surf_oxide=Surface(10000,512);
+% surf_algaas=Surface(512,10000);
+% surf_oxide=Surface(512,10000);
 % 
 % surf_algaas.addFeature(Feature("maarten/AlGaAs_surface1_10um.csv",10000),1,1);
 % surf_oxide.addFeature(Feature("maarten/Oxide_surface1_10um.csv",10000),1,1);
@@ -87,9 +76,9 @@ close all
 % % surf_oxide.plot();
 
 
-for n=1:40
+%for n=1:40
 
-a=Surface(10000,512);
+a=Surface(512,10000);
 f_titan = Feature(round(512/2),5000,500,"Cone");
 f_giant = Feature(round(512/2.5),5000,450,"Cone");
 f_large = Feature(round(512/3.5),2500,400,"Cone");
@@ -104,6 +93,9 @@ a.addRandomFeatures(f_small,100,"PBC",true)
 
 a.placeFeatures("PBC",true, "mode", "merge");
 a.listFeatures()
+a.report()
+a.plot()
+a.resize(128,5000)
 a.plot()
 % b4 = Feature("Feature1_2500nm.csv",2500);
 % 
@@ -124,33 +116,18 @@ a.plot()
 %a.plot();
 %%
 
-% Maarten
-
-% layer               = cell2struct(...
-%                         [{'GaAs','Al03GaAs','InGaP','GaAs'};...
-%                         {100,200,100,5000};...
-%                         {a,0, 0, 0};...
-%                         {10, 0, 0, 0}], {'material','L','input','roughdim'}, 1);
-
-% Test
-% layer               = cell2struct(...
-%                         [{'GaAs','GaAs','Ag'};...
-%                         {500,200,1000};...
-%                         {a,0, 0};...
-%                         {20,0, 0};...
-%                         {7,0, 0}], {'material','L','input','roughdim','shape'}, 1);
+device.version = "3.0.2";
 
 % Daan paper
 layer               = cell2struct(...
                         [{'MgF2','ZnS','AlInP','GaAs','InGaP','Al03GaAs','InGaP','GaP','Ag'};...
-                        {94,44,25, 300, 110, 130, 50, 500, 3000};...
-                        {0, 0,0,0, 0, 0, 0, 0, a};...
-                        {0, 0,0,0, 0, 0, 0, 0, 40}], {'material','L','input','roughdim'}, 1);
+                        {94, 44, 25, 100, 110, 130, 50, 250, 3000};...
+                        {0, 0, 0, 0, 0, 0, 0, 0, 0};...
+                        {0, 0, 0, 0, 0, 0, 0, 0, 0}], {'material','L','input','roughdim'}, 1);
 
+wavelengthArray     = 350:10:900;
 
-wavelengthArray     = 850:10:900;
-
-layer               = import_permittivities(layer,wavelengthArray, 'plot_permfig', false);
+layer               = import_permittivities(layer,wavelengthArray, 'plot_permfig', true);
 
 % input wave
 input_wave.theta	= 8/360*2*pi;
@@ -158,7 +135,7 @@ input_wave.phi      = 0;
 input_wave.pTE      = 0.5;
 input_wave.pTM      = 0.5;
 
-% left and right media
+% left and right media %FIX THIS
 device.ref_medium	= "Air";
 device.trn_medium	= "Air";
 device.eps_ref      = 1;
@@ -183,12 +160,12 @@ device.truncfig     = false;
 % Calculate field in all rough layers
 device.calcAllRough = false;
 
-% Convergence check
+% Convergence check, BREAK WHEN CONVERGED
 device.checkConverg = false;
-device.Hmax         = 9;
+device.Hmax         = 3;
 
 % Rough
-device.plotSurf     = false;
+device.plotSurf     = true;
 device.reverse      = true;
 device.recalcRoughL = true;
 
@@ -199,13 +176,10 @@ device.tolerance    = 5e-3;
 
 %%
 [device, layer, input_wave, Sz] = RCWA(layer,device,input_wave,wavelengthArray);
-filename = "overnight/test"+n;
-save(filename)
-clearvars -except n
-close all
-end
+% filename = "overnight/test"+n;
+% save(filename)
+% clearvars -except n
+% close all
+% end
 %%
-%h = RCWA_plot(layer, device, wavelengthArray, Sz);
-
-%%
-%plot(wavelengthArray,squeeze(sum(Sz(:,8,:),1)))
+h = RCWA_plot(layer, device, wavelengthArray, Sz);

@@ -33,7 +33,7 @@ for i=1:numel(layer)
             if device.plotSurf
                 figure
                 mesh(sum(Z .* reshape(layer(i).L,1,1,[]),3))
-                colormap jet
+                title("Rough "+layer(i).material)
             end
             
         else

@@ -63,8 +63,8 @@ end
 
 if device.checkConverg
     figure
-    plot(R)
-    xticklabels(string(wavelengthArray))
+    plot(wavelengthArray,R)
+    %xticklabels(string(wavelengthArray))
     xlabel("Wavelength (nm)")
     ylabel("Reflectance (a.u.)")
     legend(string(harmArray.^2)+' Harmonics (excl. trunc)','location','eastoutside')

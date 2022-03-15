@@ -106,14 +106,12 @@ x_grid=repmat(lam0_r',1,N);
 n(end+1)="R";
 n(end+1)="T";
 
-colororder(hsv(8))
-
+for i = 1:N
+    jsc(i) = Jsc(Sz(:,i)', lam0_r);
+end
 area(x_grid,Sz,'EdgeColor','none')
-% hold on
-% plot(lam0_r,real(eps_lab{1})/max(real(eps_lab{1})))
-% plot(lam0_r,imag(eps_lab{1})/max(real(eps_lab{1})))
-legend(n,'Location','eastoutside')
-%ylim([-0.5,1.5])
+legstring=n + " Jsc: " + compose('%0.2f',string(jsc)) + " mA/cm^2";
+leg1 = legend(legstring,'Location','eastoutside','FontSize',12);
 xlim([lab1-0.1*(lab2-lab1),lab2+0.1*(lab2-lab1)])
 end
 

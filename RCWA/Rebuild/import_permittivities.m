@@ -43,7 +43,7 @@ if options.plot_permfig
     nexttile
     hold on
     for i=1:length(ip)
-        plot(lam0_r,ip{i}(:,1))
+        plot(lam0_r,ip{i}(:,1),"LineWidth",2)
     end
     xlabel('Wavelength (nm)')
     ylabel('Refractive index')
@@ -52,7 +52,7 @@ if options.plot_permfig
     nexttile
     hold on
     for i=1:length(eps_lab)
-        plot(lam0_r,ip{i}(:,2))
+        plot(lam0_r,ip{i}(:,2),"LineWidth",2)
     end
     xlabel('Wavelength (nm)')
     ylabel('Extinction coefficient')

@@ -1,25 +1,98 @@
 classdef Surface < handle
+    %SURFACE Produces a surface, to which features can be added.
+    %   s = SURFACE(r), if r is a scalar, produces a Surface with resolution r
+    %   and default size.
+    %
+    %   s = SURFACE(r, sz) specifies the size sz of the Surface in nanometers.
+    %
+    %   Surface properties:
+	%              surfMatrix - SURFACE grid matrix.
+    %                Features - Feature struct list.
+    %                surfsize - Size of the SURFACE in nanometers.
+    %                 surfres - Resolution of the SURFACE in pixels.
+    %                   surfx - x coordinates of the surface vector.
+    %                   surfy - y coordinates of the surface vector.
+    %                   surfX - x coordinates of the surface matrix.
+    %                   surfY - y coordinates of the surface matrix.
+    %
+    %	Surface methods:
+    %              addFeature - Adds Feature object to the SURFACE.
+    %            listFeatures - List of Features that have been added.
+    %                    plot - Displays current SURFACE grid.
+    %            clearSurface - Clears current SURFACE grid.
+    %            placeFeature - Places specified Feature on the grid.
+    %                  rotate - Rotates SURFACE grid.
+    %       addRandomFeatures - Adds specified Feature to random locations.
+    %                  hscale - Scales current SURFACE grid.
+    %            addRoughsurf - Adds specified rough surface to SURFACE grid.
+    %           placeFeatures - Place selected Features on the SURFACE grid.
+    
+    %   Copyright 2022 Sander Meis.
     
     properties
+        %SURFMATRIX - Magnitude of the surface matrix.
+        %   surfMatrix is a matrix giving the magnitude of the SURFACE.
+        %
+        %   See also SURFACE
         surfMatrix
+        
+        %FEATURES - List of features that have been added to the SURFACE.
+        %   Features is a list of structs .
+        %
+        %   See also SURFACE
         Features (1,:) struct
     end
-    properties (SetAccess = immutable)
+    properties (SetAccess = protected)
+        %SURFSIZE - Size of the SURFACE in nanometers.
+        %   Currently Surfaces can only be square, so SURFSIZE represents both
+        %   the x and y length. 
+        %   On construction, the size can be chosen explicitly, else it
+        %   defaults to 10000.
+        %
+        %   See also SURFACE
         surfsize = 10000
+        
+        %SURFRES - Resolution of the SURFACE in pixels.
+        %   Currently Surfaces can only be square, so SURFRES represents both
+        %   the x and y resolution. 
+        %   On construction, the resolution can be chosen explicitly, else it
+        %   defaults to 512.
+        %
+        %   See also SURFACE
         surfres = 512
+        
+        %SURFX - x coordinates vector of the Surface.
+        %   SURFX is a vector giving the x coordinates of the SURFACE.
+        %
+        %   See also SURFACE
         surfx
+        
+        %SURFY - y coordinates vector of the Surface.
+        %   SURFY is a vector giving the y coordinates of the SURFACE.
+        %
+        %   See also SURFACE
         surfy
+        
+        %SURFX - x coordinates matrix of the Surface.
+        %   SURFX is a matrix giving the x coordinates of the SURFACE.
+        %
+        %   See also SURFACE
         surfX
+        
+        %SURFY - y coordinates matrix of the Surface.
+        %   SURFY is a matrix giving the y coordinates of the SURFACE.
+        %
+        %   See also SURFACE
         surfY
     end
     
     methods
         function obj = Surface(varargin)
             if nargin==1
-                obj.surfsize = varargin{1};
+                obj.surfres = varargin{1};
             elseif nargin>=2
-                obj.surfsize = varargin{1};
-                obj.surfres = varargin{2};
+                obj.surfres = varargin{1};
+                obj.surfsize = varargin{2};
             end
             obj.surfx = linspace(0, obj.surfsize, obj.surfres);
             obj.surfy = linspace(0, obj.surfsize, obj.surfres);
@@ -36,6 +109,15 @@ classdef Surface < handle
                 ypos (1,:) {mustBeInteger}
                 PBC logical = true
             end
+            %ADDFEATURE Adds Feature object to the SURFACE.
+            %   Input is ADDFEATURE(Feature, xpos, ypos, PBC)
+            %
+            %   Feature - Feature object.
+            %   xpos    - X grid position(s) of feature(s)
+            %   ypos    - Y grid position(s) of feature(s)
+            %   PBC     - Periodic boundary conditions (0 or 1)
+            %
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             if (fobj.resolution<=obj.surfres)
                 if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
                     if isempty(obj.Features)
@@ -58,6 +140,10 @@ classdef Surface < handle
         
         
         function listFeatures(obj)
+            %LISTFEATURES Prints a list with all Features.
+            %   Function has no input.
+            %
+            %   See also: REPORT, ADDFEATURE
             if ~isempty(obj.Features)
                 fprintf("Surface ""%s"" consists of these Features:\n",inputname(1))
                 fprintf("--------------------\n")
@@ -72,29 +158,32 @@ classdef Surface < handle
                     fprintf("--------------------\n")
                 end
             else
-                fprintf("Surface has no features")
+                warning("Surface has no features")
             end
         end
         
         
-        %         function report(obj)
-        %             if ~isempty(obj.Features)
-        %                 fprintf("Surface ""%s"" consists of these Features:\n",inputname(1))
-        %                 fprintf("--------------------\n")
-        %                 for i=1:numel(obj.Features)
-        %                     %number
-        %                     % coordinates
-        %                     % type
-        %                     nr = length(obj.Features(i).xpos);
-        %                     fprintf("--------------------\n")
-        %                     fprintf("Feature %u\nType: ""%s""; Number: %u; Number density: %d num/um^2\nCoordinates: \n", i, obj.Features(i).fobj.shape, nr, nr/(obj.surfsize/1000)^2)
-        %                     fprintf("Copy %u: (%u, %u)\n",[1:length(obj.Features(i).xpos); obj.Features(i).xpos; obj.Features(i).ypos])
-        %                     fprintf("--------------------\n")
-        %                 end
-        %             else
-        %                 fprintf("Surface has no features")
-        %             end
-        %         end
+        function report(obj)
+            %REPORT Reports on some surface parameters.
+            %   Function has no input. Prints the Variance, RMS roughness,
+            %   Skewness, Kurtosis
+            %
+            %
+            %   See also: CLEARFEATURES, CLEARSURFACE, ADDFEATURE
+            fprintf("Surface ""%s"" Report:\n",inputname(1))
+            fprintf("--------------------\n")
+            meansurf = mean(obj.surfMatrix(:));
+            %Mean roughness
+            fprintf("meansurf: %d\n",meansurf)
+            var = mean((obj.surfMatrix(:)-meansurf).^2);
+            fprintf("var: %d\n",var)
+            rms = sqrt(mean((obj.surfMatrix(:)-meansurf).^2));
+            fprintf("rms: %d\n",rms)
+            skew = mean((obj.surfMatrix(:)-meansurf).^3./rms.^3);
+            fprintf("skew: %d\n",skew)
+            kurt = mean((obj.surfMatrix(:)-meansurf).^4./rms.^4);
+            fprintf("kurt: %d\n",kurt)
+        end
         
         
         function placeFeature(obj,i,xpos,ypos,PBC,mode)
@@ -104,8 +193,20 @@ classdef Surface < handle
                 xpos
                 ypos
                 PBC logical = true
-                mode string = "add" %add, replace, merge
+                mode string = "add"
             end
+            %PLACEFEATURE Places all Features on the grid.
+            %   Input is PLACEFEATURE(i, xpos, ypos, options)
+            %
+            %   i       - Feature list number.
+            %   xpos    - X grid position(s) of feature(s)
+            %   ypos    - Y grid position(s) of feature(s)
+            %
+            %   Where options can be the following string:
+            %   'PBC'   - Periodic boundary conditions (0 or 1).
+            %   'mode'  - "add", "merge" or "replace".
+            %
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             
             nx = obj.Features(i).fobj.resolution;
             ny = obj.Features(i).fobj.resolution;
@@ -148,6 +249,14 @@ classdef Surface < handle
                 options.PBC logical = true
                 options.mode string = "add"
             end
+            %PLACEFEATURES Places all Features on the grid.
+            %   Input is PLACEFEATURES(options)
+            %
+            %   Where options can be the following string:
+            %   'PBC'    	- Periodic boundary conditions (0 or 1).
+            %   'mode'      - "add", "merge" or "replace".
+            %
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             for i=1:numel(obj.Features)
                 x = obj.Features(i).xpos;
                 y = obj.Features(i).ypos;
@@ -164,6 +273,16 @@ classdef Surface < handle
                 options.PBC logical = true
                 %options.mode string = "add"
             end
+            %ADDRANDOMFEATURES Adds a Feature object with random coordinates to the SURFACE a certain number of times.
+            %   Input is ADDRANDOMFEATURES(Feature, number, options)
+            %
+            %   Feature     - Feature object.
+            %   number      - How many features are to be added.
+            %
+            %   Where option can be the following string:
+            %   'PBC'    	- Periodic boundary conditions (0 or 1).
+            %
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             if ~options.PBC
                 nx = fobj.resolution;
                 ny = fobj.resolution;
@@ -172,35 +291,130 @@ classdef Surface < handle
                 
                 xpos = randi([1,maxx],1,number);
                 ypos = randi([1,maxy],1,number);
-                %placeFeature(obj,i,x,y,options.PBC,options.mode)
-                addFeature(obj,fobj,xpos,ypos,options.PBC)
-                
-            else
-                
+                %placeFeature(obj,i,x,y,options.PBC,options.mode);
+                addFeature(obj,fobj,xpos,ypos,options.PBC);
+            else  
                 xpos = randi([1,obj.surfres],1,number);
                 ypos = randi([1,obj.surfres],1,number);
-                %placeFeature(obj,i,x,y,options.PBC,options.mode)
-                addFeature(obj,fobj,xpos,ypos,options.PBC)
+                %placeFeature(obj,i,x,y,options.PBC,options.mode);
+                addFeature(obj,fobj,xpos,ypos,options.PBC);
+            end
+        end
+        
+        %%% Placeholder
+        function addRandomFeaturesMC(obj,fobj,tarRMS,number,options)
+            arguments
+                obj
+                fobj
+                tarRMS
+                number
+                options.PBC logical = true
+                %options.mode string = "add"
+            end
+            if ~options.PBC
+                nx = fobj.resolution;
+                ny = fobj.resolution;
+                maxx = size(obj.surfMatrix,1)-nx+1;
+                maxy = size(obj.surfMatrix,2)-ny+1;
+                
+                xpos = randi([1,maxx],1,number);
+                ypos = randi([1,maxy],1,number);
+                %placeFeature(obj,i,x,y,options.PBC,options.mode);
+                addFeature(obj,fobj,xpos,ypos,options.PBC);
+                
+            else
+                for i=1:number
+                xpos = randi([1,obj.surfres],1,number);
+                ypos = randi([1,obj.surfres],1,number);
+                %placeFeature(obj,i,x,y,options.PBC,options.mode);
+                surfmean=mean(obj.surfMatrix(:));
+                rms=sqrt(mean((obj.surfMatrix(:)-surfmean).^2));
+                delta_rms=tarRMS-rms;
+                if delta_rms>0
+                    addFeature(obj,fobj,xpos,ypos,options.PBC);
+                end
+                end
             end
         end
         
         
         function clearSurface(obj)
+            %CLEARSURFACE Clears the surface, this does not clear the Features.
+            %   Function has no input
+            %
+            %   See also: CLEARFEATURES, ADDFEATURE, PLACEFEATURE
             obj.surfMatrix = zeros(obj.surfsize*obj.surfres,obj.surfsize*obj.surfres);
         end
         
         
+        function clearFeatures(obj)
+            %CLEARFEATURES Clears all Features, this does not clear the surface matrix.
+            %   Function has no input
+            %
+            %   See also: CLEARSURFACE, ADDFEATURE, PLACEFEATURE
+            obj.Features = struct([]);
+        end
+        
+        
+        function clearAll(obj)
+            %CLEARALL Clears the surface and Features.
+            %   Function has no input
+            %
+            %   See also: CLEARFEATURES, CLEARSURFACE, ADDFEATURE
+            clearSurface(obj)
+            clearFeatures(obj)
+        end
+        
+        
+        function resize(obj, surfres_new, surfsize_new)
+            %RESIZE Resamples SURFACE to new resolution and size.
+            %   Input is RESIZE(res, size)
+            %
+            %   res     - New resolution.
+            %   size    - New size in nm.
+            %
+            %   See also: HSCALE, PLACEFEATURE, ADDRANDOMFEATURES
+            clearFeatures(obj)
+            surfx_new = linspace(0, surfsize_new, surfres_new);
+            surfy_new = linspace(0, surfsize_new, surfres_new);
+            [surfX_new, surfY_new] = meshgrid(surfx_new, surfy_new);
+            F = griddedInterpolant({obj.surfx, obj.surfy}, obj.surfMatrix);
+            obj.surfMatrix = F({surfx_new, surfy_new});
+            obj.surfres = surfres_new;
+            obj.surfsize = surfsize_new;
+            obj.surfx = surfx_new;
+            obj.surfy = surfy_new;
+            obj.surfX = surfX_new;
+            obj.surfY = surfY_new;
+        end
+        
+        
         function hscale(obj,h)
-            obj.surfMatrix = obj.surfMatrix*h/max(obj.surfMatrix(:));
+            %HSCALE Rescales the SURFACE.
+            %   Input is HSCALE(h)
+            %
+            %   h       - New height.
+            %
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
+            omax = max(obj.surfMatrix(:));
+            if omax>0
+                obj.surfMatrix = h * obj.surfMatrix/omax;
+            else
+                warning("Can't rescale empty surface")
+            end
         end
         
         
         function plot(obj)
+            %PLOT Displays SURFACE object.
+            %   Function has no input
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             figure
             mesh(obj.surfX, obj.surfY, obj.surfMatrix)
             title("Surface Architecture")
             xlabel("X (nm)")
-            xlabel("Y (nm)")
+            ylabel("Y (nm)")
+            zlabel("Height (nm)")
         end
         
         
@@ -215,7 +429,19 @@ classdef Surface < handle
                 options.x (1,1) {mustBeInteger} = 1
                 options.y (1,1) {mustBeInteger} = 1
             end
-            
+            %ADDROUGHSURF Adds a rough layer to the SURFACE as a Feature object.
+            %   Input is ADDROUGHSURF(options)
+            %
+            %   Where options can be the following strings:
+            %   'PBC'    	- Periodic boundary conditions (0 or 1).
+            %   'mode'      - "Rough" or "Artificial".
+            %   'sigma'  	- Standard deviation or RMS roughness (only for "Artificial").
+            %   'hurst'  	- Fractal parameter.
+            %   'height'    - Height (only for "Rough").
+            %   'x'         - Feature x coordinate.
+            %   'y'         - Feature y coordinate.
+            %
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             if options.mode == "Artificial"
                 [Z , ~ , ~] = artificial_surf(options.sigma, options.hurst, obj.surfsize, obj.surfres, obj.surfres);
             elseif options.mode == "Rough"
@@ -228,6 +454,9 @@ classdef Surface < handle
         
         
         function obj = rotate(obj)
+            %ROTATE Rotates SURFACE object 90 degrees anticlockwise.
+            %   Function has no input
+            %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             obj.surfMatrix = rot90(obj.surfMatrix);
         end
         
