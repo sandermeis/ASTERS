@@ -109,7 +109,7 @@ classdef Surface < handle
                 ypos (1,:) {mustBeInteger}
                 PBC logical = true
             end
-            %ADDFEATURE Adds Feature object to the SURFACE.
+            %ADDFEATURE Adds Feature object to the Surface.
             %   Input is ADDFEATURE(Feature, xpos, ypos, PBC)
             %
             %   Feature - Feature object.
@@ -273,7 +273,7 @@ classdef Surface < handle
                 options.PBC logical = true
                 %options.mode string = "add"
             end
-            %ADDRANDOMFEATURES Adds a Feature object with random coordinates to the SURFACE a certain number of times.
+            %ADDRANDOMFEATURES Adds a Feature object with random coordinates to the Surface a certain number of times.
             %   Input is ADDRANDOMFEATURES(Feature, number, options)
             %
             %   Feature     - Feature object.
@@ -367,7 +367,7 @@ classdef Surface < handle
         
         
         function resize(obj, surfres_new, surfsize_new)
-            %RESIZE Resamples SURFACE to new resolution and size.
+            %RESIZE Resamples Surface to new resolution and size.
             %   Input is RESIZE(res, size)
             %
             %   res     - New resolution.
@@ -390,7 +390,7 @@ classdef Surface < handle
         
         
         function hscale(obj,h)
-            %HSCALE Rescales the SURFACE.
+            %HSCALE Rescales the Surface.
             %   Input is HSCALE(h)
             %
             %   h       - New height.
@@ -406,7 +406,7 @@ classdef Surface < handle
         
         
         function plot(obj)
-            %PLOT Displays SURFACE object.
+            %PLOT Displays Surface object.
             %   Function has no input
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             figure
@@ -429,7 +429,7 @@ classdef Surface < handle
                 options.x (1,1) {mustBeInteger} = 1
                 options.y (1,1) {mustBeInteger} = 1
             end
-            %ADDROUGHSURF Adds a rough layer to the SURFACE as a Feature object.
+            %ADDROUGHSURF Adds a rough layer to the Surface as a Feature object.
             %   Input is ADDROUGHSURF(options)
             %
             %   Where options can be the following strings:
@@ -454,7 +454,7 @@ classdef Surface < handle
         
         
         function obj = rotate(obj)
-            %ROTATE Rotates SURFACE object 90 degrees anticlockwise.
+            %ROTATE Rotates Surface object 90 degrees anticlockwise.
             %   Function has no input
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             obj.surfMatrix = rot90(obj.surfMatrix);

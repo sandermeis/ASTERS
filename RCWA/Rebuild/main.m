@@ -116,7 +116,7 @@ a.plot()
 %a.plot();
 %%
 
-device.version = "3.0.2";
+device.version = "3.0.3";
 
 % Daan paper
 layer               = cell2struct(...

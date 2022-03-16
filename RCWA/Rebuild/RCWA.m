@@ -6,7 +6,7 @@ function [device,layer,input_wave,Sz] = RCWA(layer,device,input_wave,wavelengthA
         wavelengthArray (1,:) {mustBeNumeric,mustBeReal}
     end
     
-c = onCleanup(@() progressBar(1));
+c = onCleanup(@() progressBar());
 
 if device.checkConverg
     harmArray = 1:2:device.Hmax;
@@ -35,6 +35,10 @@ elseif device.useSurfaceSize
 end
 
 lenHarmArray = length(harmArray);
+lenWavelengthArray = length(wavelengthArray);
+
+progressTick = progressBar(lenWavelengthArray*lenHarmArray);
+
 
 for iHarm = 1:lenHarmArray
     
@@ -46,15 +50,13 @@ for iHarm = 1:lenHarmArray
     input_wave          = get_sinc(input_wave,device);
     layer               = build_layerstack(layer,device);
     
-    lenWavelengthArray = length(wavelengthArray); 
     Sz = zeros(device.num_H,~device.calcAllRough*numel(layer)+device.calcAllRough*numel([layer.L])+2,lenWavelengthArray);
 
-    for iWavelength = 1:lenWavelengthArray      
-        progressBar(lenWavelengthArray*lenHarmArray)
+    parfor iWavelength = 1:lenWavelengthArray      
         
-        layer = apply_convolution(layer,device,iWavelength);
-        [layer,device] = calc_K(layer,device,input_wave,iWavelength);
-        Sz(:,:,iWavelength) = RCWA_transmittance(layer,device,input_wave);       
+        Sz(:,:,iWavelength) = RCWA_transmittance(layer,device,input_wave,iWavelength);
+
+        progressTick();
     end
 
 R(:,iHarm) = squeeze(sum(Sz(:,end-1,:),1));
@@ -73,42 +75,51 @@ end
 end
 
 
-function progressBar(i)
-
+function progressOut = progressBar(varargin)
 persistent iters wb tocArray;
+if nargin==1
+    i=varargin{1};
 
-if isempty(wb)
-    wb = waitbar(0,'Initializing...');
-    iters = 1;
-    tic;
-    tocArray = 0;
-elseif iters >= i
+    D = parallel.pool.DataQueue;
+    afterEach(D, @updateWaitbar);
+    progressOut = @progressTick;
+elseif nargin==0
     close(wb);
     delete(wb);
     toc
     clear wb iters tocArray
-else
-
-tocArray(end+1) = toc;
-
-iterRemaining = i-iters;
-
-if iters > 50
-    t = tocArray(end-50:end);
-else
-    t = tocArray;
 end
 
-timeLeft = string(seconds(iterRemaining*mean(diff(t))),'hh:mm:ss');
+    function updateWaitbar(~)
+        if isempty(wb)
+            wb = waitbar(0,'Initializing...');
+            iters = 1;
+            tic;
+            tocArray = 0;
+        else
+            tocArray(end+1) = toc;
 
-waitBarDuration = iters/i;
-waitBarString = {'Iteration ' + string(iters) + '/' + string(i),...
+            iterRemaining = i-iters;
+
+            if iters > 10
+                t = tocArray(end-10:end);
+            else
+                t = tocArray;
+            end
+
+            timeLeft = string(seconds(iterRemaining*mean(diff(t))),'hh:mm:ss');
+
+            waitBarDuration = iters/i;
+            waitBarString = {'Iteration ' + string(iters) + '/' + string(i),...
                 'Estimated time remaining: ' + timeLeft};
 
-waitbar(waitBarDuration,wb,waitBarString)
+            waitbar(waitBarDuration,wb,waitBarString)
 
-iters = iters + 1;
+            iters = iters + 1;
+        end
+    end
 
-end
-
+    function progressTick()
+        send(D, []);
+    end
 end

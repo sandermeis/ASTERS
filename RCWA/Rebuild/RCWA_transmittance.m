@@ -1,4 +1,7 @@
-function Sz = RCWA_transmittance(layer,device,input_wave)
+function Sz = RCWA_transmittance(layer,device,input_wave,iWavelength)
+
+layer = apply_convolution(layer,device,iWavelength);
+[layer,device] = calc_K(layer,device,input_wave,iWavelength);
 
 A1 = -1i/device.mu_ref*(device.Kz_ref\device.Kx)*device.Ky;
 A2 = -1i/device.mu_ref*(device.Kz_ref\(device.Ky*device.Ky+device.Kz_ref*device.Kz_ref));
