@@ -1,20 +1,23 @@
-function layer = apply_convolution(layer,device,iter)
+function layer = apply_convolution(layer, param, iter)
+
+
 
 for i = 1:numel(layer)
     
-    eps = layer(i).permittivities(iter);
-    layer(i).geometry.eps = eps*layer(i).geometry.eps_struc;
+    eps = layer(i).permittivities(param.wavelengthArray(iter));% wl
+    layer(i).geometry.eps = eps * layer(i).geometry.eps_struc;
     
     if layer(i).input~=0
         if i==1
-            epsprev = 1; %Air
+            epsprev = 1; %Air %Adapt for trn/ref
         else
-            epsprev = layer(i-1).permittivities(iter);
+            epsprev = layer(i-1).permittivities(param.wavelengthArray(iter));
         end
         layer(i).geometry.eps(layer(i).geometry.eps_struc==0) = epsprev;
-        layer(i).geometry.eps = conv_mat(layer(i).geometry.eps,device.P,device.Q);
-        layer(i).geometry.mu = layer(i).geometry.mu_struc(device.tr_ind,device.tr_ind);
-        layer(i).geometry.eps = layer(i).geometry.eps(device.tr_ind,device.tr_ind,:);
+        layer(i).geometry.eps = conv_mat(layer(i).geometry.eps,param.P,param.Q);
+        layer(i).geometry.mu_struc = eye(param.P*param.Q);
+        layer(i).geometry.mu = layer(i).geometry.mu_struc(param.tr_ind,param.tr_ind);
+        layer(i).geometry.eps = layer(i).geometry.eps(param.tr_ind,param.tr_ind,:);
     end
 end
 end

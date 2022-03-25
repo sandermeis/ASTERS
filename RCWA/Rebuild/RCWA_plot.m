@@ -1,12 +1,12 @@
-function h = RCWA_plot(layer,device,lam0_r,Sz)
+function h = RCWA_plot(layer, param, wavelengthArray, Sz)
 
-n = fixLayerString(layer, device);
+n = fixLayerString(layer, param);
 
-h(1) = tile_harmonics4d(Sz, lam0_r, n, device.P, device.Q, device.tr_ind);
+h(1) = tile_harmonics4d(Sz, wavelengthArray, n, param.P, param.Q, param.tr_ind);
 
-h(2) = plot_results(squeeze(sum(Sz,1)).', lam0_r, n);
+h(2) = plot_results(squeeze(sum(Sz,1)).', wavelengthArray, n);
 
-h(3) = plothaze(Sz, lam0_r, n);
+h(3) = plothaze(Sz, wavelengthArray, n);
 
 end
 
@@ -16,17 +16,17 @@ end
 % h(2) = tile_harmonics(Sz,string({layer.material}));
 
 
-function n = fixLayerString(layer,device)
+function n = fixLayerString(layer,param)
 n = string({layer.material});
-if device.calcAllRough
+if param.calcAllRough
     for i = 1:numel(layer)
         
         for j = 1:numel(layer(i).L)
             if numel(layer(i).L)>1
                 if i==1
-                    n2(j,i) = "Rough "+device.ref_medium+"/"+layer(i).material+" ("+string(j)+") "+string(layer(i).L(j))+" nm";
+                    n2(j,i) = "Rough "+param.ref_medium+"/"+layer(i).material+" ("+string(j)+") "+string(layer(i).L(j))+" nm";
                 elseif i==numel(layer)
-                    n2(j,i) = "Rough "+layer(i).material+"/"+device.trn_medium+" ("+string(j)+") "+string(layer(i).L(j))+" nm";
+                    n2(j,i) = "Rough "+layer(i).material+"/"+param.trn_medium+" ("+string(j)+") "+string(layer(i).L(j))+" nm";
                 else
                     n2(j,i) = "Rough "+layer(i-1).material+"/"+layer(i).material+" ("+string(j)+") "+string(layer(i).L(j))+" nm";
                 end
@@ -44,7 +44,7 @@ else
     sh_shift(:, end) = 0;
     
     if shape(1)~=0
-        n(1)="Rough "+device.ref_medium+"/"+n(1);
+        n(1)="Rough "+param.ref_medium+"/"+n(1);
         sh(1)=0;
         n(sh)="Rough "+n(sh_shift)+"/"+n(sh);
     else
@@ -55,7 +55,7 @@ end
 end
 
 
-function h = plothaze(Sz, lam0_r, n)
+function h = plothaze(Sz, wavelengthArray, n)
 
 % why abs???
 centralH = squeeze(abs(Sz((end+1)/2,:,:)));
@@ -68,7 +68,7 @@ h = figure;
 colororder(hsv(8))
 for i=1:size(haze,1)
     hold on
-    plot(lam0_r,abs(haze(i,:)).','LineWidth',2)
+    plot(wavelengthArray,abs(haze(i,:)).','LineWidth',2)
 end
 xlabel('Wavelength (nm)')
 ylabel('Haze')
@@ -77,9 +77,9 @@ legend(n,'location','eastoutside')
 
 %%
 % h(2) = figure;
-% plot(lam0_r,Rtot,'Marker', 'o')
+% plot(wavelengthArray,Rtot,'Marker', 'o')
 % hold on
-% plot(lam0_r,haze,'Marker', 'o')
+% plot(wavelengthArray,haze,'Marker', 'o')
 
 % load('RD.mat','RD');
 % plot(RD{2,7}(11:141),RD{2,8}(11:141),'Marker', 'o')
@@ -88,26 +88,26 @@ legend(n,'location','eastoutside')
 % xlabel("Wavelength (nm)")
 % ylabel("Absorption (a.u.)")
 % legend(["R_{RCWA}","Haze_{RCWA}","R_{measured}","Haze_{measured}"])
-% xlim([lam0_r(1), lam0_r(end)])
+% xlim([wavelengthArray(1), wavelengthArray(end)])
 
 end
 
 
-function h = plot_results(Sz, lam0_r, n)
+function h = plot_results(Sz, wavelengthArray, n)
 
 h = figure;
-lab1 = lam0_r(1);
-lab2 = lam0_r(end);
+lab1 = wavelengthArray(1);
+lab2 = wavelengthArray(end);
 
 N=size(Sz,2);
 
-x_grid=repmat(lam0_r',1,N);
+x_grid=repmat(wavelengthArray',1,N);
 
 n(end+1)="R";
 n(end+1)="T";
 
 for i = 1:N
-    jsc(i) = Jsc(Sz(:,i)', lam0_r);
+    jsc(i) = Jsc(Sz(:,i)', wavelengthArray);
 end
 area(x_grid,Sz,'EdgeColor','none')
 legstring=n + " Jsc: " + compose('%0.2f',string(jsc)) + " mA/cm^2";
@@ -116,7 +116,7 @@ xlim([lab1-0.1*(lab2-lab1),lab2+0.1*(lab2-lab1)])
 end
 
 
-function h = tile_harmonics4d(Sz, lam0_r, n, P, Q, tr_ind)
+function h = tile_harmonics4d(Sz, wavelengthArray, n, P, Q, tr_ind)
 
 n = [n, "R", "T"];
 h = figure;
@@ -125,7 +125,7 @@ cmax=max(Sz(:));
 cmin=0;%min(Sz(:));
 a = repair_harmonics(Sz,P,Q,tr_ind);
 
-[X,Y,Z] = ndgrid(-((P-1)/2):((P-1)/2),-((Q-1)/2):((Q-1)/2),lam0_r);
+[X,Y,Z] = ndgrid(-((P-1)/2):((P-1)/2),-((Q-1)/2):((Q-1)/2),wavelengthArray);
 
 for i=1:size(Sz,2)
 

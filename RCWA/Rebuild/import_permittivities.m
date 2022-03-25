@@ -1,63 +1,36 @@
-function layer = import_permittivities(layer,lam0_r,options)
-    arguments
-        layer (:,1) struct
-        lam0_r (1,:) {mustBeNumeric,mustBeReal}
-        options.plot_permfig logical = false
-    end
-    
-lab1=lam0_r(1);
-lab2=lam0_r(end);
-
-for i=1:numel(layer)
-    mat = layer(i).material;
-    file_name = "refractive_indices/"+mat+".csv";
-    x{i} = csvread(file_name);
-    
-    warning('off','backtrace')
-    % check for range of input wavelengths
-    if isempty(find(x{i}(:,1)==lab1,1))
-        if lab1<x{i}(:,1)
-            warning('Requested starting wavelength (%.2f) not in range of %s data. Extrapolating',lab1,mat)
-        else
-            warning('Requested starting wavelength (%.2f) not in %s data. Interpolating',lab1,mat)
-        end
-    elseif isempty(find(x{i}(:,1)==lab2,1))
-        if lab2>x{i}(:,1)
-            warning('Requested ending wavelength (%.2f) not in range of %s data. Extrapolating',lab2,mat)
-        else
-            warning('Requested ending wavelength (%.2f) not in %s data. Interpolating',lab1,mat)
-        end
-    end
-    
-
-    ip{i}=interp1(x{i}(:,1),x{i}(:,2:3),lam0_r,'linear','extrap');
-    eps_lab{i}=(ip{i}(:,1)-1i*ip{i}(:,2)).^2;
-  
+function [eps_lab] = import_permittivities(materials)%, wl)
+arguments
+    materials (1,:) cell
+%     wl (1,:) cell
 end
 
-[layer.permittivities]=deal(eps_lab{:});
+eps_lab = cell(size(materials));
 
-if options.plot_permfig
-    t = tiledlayout(1,2);
-    title(t,'Material properties of layer stack')
-    nexttile
-    hold on
-    for i=1:length(ip)
-        plot(lam0_r,ip{i}(:,1),"LineWidth",2)
-    end
-    xlabel('Wavelength (nm)')
-    ylabel('Refractive index')
-    xlim([lab1,lab2])
-    
-    nexttile
-    hold on
-    for i=1:length(eps_lab)
-        plot(lam0_r,ip{i}(:,2),"LineWidth",2)
-    end
-    xlabel('Wavelength (nm)')
-    ylabel('Extinction coefficient')
-    xlim([lab1,lab2])
-    legend(string({layer.material}),'location','eastoutside');
+for i=1:numel(materials)
+%     wavelengthArray = wl{i};
+    mat = materials{i};
+    file_name = "refractive_indices/"+mat+".csv";
+    x = csvread(file_name);
+
+%     warning('off','backtrace')
+%     % check for range of input wavelengths
+%     if isempty(find(x(:,1)==wavelengthArray(1),1))
+%         if wavelengthArray(1)<x(:,1)
+%             warning('Requested starting wavelength (%.2f) not in range of %s data. Extrapolating',wavelengthArray(1),mat)
+%         else
+%             warning('Requested starting wavelength (%.2f) not in %s data. Interpolating',wavelengthArray(1),mat)
+%         end
+%     elseif isempty(find(x(:,1)==wavelengthArray(end),1))
+%         if wavelengthArray(end)>x(:,1)
+%             warning('Requested ending wavelength (%.2f) not in range of %s data. Extrapolating',wavelengthArray(end),mat)
+%         else
+%             warning('Requested ending wavelength (%.2f) not in %s data. Interpolating',wavelengthArray(1),mat)
+%         end
+%     end
+    eps_lab{i} = griddedInterpolant(x(:,1),x(:,4));
+    %ip = interp1(x(:,1), x(:,2:3), wavelengthArray, 'linear', 'extrap');
+    %eps_lab{i} = (ip(:,1)-1i*ip(:,2)).^2;
+
 end
 
 end

@@ -1,99 +1,114 @@
-function Sz = RCWA_transmittance(layer,device,input_wave,iWavelength)
+function Sz = RCWA_transmittance(layer, param)
 
-layer = apply_convolution(layer,device,iWavelength);
-[layer,device] = calc_K(layer,device,input_wave,iWavelength);
+Sz = zeros(param.num_H,~param.calcAllRough*numel(layer)+param.calcAllRough*numel([layer.L])+2,numel(param.wavelengthArray));
 
-A1 = -1i/device.mu_ref*(device.Kz_ref\device.Kx)*device.Ky;
-A2 = -1i/device.mu_ref*(device.Kz_ref\(device.Ky*device.Ky+device.Kz_ref*device.Kz_ref));
-A3 = 1i/device.mu_ref*(device.Kz_ref\(device.Kx*device.Kx+device.Kz_ref*device.Kz_ref));
-A4 = 1i/device.mu_ref*(device.Kz_ref\device.Kx)*device.Ky;
+for iWavelength = 1:numel(param.wavelengthArray)
+    Sz(:, :, iWavelength) = RCWA_wl(layer, param, iWavelength);
+end
 
-B1 = 1i/device.mu_trn*(device.Kz_trn\device.Kx)*device.Ky;
-B2 = 1i/device.mu_trn*(device.Kz_trn\(device.Ky*device.Ky+device.Kz_trn*device.Kz_trn));
-B3 = -1i/device.mu_trn*(device.Kz_trn\(device.Kx*device.Kx+device.Kz_trn*device.Kz_trn));
-B4 = -1i/device.mu_trn*(device.Kz_trn\device.Kx)*device.Ky;
+end
 
-A=[eye(2*device.num_H);...
+
+function Sz = RCWA_wl(layer, param, iWavelength)
+
+param = get_sinc(param, iWavelength);
+layer = apply_convolution(layer, param, iWavelength);
+[layer, param] = calc_K(layer, param, iWavelength);
+
+mu_ref = param.mu_ref(iWavelength);
+mu_trn = param.mu_trn(iWavelength);
+
+A1 = -1i/mu_ref*(param.Kz_ref\param.Kx)*param.Ky;
+A2 = -1i/mu_ref*(param.Kz_ref\(param.Ky*param.Ky+param.Kz_ref*param.Kz_ref));
+A3 = 1i/mu_ref*(param.Kz_ref\(param.Kx*param.Kx+param.Kz_ref*param.Kz_ref));
+A4 = 1i/mu_ref*(param.Kz_ref\param.Kx)*param.Ky;
+
+B1 = 1i/mu_trn*(param.Kz_trn\param.Kx)*param.Ky;
+B2 = 1i/mu_trn*(param.Kz_trn\(param.Ky*param.Ky+param.Kz_trn*param.Kz_trn));
+B3 = -1i/mu_trn*(param.Kz_trn\(param.Kx*param.Kx+param.Kz_trn*param.Kz_trn));
+B4 = -1i/mu_trn*(param.Kz_trn\param.Kx)*param.Ky;
+
+A=[eye(2*param.num_H);...
     A1,A2;...
     A3,A4];
-B=[eye(2*device.num_H);...
+B=[eye(2*param.num_H);...
     B1,B2;...
     B3,B4];
 
 for i = numel(layer):-1:1
     for j = size(layer(i).geometry.eps,3):-1:1
-        
-        [V, W, lam] = calc_VW(layer(i).geometry.mu(:,:),layer(i).geometry.eps(:,:,j),device.Kx,device.Ky);
-        F{i,j} = [W,W;-V,V];     
-        X{i,j} = expm(-lam * device.k_0i * layer(i).L(j));
-        
+
+        [V, W, lam] = calc_VW(layer(i).geometry.mu(:,:),layer(i).geometry.eps(:,:,j),param.Kx,param.Ky);
+        F{i,j} = [W, W; -V, V];
+        X{i,j} = expm(-lam * param.k_0(iWavelength) * layer(i).L(j));
+
         temp = F{i,j}\B;
-        
-        a{i,j} = temp(1:2*device.num_H,:);
-        b{i,j} = temp(2*device.num_H+1:end,:);
-        
-        B = F{i,j} * [eye(2*device.num_H),zeros(2*device.num_H);zeros(2*device.num_H),X{i,j}] * [eye(2*device.num_H);b{i,j}*(a{i,j}\X{i,j})];
+
+        a{i,j} = temp(1:2*param.num_H,:);
+        b{i,j} = temp(2*param.num_H+1:end,:);
+
+        B = F{i,j} * [eye(2*param.num_H),zeros(2*param.num_H);zeros(2*param.num_H),X{i,j}] * [eye(2*param.num_H);b{i,j}*(a{i,j}\X{i,j})];
     end
 end
 
-temp = [-A, B]\input_wave.s_inc;
-r = temp(1:2*device.num_H);
-tN{1} = temp(2*device.num_H+1:end);
+temp = [-A, B]\param.s_inc;
+r = temp(1:2*param.num_H);
+tN{1} = temp(2*param.num_H+1:end);
 
 k = 1;
-if device.calcAllRough
-    Sz = zeros(device.num_H,numel([layer.L]));
+if param.calcAllRough
+    Sz = zeros(param.num_H,numel([layer.L]));
 else
-    Sz = zeros(device.num_H,numel(layer));
+    Sz = zeros(param.num_H,numel(layer));
 end
 
 for i = 1:numel(layer)
     for j = 1:size(layer(i).geometry.eps,3)
         temp = a{i,j}\X{i,j};
         tN{k+1} = temp*tN{k};
-        c_im = [eye(2*device.num_H);b{i,j}*temp]*tN{k};
-        
-        if device.calcAllRough
-            field_begin = F{i,j}*[eye(2*device.num_H),zeros(2*device.num_H);zeros(2*device.num_H),X{i,j}]*c_im;
-            field_end = F{i,j}*[X{i,j},zeros(2*device.num_H);zeros(2*device.num_H),eye(2*device.num_H)]*c_im;
-            Sz(:,k) = (Sz_field(field_begin)-Sz_field(field_end))/sum(Sz_field(input_wave.s_inc));
+        c_im = [eye(2*param.num_H);b{i,j}*temp]*tN{k};
+
+        if param.calcAllRough
+            field_begin = F{i,j}*[eye(2*param.num_H),zeros(2*param.num_H);zeros(2*param.num_H),X{i,j}]*c_im;
+            field_end = F{i,j}*[X{i,j},zeros(2*param.num_H);zeros(2*param.num_H),eye(2*param.num_H)]*c_im;
+            Sz(:,k) = (Sz_field(field_begin)-Sz_field(field_end))/sum(Sz_field(param.s_inc));
         elseif j==1
-            field_begin = F{i,j}*[eye(2*device.num_H),zeros(2*device.num_H);zeros(2*device.num_H),X{i,j}]*c_im;
+            field_begin = F{i,j}*[eye(2*param.num_H),zeros(2*param.num_H);zeros(2*param.num_H),X{i,j}]*c_im;
         end
         k=k+1;
     end
-    if ~device.calcAllRough
-    field_end = F{i,j}*[X{i,j},zeros(2*device.num_H);zeros(2*device.num_H),eye(2*device.num_H)]*c_im;
-    Sz(:,i) = (Sz_field(field_begin)-Sz_field(field_end))/sum(Sz_field(input_wave.s_inc));
+    if ~param.calcAllRough
+        field_end = F{i,j}*[X{i,j},zeros(2*param.num_H);zeros(2*param.num_H),eye(2*param.num_H)]*c_im;
+        Sz(:,i) = (Sz_field(field_begin)-Sz_field(field_end))/sum(Sz_field(param.s_inc));
     end
 end
 
 t = temp*tN{end-1};
 
-r(2*device.num_H+1:3*device.num_H) = -device.Kz_ref\(device.Kx*r(1:device.num_H)+device.Ky*r(device.num_H+1:2*device.num_H));
-t(2*device.num_H+1:3*device.num_H) = -device.Kz_trn\(device.Kx*t(1:device.num_H)+device.Ky*t(device.num_H+1:2*device.num_H));
+r(2*param.num_H+1:3*param.num_H) = -param.Kz_ref\(param.Kx*r(1:param.num_H)+param.Ky*r(param.num_H+1:2*param.num_H));
+t(2*param.num_H+1:3*param.num_H) = -param.Kz_trn\(param.Kx*t(1:param.num_H)+param.Ky*t(param.num_H+1:2*param.num_H));
 
-rmag = abs(r(1:device.num_H)).^2+abs(r(device.num_H+1:2*device.num_H)).^2+abs(r(2*device.num_H+1:end)).^2;
-Sz(:,end+1) = real(device.Kz_ref*rmag/input_wave.beta(3));
+rmag = abs(r(1:param.num_H)).^2+abs(r(param.num_H+1:2*param.num_H)).^2+abs(r(2*param.num_H+1:end)).^2;
+Sz(:,end+1) = real(param.Kz_ref*rmag/param.beta(3));
 
-tmag = abs(t(1:device.num_H)).^2+abs(t(device.num_H+1:2*device.num_H)).^2+abs(t(2*device.num_H+1:end)).^2;
-Sz(:,end+1) = real(device.Kz_trn*tmag/input_wave.beta(3));
+tmag = abs(t(1:param.num_H)).^2+abs(t(param.num_H+1:2*param.num_H)).^2+abs(t(2*param.num_H+1:end)).^2;
+Sz(:,end+1) = real(param.Kz_trn*tmag/param.beta(3));
 end
 
 
-function [V,W,lam] = calc_VW(mu_r,eps_r,Kx,Ky)
+function [V, W, lam] = calc_VW(mu_r, eps_r, Kx, Ky)
 
-P = calc_PQ(mu_r,eps_r,Kx,Ky);
-Q = calc_PQ(eps_r,mu_r,Kx,Ky);
+P = calc_PQ(mu_r, eps_r, Kx, Ky);
+Q = calc_PQ(eps_r, mu_r, Kx, Ky);
 
-[W, eigval] = eig(P*Q);
+[W, eigval] = eig(P * Q);
 lam = sqrt(eigval);
-V = Q * W *inv(lam);
+V = Q * W * inv(lam);
 
 end
 
 
-function PQ = calc_PQ(eps,mu,Kx,Ky)
+function PQ = calc_PQ(eps, mu, Kx, Ky)
 
 %%%                   P
 %%%

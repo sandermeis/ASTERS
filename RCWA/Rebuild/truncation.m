@@ -1,23 +1,26 @@
-function device = truncation(device)
+function param = truncation(param)
 %%
-M = -(device.P-1)/2:(device.P-1)/2;
-N = -(device.Q-1)/2:(device.Q-1)/2;
-[m,n] = meshgrid(M,N);
+for i=1:numel(param)
+    M = -(param(i).P-1)/2:(param(i).P-1)/2;
+    N = -(param(i).Q-1)/2:(param(i).Q-1)/2;
+    [m,n] = meshgrid(M,N);
 
-if device.truncateHarm
-    TMAP = abs(m/((device.P-1)/2)).^(2*device.truncFactor) + abs(n/((device.Q-1)/2)).^(2*device.truncFactor);
-    TMAP(isnan(TMAP))=1;
-    TMAP = (TMAP <= 1);
-    if device.truncfig
-    figure
-    imagesc(TMAP);
+    if param(i).truncateHarm
+        TMAP = abs(m/((param(i).P-1)/2)).^(2*param(i).truncFactor) + abs(n/((param(i).Q-1)/2)).^(2*param(i).truncFactor);
+        TMAP(isnan(TMAP))=1;
+        TMAP = (TMAP <= 1);
+        if param(i).truncfig
+            figure
+            imagesc(TMAP);
+        end
+    else
+        TMAP = ones(size(m));
     end
-else
-    TMAP = ones(size(m));
+
+    % Extract Array Indices
+    param(i).tr_ind = find(TMAP(:));
+    param(i).num_H = length(param(i).tr_ind);
 end
 
-% Extract Array Indices
-device.tr_ind = find(TMAP(:));
-device.num_H = length(device.tr_ind);
 
 end

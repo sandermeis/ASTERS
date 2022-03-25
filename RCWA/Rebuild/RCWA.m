@@ -1,75 +1,56 @@
-function [device,layer,input_wave,Sz] = RCWA(layer,device,input_wave,wavelengthArray)
-    arguments
-        layer (:,1) struct
-        device struct
-        input_wave struct
-        wavelengthArray (1,:) {mustBeNumeric,mustBeReal}
-    end
-    
-c = onCleanup(@() progressBar());
-
-if device.checkConverg
-    harmArray = 1:2:device.Hmax;
-else
-    harmArray = device.Hmax;
+function Sz = RCWA(layerset, param, options)
+arguments
+    layerset (1,:) struct
+    param struct
+    options
 end
 
-issurf = cellfun(@(x) isa(x,"Surface"),{layer.input});
-laynum = find(issurf,1);
-if laynum
-    k = [layer(issurf).input];
-    k2 = [k.surfsize];
-    k3 = [k.surfres];
-    if ~all(k2 == k2(1))&&~all(k3 == k3(1))
-        error("Mismatching layer dimensions")
-    end
-    
-    if device.useSurfaceSize
-        device.size_x       = layer(laynum).input.surfsize;
-        device.size_y       = layer(laynum).input.surfsize;
-        device.res_x        = layer(laynum).input.surfres;
-        device.res_y        = layer(laynum).input.surfres;   
-    end
-elseif device.useSurfaceSize
-    warning("No rough layers added, using manually entered dimensions")
+%c = onCleanup(@() progressBar());
+
+if options.save
+    folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
+% onlinepath='schijf/sander/results';
+    mkdir("results",folderName)
+    save("results/"+folderName+"/param.mat","param","layerset")
 end
 
-lenHarmArray = length(harmArray);
-lenWavelengthArray = length(wavelengthArray);
+% REDO THIS, SKIPPING FOR NOW
+%     % check if surfaces same dimensions
+%     issurf = cellfun(@(x) isa(x,"Surface"),{layer.input});
+%     laynum = find(issurf,1);
+%     if laynum
+%         k = [layer(issurf).input];
+%         k2 = [k.surfsize];
+%         k3 = [k.surfres];
+%         if ~all(k2 == k2(1))&&~all(k3 == k3(1))
+%             error("Mismatching layer dimensions")
+%         end
+% 
+%         if param.useSurfaceSize
+%             param.size_x       = layer(laynum).input.surfsize;
+%             param.size_y       = layer(laynum).input.surfsize;
+%             param.res_x        = layer(laynum).input.surfres;
+%             param.res_y        = layer(laynum).input.surfres;
+%         end
+%     elseif param.useSurfaceSize
+%         warning("No rough layers added, using manually entered dimensions")
+%     end
 
-progressTick = progressBar(lenWavelengthArray*lenHarmArray);
+numRuns = numel(param);
 
+%progressTick = progressBar(numRuns);
 
-for iHarm = 1:lenHarmArray
-    
-    device.P            = harmArray(iHarm);
-    device.Q            = harmArray(iHarm);
-    device.num_H        = device.P * device.Q;
-    
-    device              = truncation(device);
-    input_wave          = get_sinc(input_wave,device);
-    layer               = build_layerstack(layer,device);
-    
-    Sz = zeros(device.num_H,~device.calcAllRough*numel(layer)+device.calcAllRough*numel([layer.L])+2,lenWavelengthArray);
+for n = 1:numRuns
 
-    parfor iWavelength = 1:lenWavelengthArray      
-        
-        Sz(:,:,iWavelength) = RCWA_transmittance(layer,device,input_wave,iWavelength);
+    Sz = RCWA_transmittance(layerset(param(n).lay).layer, param(n));
+    fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
-        progressTick();
+    if options.save
+        fileName = "results/"+folderName+"/sim"+n+".mat";
+        parsave(fileName,Sz,fom,n)
     end
 
-R(:,iHarm) = squeeze(sum(Sz(:,end-1,:),1));
-
-end
-
-if device.checkConverg
-    figure
-    plot(wavelengthArray,R)
-    %xticklabels(string(wavelengthArray))
-    xlabel("Wavelength (nm)")
-    ylabel("Reflectance (a.u.)")
-    legend(string(harmArray.^2)+' Harmonics (excl. trunc)','location','eastoutside')
+    %progressTick();
 end
 
 end
@@ -122,4 +103,12 @@ end
     function progressTick()
         send(D, []);
     end
+end
+
+function parsave(varargin)
+savefile = varargin{1}; % first input argument
+for i=2:nargin
+    savevar.(inputname(i)) = varargin{i}; % other input arguments
+end
+save(savefile,'-struct','savevar')
 end
