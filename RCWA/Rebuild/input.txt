@@ -1,5 +1,5 @@
 % Constants
-version         = v3.1.0
+version         = v3.1.1
 
 % Parameters
 % Add "+ otherparameter1, otherparameter2" to a parameter,
@@ -7,8 +7,8 @@ version         = v3.1.0
 %   -c to pass a whole array as one parameter.
 %   -r repeat parameter
 %   -t vary in tandem
-%
-wavelengthArray = 350:5:355 -c
+
+wavelengthArray = 350:5:950 -c
 ref_medium      = Air
 trn_medium      = Air
 theta           = 0
@@ -18,12 +18,12 @@ pTM             = 0.5
 size            = 10000
 res             = 512
 truncFactor     = 1
-Hmax            = 3:2:7
-lay             = Sheet1, Sheet2
-p1              = 0
-p2              = 0
-p3              = 0
-p4              = 0
+Hmax            = 9
+lay             = Sheet1
+p1              = 100:100:500 + p2, p3, p4
+p2              = 5,10,15
+p3              = 1:3
+p4              = 64:64:256
 
 % Booleans
 plot_permfig    = false

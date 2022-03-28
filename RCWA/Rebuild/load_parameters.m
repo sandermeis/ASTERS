@@ -4,29 +4,55 @@ cellpar = readcell("input.txt", 'CommentStyle', '%','Delimiter',{'=','+','-'},'L
 numParams = size(cellpar,1);
 
 for i = 1:numParams
-    try
-        if all(ismember(cellpar{i,2}, '0123456789+-.,:[]'))||string(cellpar{i,2})=="false"||string(cellpar{i,2})=="true"
+    if ~any(ismember(cellpar{i,2}, ','))
+        if ~isnumeric(cellpar{i,2})
+        if all(ismember(char(cellpar{i,2}), '0123456789+-.:[]'))||string(cellpar{i,2})=="false"||string(cellpar{i,2})=="true"
             try
-                cellpar{i,2} = eval(cellpar{i,2});
+            cellpar{i,2} = eval(cellpar{i,2});
             catch
             end
         else
-            cellpar{i,2} = string(strsplit(cellpar{i,2},{' ',','}));
+            cellpar{i,2} = string(cellpar{i,2});
         end
-        cellpar{i,3} = string(strsplit(cellpar{i,3},{' ',','}));
+        end
+    else
+        b = string(strsplit(cellpar{i,2},{' ',','}));
+        b2=cell(size(b));
+        % need to add safety check if numeric
+        for j = 1:numel(b)
+            try
+            if all(ismember(char(b(j)), '0123456789+-.:[] '))||string(b(j))=="false"||string(b(j))=="true"
+                b2{j} = eval(b(j));
+            else
+                b2{j} = b(j);
+            end
+            catch
+            end
+        end
+        cellpar{i,2} = b2;
+    end
+    try
+    cellpar{i,3} = string(strsplit(cellpar{i,3},{' ',','}));
     catch
     end
 end
 
-%cells with array
+%cells with array, except with c as parameter
 cellsNumAndList=false(numParams,1);
-for i=1:numParams
-    cellsNumAndList(i) = length(cellpar{i,2})>1&&any(~strcmp(cellpar{i,3},'c'));%isnumeric(cellpar{i,2})&&
+if size(cellpar,2)>2
+    for i=1:numParams
+        cellsNumAndList(i) = length(cellpar{i,2})>1&&any(~strcmp(cellpar{i,3},'c'));%isnumeric(cellpar{i,2})&&
+    end
+else
+    for i=1:numParams
+        cellsNumAndList(i) = length(cellpar{i,2})>1;
+    end
 end
 %indices cells with array
 k=find(cellsNumAndList);
 %cell with just the arrays
 cc = cellpar(cellsNumAndList,:);
+if size(cellpar,2)>2
 for j=1:numel(cc(:,3)) %number of arrays
     if all(~ismissing(cc{j,3}))&&all(~strcmp(cc{j,3},'c')) % for non missing arrays
         d=[];
@@ -37,13 +63,17 @@ for j=1:numel(cc(:,3)) %number of arrays
         cc{j,3} = d;
     end
 end
-
+end
 dim = numel(cc(:,2));
 b = cell(1,dim);
 [b{:}] = ndgrid(cc{:,2});
 
 %if params dont vary at same time
-cm = cornerMatrix(b{1},cc(cellfun(@(x) isnumeric(x),cc(:,3)),3));
+if size(cellpar,2)>2
+    cm = cornerMatrix(b{1},cc(cellfun(@(x) isnumeric(x),cc(:,3)),3));
+else
+    cm = cornerMatrix(b{1},{});
+end
 for i=1:dim
     c{i} = b{i}(cm);
 end
@@ -52,7 +82,11 @@ for n = 1:length(c{1,1})
     cp2 = cellpar;
     for j = 1:dim
         %if numeric
-        cp2(k(j),2)={c{j}(n)};
+        if iscell(c{j}(n))
+            cp2(k(j),2)=c{j}(n);
+        else
+            cp2(k(j),2)={c{j}(n)};
+        end
         %if not numeric
         %cp2(k(j),2)={cellpar(c{j}(n))};
     end

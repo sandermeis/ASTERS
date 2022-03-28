@@ -183,6 +183,39 @@ classdef Surface < handle
             fprintf("skew: %d\n",skew)
             kurt = mean((obj.surfMatrix(:)-meansurf).^4./rms.^4);
             fprintf("kurt: %d\n",kurt)
+            
+            tiledlayout('flow')
+            %Normalized height distribution
+            nexttile
+            histogram(obj.surfMatrix(:)/numel(obj.surfMatrix),'EdgeColor', 'none');
+            title("Height distribution")
+
+            %Power spectral density
+            nexttile
+            m=obj.surfres;
+            a=obj.surfsize/obj.surfres;
+            qx_1=zeros(m,1);
+            for k=0:m-1
+                qx_1(k+1)=(2*pi/m)*(k);
+            end
+            qx_2 = fftshift(qx_1);
+            qx_3 = unwrap(qx_2-2*pi);
+            qx = qx_3/a;
+            surf(qx,qx,fft2(obj.surfMatrix).*conj(fft2(obj.surfMatrix)),'EdgeColor', 'none');
+            title("PSD")
+
+            %Radially averaged power spectral density
+            nexttile
+            [q , C, ~] = psd_2D(obj.surfMatrix , obj.surfsize/obj.surfres);
+            loglog(q,C)
+            title("Radially averaged PSD")
+            shading flat
+
+            %Autocorrelation function
+            nexttile
+            surf(abs(fftshift(ifft2(fft2(obj.surfMatrix).*conj(fft2(obj.surfMatrix)))))./(obj.surfres.^2))
+            title("Autocorrelation function")
+            shading interp
         end
         
         
@@ -271,6 +304,7 @@ classdef Surface < handle
                 fobj
                 number
                 options.PBC logical = true
+                options.seed = 0
                 %options.mode string = "add"
             end
             %ADDRANDOMFEATURES Adds a Feature object with random coordinates to the Surface a certain number of times.
@@ -283,6 +317,7 @@ classdef Surface < handle
             %   'PBC'    	- Periodic boundary conditions (0 or 1).
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
+            rng(options.seed)
             if ~options.PBC
                 nx = fobj.resolution;
                 ny = fobj.resolution;
@@ -343,7 +378,7 @@ classdef Surface < handle
             %   Function has no input
             %
             %   See also: CLEARFEATURES, ADDFEATURE, PLACEFEATURE
-            obj.surfMatrix = zeros(obj.surfsize*obj.surfres,obj.surfsize*obj.surfres);
+            obj.surfMatrix = zeros(obj.surfres, obj.surfres);
         end
         
         

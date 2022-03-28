@@ -1,11 +1,9 @@
 % TODO
 % 
-
-% save data, to average later manually
-% Jsc in workspace
 % height distribution
 % PSD, ACF
 % Surface remove X and Y for RAM saving
+% Random seed
 %
 % resolution matching feature/surface
 % Auto break on conv check
@@ -21,6 +19,7 @@
 % repeat variable n times
 % multiple wavelength ranges input
 % vary both together (diagonal)
+% "c" plus multiple arrays together
 
 clear all
 close all
@@ -28,30 +27,15 @@ close all
 param = load_parameters();
 
 %%
-a1 = Surface(512,10000);
-a2 = Surface(512,10000);
-a3 = Surface(512,10000);
+p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
+[layer_structure, lay_ind, pset] = load_layers(p,[param.lay]);
 
-f_cone = Feature(512,5000,500,"Cone");
-f_pyramid = Feature(512,5000,500,"Pyramid");
-f_sphere = Feature(512,5000,500,"Sphere");
-
-a1.addRandomFeatures(f_cone,10,"PBC",true) % add option for random seed
-a2.addRandomFeatures(f_pyramid,10,"PBC",true)
-a3.addRandomFeatures(f_sphere,10,"PBC",true)
-
-a1.placeFeatures("PBC",true, "mode", "merge");
-a2.placeFeatures("PBC",true, "mode", "merge");
-a3.placeFeatures("PBC",true, "mode", "merge");
-
-surfaces={a1,a2,a3};
-%%
-[layerset, lay_ind] = load_layers(surfaces,[param.lay]);
+[param.pset] = pset{:};
 [param.lay] = lay_ind{:};
 %%
 % save yes/no, display graphs, yes/no
 options.save = true;
 options.parallel = true;
 %%
-Sz = RCWA(layerset, param, options);
+Sz = RCWA(layer_structure, param, options);
 

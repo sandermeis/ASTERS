@@ -1,6 +1,6 @@
-function Sz = RCWA(layerset, param, options)
+function Sz = RCWA(layer_structure, param, options)
 arguments
-    layerset (1,:) struct
+    layer_structure (1,:) struct
     param struct
     options
 end
@@ -11,7 +11,7 @@ if options.save
     folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
 % onlinepath='schijf/sander/results';
     mkdir("results",folderName)
-    save("results/"+folderName+"/param.mat","param","layerset")
+    save("results/"+folderName+"/param.mat","param","layer_structure")
 end
 
 % REDO THIS, SKIPPING FOR NOW
@@ -42,7 +42,7 @@ numRuns = numel(param);
 
 for n = 1:numRuns
 
-    Sz = RCWA_transmittance(layerset(param(n).lay).layer, param(n));
+    Sz = RCWA_transmittance(layer_structure(param(n).lay).layer_set(param(n).pset).layer, param(n));
     fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
     if options.save
