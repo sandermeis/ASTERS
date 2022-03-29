@@ -1,1 +1,95 @@
 .DS_Store
+Articles/Luque_Handbook photovoltaic science.pdf
+Articles/RCWA/andreani2015.pdf
+Articles/RCWA/brenner2010.pdf
+Articles/RCWA/dewan2014.pdf
+Articles/RCWA/doctorate thesis weismann 2016.pdf
+Articles/RCWA/hench2008.pdf
+Articles/RCWA/hstan2002.pdf
+Articles/RCWA/kim2007.pdf
+Articles/RCWA/kwiecien2015.pdf
+Articles/RCWA/lalanne96.pdf
+Articles/RCWA/li2003.pdf
+Articles/RCWA/li96.pdf
+Articles/RCWA/liscidini2008.pdf
+Articles/RCWA/master thesis allouche 2018.pdf
+Articles/RCWA/moharam1994.pdf
+Articles/RCWA/moharam1995.pdf
+Articles/RCWA/New/battaglia2012.pdf
+Articles/RCWA/New/bozzola2013.pdf
+Articles/RCWA/New/chen2018.pdf
+Articles/RCWA/New/kowalczewski2012.pdf
+Articles/RCWA/New/kowalczewski2013.pdf
+Articles/RCWA/New/kowalczewski2014.pdf
+Articles/RCWA/New/li2021.pdf
+Articles/RCWA/New/moharam2004.pdf
+Articles/RCWA/New/Reflection and morphology analysis of lattice mismatched GaP (2).docx
+Articles/RCWA/New/rockstuhl2010.pdf
+Articles/RCWA/sai2007.pdf
+Articles/RCWA/tan2002.pdf
+Articles/RCWA/whittaker1999.pdf
+Articles/Sadi, Radevici, Oksanen Thermophotonic cooling with light-emitting diodes.pdf
+Articles/TM/Centurioni, E. Appl. Opt. 44, 7532 (2005).pdf
+Articles/TM/Charalambos, C. et al. Appl. Opt. 41, 19 (2002).pdf
+Articles/TM/Missoni, L. et al. Optical Materials. 109 110012 (2020).pdf
+Articles/TM/Pettersson, L. et al. J. Appl. Phys. 86, 1 (1999).pdf
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_100.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_150.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_200.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_250.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_260.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_300.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_350.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_360.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_375.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_380.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_385.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_390.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_395.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_400.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_405.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_410.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_415.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_420.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_425.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_430.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_450.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_475.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_500.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_550.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_800.fig
+RCWA/Transmittance/Rough/figs/RCWA_ARough2_81_GaPthickness_360.fig
+RCWA/Transmittance/Rough/figs/RCWA_ARough_81_GaPthickness_360.fig
+RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim4.mat
+RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim3.mat
+RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim2.mat
+RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim1.mat
+RCWA/Rebuild/results/sim_25_03_22_16_26_19/param.mat
+RCWA/Rebuild/analyze_distribution.m
+RCWA/Rebuild/bbc.mat
+RCWA/Rebuild/bbc2.mat
+RCWA/Rebuild/booba.mat
+RCWA/Rebuild/disp_permittivity.m
+RCWA/Rebuild/fill_layer.m
+RCWA/Rebuild/input2.txt
+RCWA/Rebuild/layer.txt
+RCWA/Rebuild/lineartoind.m
+RCWA/Rebuild/overnight/test1.mat
+RCWA/Rebuild/overnight/test2.mat
+RCWA/Rebuild/plotLayer.m
+RCWA/Rebuild/RD.mat
+RCWA/Rebuild/somefile.txt
+RCWA/Rebuild/untitled.m
+RCWA/Rebuild/untitled2.m
+RCWA/Rebuild/untitled3.m
+RCWA/Rebuild/untitled4.m
+RCWA/Transmittance/Rough/RD.mat
+ri/A2.mat
+ri/feature1.csv
+ri/Feature1_19.53125nmpd.csv
+ri/Feature1_2500nm.csv
+ri/psd_2D.m
+ri/RD.mat
+ri/TMMdiffRCWA.fig
+RCWA/Transmittance/Rough/RD.mat
+ri/RD.mat
