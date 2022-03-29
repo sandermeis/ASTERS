@@ -33,6 +33,7 @@ Articles/TM/Centurioni, E. Appl. Opt. 44, 7532 (2005).pdf
 Articles/TM/Charalambos, C. et al. Appl. Opt. 41, 19 (2002).pdf
 Articles/TM/Missoni, L. et al. Optical Materials. 109 110012 (2020).pdf
 Articles/TM/Pettersson, L. et al. J. Appl. Phys. 86, 1 (1999).pdf
+<<<<<<< Updated upstream
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_100.fig
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_150.fig
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_200.fig
@@ -84,12 +85,56 @@ RCWA/Rebuild/untitled2.m
 RCWA/Rebuild/untitled3.m
 RCWA/Rebuild/untitled4.m
 RCWA/Transmittance/Rough/RD.mat
+=======
+RCWA/Transmittance/Rough/figs/RCWA_ARough_81_GaPthickness_360.fig
+RCWA/Transmittance/Rough/figs/RCWA_ARough2_81_GaPthickness_360.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_800.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_550.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_500.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_475.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_450.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_430.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_425.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_420.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_415.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_410.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_405.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_400.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_395.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_390.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_385.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_380.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_375.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_360.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_350.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_300.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_260.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_250.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_200.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_150.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_100.fig
+RCWA/Rebuild/untitled4.m
+RCWA/Rebuild/untitled3.m
+RCWA/Rebuild/untitled2.m
+RCWA/Rebuild/untitled.m
+>>>>>>> Stashed changes
 ri/A2.mat
 ri/feature1.csv
 ri/Feature1_19.53125nmpd.csv
 ri/Feature1_2500nm.csv
 ri/psd_2D.m
+<<<<<<< Updated upstream
 ri/RD.mat
 ri/TMMdiffRCWA.fig
 RCWA/Transmittance/Rough/RD.mat
 ri/RD.mat
+=======
+ri/TMMdiffRCWA.fig
+*.mat
+RCWA/Rebuild/plotLayer.m
+RCWA/Rebuild/lineartoind.m
+RCWA/Rebuild/layer.txt
+RCWA/Rebuild/input2.txt
+RCWA/Rebuild/disp_permittivity.m
+RCWA/Rebuild/analyze_distribution.m
+>>>>>>> Stashed changes

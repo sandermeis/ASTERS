@@ -1,11 +1,16 @@
-function Sz = RCWA(layer_structure, param, options)
+function Sz = RCWA(options)
 arguments
-    layer_structure (1,:) struct
-    param struct
     options
 end
 
 %c = onCleanup(@() progressBar());
+
+
+param = load_parameters();
+
+
+p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
+
 
 if options.save
     folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
@@ -41,8 +46,8 @@ numRuns = numel(param);
 %progressTick = progressBar(numRuns);
 
 for n = 1:numRuns
-
-    Sz = RCWA_transmittance(layer_structure(param(n).lay).layer_set(param(n).pset).layer, param(n));
+    layer = fill_layer(p, n, [param.lay]);
+    Sz = RCWA_transmittance(layer, param(n));
     fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
     if options.save

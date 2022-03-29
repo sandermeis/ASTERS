@@ -24,18 +24,9 @@
 clear all
 close all
 %%
-param = load_parameters();
-
-%%
-p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
-[layer_structure, lay_ind, pset] = load_layers(p,[param.lay]);
-
-[param.pset] = pset{:};
-[param.lay] = lay_ind{:};
-%%
 % save yes/no, display graphs, yes/no
 options.save = true;
 options.parallel = true;
 %%
-Sz = RCWA(layer_structure, param, options);
+Sz = RCWA(options);
 
