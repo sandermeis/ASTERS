@@ -1,1 +1,19 @@
 .DS_Store
+*.mat
+*.fig
+*.pdf
+ri/psd_2D.m
+ri/Feature1_2500nm.csv
+ri/Feature1_19.53125nmpd.csv
+ri/feature1.csv
+RCWA/Rebuild/untitled4.m
+RCWA/Rebuild/untitled3.m
+RCWA/Rebuild/untitled2.m
+RCWA/Rebuild/untitled.m
+RCWA/Rebuild/plotLayer.m
+RCWA/Rebuild/lineartoind.m
+RCWA/Rebuild/layer.txt
+RCWA/Rebuild/input2.txt
+RCWA/Rebuild/disp_permittivity.m
+RCWA/Rebuild/analyze_distribution.m
+Articles/RCWA/New/Reflection and morphology analysis of lattice mismatched GaP (2).docx
