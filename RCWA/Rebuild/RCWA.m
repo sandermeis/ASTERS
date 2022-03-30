@@ -3,20 +3,17 @@ arguments
     options
 end
 
-%c = onCleanup(@() progressBar());
-
+c = onCleanup(@() progressBar());
 
 param = load_parameters();
 
-
 p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
-
 
 if options.save
     folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
 % onlinepath='schijf/sander/results';
     mkdir("results",folderName)
-    save("results/"+folderName+"/param.mat","param","layer_structure")
+    save("results/"+folderName+"/param.mat","param")
 end
 
 % REDO THIS, SKIPPING FOR NOW
@@ -43,9 +40,9 @@ end
 
 numRuns = numel(param);
 
-%progressTick = progressBar(numRuns);
+progressTick = progressBar(numRuns);
 
-for n = 1:numRuns
+parfor n = 1:numRuns
     layer = fill_layer(p, n, [param.lay]);
     Sz = RCWA_transmittance(layer, param(n));
     fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
@@ -55,7 +52,7 @@ for n = 1:numRuns
         parsave(fileName,Sz,fom,n)
     end
 
-    %progressTick();
+    progressTick();
 end
 
 end

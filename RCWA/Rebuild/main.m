@@ -3,7 +3,9 @@
 % height distribution
 % PSD, ACF
 % Surface remove X and Y for RAM saving
-% Random seed
+% uiconfirm
+% parallel/save options
+% 
 %
 % resolution matching feature/surface
 % Auto break on conv check

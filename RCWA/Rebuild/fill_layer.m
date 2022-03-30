@@ -27,7 +27,7 @@ surfaces{1} = a;
 
 fn = "layers.xlsx";
 
-layer = table2struct(readtable(fn,'Sheet',which_lay));
+layer = table2struct(readtable(fn,'Sheet',which_lay(n)));
 
 for j=1:numel(layer)
     if layer(j).input
