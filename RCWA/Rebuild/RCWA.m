@@ -13,6 +13,8 @@ selection = uiconfirm(fig,sprintf("About to do %d simulations",numRuns),"title w
 
 if selection=="OK"
 
+close(fig)
+
 p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
 
 if options.save
@@ -69,6 +71,11 @@ persistent iters wb tocArray;
 if nargin==1
     i=varargin{1};
 
+            wb = waitbar(0,'Waiting on workers...');
+            iters = 1;
+            tic;
+            tocArray = 0;
+
     D = parallel.pool.DataQueue;
     afterEach(D, @updateWaitbar);
     progressOut = @progressTick;
@@ -90,11 +97,11 @@ end
 
             iterRemaining = i-iters;
 
-            if iters > 10
-                t = tocArray(end-10:end);
-            else
+%             if iters > 10
+%                 t = tocArray(end-10:end);
+%             else
                 t = tocArray;
-            end
+%             end
 
             timeLeft = string(seconds(iterRemaining*mean(diff(t))),'hh:mm:ss');
 
@@ -113,10 +120,10 @@ end
     end
 end
 
-function parsave(varargin)
-savefile = varargin{1}; % first input argument
-for i=2:nargin
-    savevar.(inputname(i)) = varargin{i}; % other input arguments
-end
-save(savefile,'-struct','savevar')
+function parsave(fileName,Sz,fom,n)
+% savefile = varargin{1}; % first input argument
+% for i=2:nargin
+%     savevar.(inputname(i)) = varargin{i}; % other input arguments
+% end
+save(fileName,'Sz','fom','n')
 end

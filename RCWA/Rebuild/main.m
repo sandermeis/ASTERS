@@ -31,4 +31,6 @@ options.save = true;
 options.parallel = true;
 %%
 folderName = RCWA(options);
+%%
+%RCWA_process(folderName)
 
