@@ -1,11 +1,4 @@
 % TODO
-% 
-% height distribution
-% PSD, ACF
-% Surface remove X and Y for RAM saving
-% uiconfirm
-% parallel/save options
-% 
 %
 % resolution matching feature/surface
 % Auto break on conv check
@@ -27,7 +20,7 @@ clear all
 close all
 %%
 % save yes/no, display graphs, yes/no
-options.save = true;
+options.save = false;
 options.parallel = true;
 %%
 folderName = RCWA(options);

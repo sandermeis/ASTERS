@@ -6,7 +6,7 @@ numParams = size(cellpar,1);
 for i = 1:numParams
     if ~any(ismember(cellpar{i,2}, ','))
         if ~isnumeric(cellpar{i,2})
-        if all(ismember(char(cellpar{i,2}), '0123456789+-.:[]'))||string(cellpar{i,2})=="false"||string(cellpar{i,2})=="true"
+        if all(ismember(char(cellpar{i,2}), '0123456789+-.:*/pi()[]'))||string(cellpar{i,2})=="false"||string(cellpar{i,2})=="true"
             try
             cellpar{i,2} = eval(cellpar{i,2});
             catch
@@ -37,19 +37,19 @@ for i = 1:numParams
     end
 end
 
-%cells with array, except with c as parameter
-cellsNumAndList=false(numParams,1);
+%cells with array, except with single c as parameter
+cellsNumAndList = false(numParams,1);
 if size(cellpar,2)>2
-    for i=1:numParams
-        cellsNumAndList(i) = length(cellpar{i,2})>1&&any(~strcmp(cellpar{i,3},'c'));%isnumeric(cellpar{i,2})&&
+    for i = 1:numParams
+        cellsNumAndList(i) = length(cellpar{i,2})>1 && any(~strcmp(cellpar{i,3},'c'));%isnumeric(cellpar{i,2})&&
     end
 else
-    for i=1:numParams
+    for i = 1:numParams
         cellsNumAndList(i) = length(cellpar{i,2})>1;
     end
 end
 %indices cells with array
-k=find(cellsNumAndList);
+k = find(cellsNumAndList);
 %cell with just the arrays
 cc = cellpar(cellsNumAndList,:);
 if size(cellpar,2)>2
