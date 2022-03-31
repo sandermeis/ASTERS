@@ -30,5 +30,5 @@ close all
 options.save = true;
 options.parallel = true;
 %%
-Sz = RCWA(options);
+folderName = RCWA(options);
 

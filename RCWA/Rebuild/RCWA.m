@@ -1,4 +1,4 @@
-function Sz = RCWA(options)
+function folderName = RCWA(options)
 arguments
     options
 end
@@ -6,6 +6,12 @@ end
 c = onCleanup(@() progressBar());
 
 param = load_parameters();
+numRuns = numel(param);
+
+fig = uifigure;
+selection = uiconfirm(fig,sprintf("About to do %d simulations",numRuns),"title warning");
+
+if selection=="OK"
 
 p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
 
@@ -38,7 +44,7 @@ end
 %         warning("No rough layers added, using manually entered dimensions")
 %     end
 
-numRuns = numel(param);
+
 
 progressTick = progressBar(numRuns);
 
@@ -54,7 +60,7 @@ parfor n = 1:numRuns
 
     progressTick();
 end
-
+end
 end
 
 
