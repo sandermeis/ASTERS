@@ -50,6 +50,7 @@ for i=1:numel(layer)
 
         if layer(i).recalcRoughL
             layer(i).L = Lrecalc/layer(i).roughdim*ones(1,layer(i).roughdim);
+            warning(sprintf("Recalculated %s layer thickness to %d nm",join(layer(i).material(:),", "),Lrecalc))
         end
 
         if layer(i).optimRough

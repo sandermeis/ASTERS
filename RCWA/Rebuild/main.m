@@ -22,9 +22,9 @@
 clear all
 close all
 %%
-options.save = false;
-options.parallel = false;
-options.simulationName = '';
+options.save = true;
+options.parallel = true;
+options.simulationName = 'MaartenTry1';
 
 %%
 [param, Sz] = RCWA(options);

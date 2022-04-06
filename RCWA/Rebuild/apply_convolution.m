@@ -11,13 +11,15 @@ for i = 1:numel(layer)
         % Maybe add existence check upstream (before iters) all(a==j,'all')
         layer(i).geometry.eps(layer(i).geometry.eps_struc == j) = eps;
 
-        % Convolution
-        layer(i).geometry.eps = conv_mat(layer(i).geometry.eps,param.P,param.Q);
-        layer(i).geometry.mu_struc = eye(param.P*param.Q);
-
-        % Truncate
-        layer(i).geometry.mu = layer(i).geometry.mu_struc(param.tr_ind,param.tr_ind);
-        layer(i).geometry.eps = layer(i).geometry.eps(param.tr_ind,param.tr_ind,:);
+        if layer(i).input~=0
+            % Convolution
+            layer(i).geometry.eps = conv_mat(layer(i).geometry.eps,param.P,param.Q);
+            layer(i).geometry.mu_struc = eye(param.P*param.Q);
+    
+            % Truncate
+            layer(i).geometry.mu = layer(i).geometry.mu_struc(param.tr_ind,param.tr_ind);
+            layer(i).geometry.eps = layer(i).geometry.eps(param.tr_ind,param.tr_ind,:);
+        end
     end
 end
 end

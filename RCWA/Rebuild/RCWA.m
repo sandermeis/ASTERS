@@ -3,7 +3,7 @@ arguments
     options
 end
 
-if isempty(options.simulationName)
+if ~isempty(options.simulationName)
     folderName = options.simulationName;
 else
     folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
