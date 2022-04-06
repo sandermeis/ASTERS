@@ -1,6 +1,7 @@
 % TODO
 %
 % resolution matching feature/surface
+% check perm outside range wavelengths
 % Auto break on conv check
 % Grating test
 % image field inside layer
@@ -9,6 +10,8 @@
 % fix haze 4d figure
 
 % TODO input
+% Feature inputs range
+% Fix useSurfaceSize
 % Make work (give warning) with random strings after + that arent in params
 % with just 1 paramset, ndgrid doesnt work
 % repeat variable n times
@@ -19,11 +22,12 @@
 clear all
 close all
 %%
-% save yes/no, display graphs, yes/no
 options.save = false;
-options.parallel = true;
+options.parallel = false;
+options.simulationName = '';
+
 %%
-folderName = RCWA(options);
+[param, Sz] = RCWA(options);
 %%
 %RCWA_process(folderName)
 

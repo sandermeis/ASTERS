@@ -1,5 +1,5 @@
 % Constants
-version         = v3.1.1
+version         = v3.2.0
 
 % Parameters
 % Add "+ otherparameter1, otherparameter2" to a parameter,
@@ -8,22 +8,28 @@ version         = v3.1.1
 %   -r repeat parameter
 %   -t vary in tandem
 
-wavelengthArray = 350:5:360 -c
+wavelengthArray = 350:5:950 -c
 ref_medium      = Air
 trn_medium      = Air
 theta           = 0
 phi             = 0
 pTE             = 0.5
 pTM             = 0.5
-size            = 10000
-res             = 512
-truncFactor     = 1:3
+size            = 5000
+res             = 256
+truncFactor     = 1
 Hmax            = 9
 lay             = Sheet1
-p1              = 20:20:100 +p2
-p2              = 1:10
-p3              = 1
-p4              = 64
+
+% make it so range can be an input for 1 simulation, with c
+
+% Add any of your own parameters
+height          = 30
+numrandom       = 200
+surfaceindex    = 1
+featres         = 32
+fill            = 0.5 + add
+add             = 0:0.5:1
 
 % Booleans
 plot_permfig    = false

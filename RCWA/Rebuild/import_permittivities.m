@@ -6,9 +6,12 @@ end
 
 eps_lab = cell(size(materials));
 
+% another loop over multiple materials
+
 for i=1:numel(materials)
+    for j=1:numel(materials{i})
 %     wavelengthArray = wl{i};
-    mat = materials{i};
+    mat = materials{i}(j);
     file_name = "refractive_indices/"+mat+".csv";
     x = csvread(file_name);
 
@@ -27,10 +30,10 @@ for i=1:numel(materials)
 %             warning('Requested ending wavelength (%.2f) not in %s data. Interpolating',wavelengthArray(1),mat)
 %         end
 %     end
-    eps_lab{i} = griddedInterpolant(x(:,1),x(:,4));
+    eps_lab{i}(j) = {griddedInterpolant(x(:,1),x(:,4))};
     %ip = interp1(x(:,1), x(:,2:3), wavelengthArray, 'linear', 'extrap');
     %eps_lab{i} = (ip(:,1)-1i*ip(:,2)).^2;
-
+    end
 end
 
 end

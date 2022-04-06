@@ -1,6 +1,12 @@
-function folderName = RCWA(options)
+function varargout = RCWA(options)
 arguments
     options
+end
+
+if isempty(options.simulationName)
+    folderName = options.simulationName;
+else
+    folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
 end
 
 c = onCleanup(@() progressBar());
@@ -9,15 +15,24 @@ param = load_parameters();
 numRuns = numel(param);
 
 fig = uifigure;
-selection = uiconfirm(fig,sprintf("About to do %d simulations",numRuns),"title warning");
-
-if selection=="OK"
-
+numSimWarning = uiconfirm(fig,sprintf("About to do %d simulations",numRuns),"title warning");
+numCoreWarning = '';
+if options.parallel
+    numCores = feature('numCores');
+    if numRuns<=numCores
+        title = sprintf("%d simulations <= %d cores",numRuns,numCores);
+        msg = "Non parallel might be slightly faster";
+        numCoreWarning = uiconfirm(fig,msg,title, ...
+            'Options',{'Parallel anyway','Non parallel','Cancel'}, ...
+            'DefaultOption',2,'CancelOption',3);
+        if numCoreWarning == "Non parallel"
+            options.parallel = 0;
+        end
+    end
+end
+if numSimWarning=="OK"&&~(numCoreWarning=="Cancel")
     close(fig)
 
-    p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
-
-    folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
     if options.save
         % onlinepath='schijf/sander/results';
         mkdir("results",folderName)
@@ -48,7 +63,7 @@ if selection=="OK"
 
     progressTick = progressBar(false, numRuns);
     n=1;
-    layer = fill_layer(p, n, [param.lay]);
+    layer = fill_layer(param(n));
     Sz = RCWA_transmittance(layer, param(n));
     fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
@@ -63,7 +78,7 @@ if selection=="OK"
         if options.parallel
             progressTick = progressBar(options.parallel);
             parfor n = 2:numRuns
-                layer = fill_layer(p, n, [param.lay]);
+                layer = fill_layer(param(n));
                 Sz = RCWA_transmittance(layer, param(n));
                 fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
@@ -78,7 +93,7 @@ if selection=="OK"
             progressTick = progressBar(options.parallel);
 
             for n = 2:numRuns
-                layer = fill_layer(p, n, [param.lay]);
+                layer = fill_layer(param(n));
                 Sz = RCWA_transmittance(layer, param(n));
                 fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
@@ -92,6 +107,16 @@ if selection=="OK"
         end
     end
 end
+
+if options.save
+    varargout{1} = param;
+    varargout{2} = folderName;
+
+else
+    varargout{1} = param;
+    varargout{2} = Sz;
+end
+
 end
 
 
@@ -105,7 +130,7 @@ if nargin==2
     iters = 1;
     tic;
     tocArray = 0;
-    
+
     if isPar
         D = parallel.pool.DataQueue;
         afterEach(D, @updateWaitbar);
@@ -130,25 +155,25 @@ elseif nargin==0
 end
 
     function updateWaitbar(~)
-            tocArray(end+1) = toc;
+        tocArray(end+1) = toc;
 
-            iterRemaining = maxIter-iters;
+        iterRemaining = maxIter-iters;
 
-            %             if iters > 10
-            %                 t = tocArray(end-10:end);
-            %             else
-            t = tocArray;
-            %             end
+        %             if iters > 10
+        %                 t = tocArray(end-10:end);
+        %             else
+        t = tocArray;
+        %             end
 
-            timeLeft = string(seconds(iterRemaining*mean(diff(t))),'hh:mm:ss');
+        timeLeft = string(seconds(iterRemaining*mean(diff(t))),'hh:mm:ss');
 
-            waitBarDuration = iters/maxIter;
-            waitBarString = {'Iteration ' + string(iters) + '/' + string(maxIter),...
-                'Estimated time remaining: ' + timeLeft};
+        waitBarDuration = iters/maxIter;
+        waitBarString = {'Iteration ' + string(iters) + '/' + string(maxIter),...
+            'Estimated time remaining: ' + timeLeft};
 
-            waitbar(waitBarDuration,wb,waitBarString)
+        waitbar(waitBarDuration,wb,waitBarString)
 
-            iters = iters + 1;
+        iters = iters + 1;
     end
 
     function progressTick()

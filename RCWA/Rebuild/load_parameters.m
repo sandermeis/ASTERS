@@ -116,10 +116,12 @@ param     = truncation(param);
 % convert list to string, place next to eachother, and find unique by row
 [C_ref, ia_ref, ic_ref] = unique([[param.ref_medium]',string(cellfun(@(x) num2str(x),{param.wavelengthArray},'UniformOutput',false))'],'rows');
 
-eps_lab_ref   = import_permittivities(cellstr(C_ref(:,1)));%, {param(ia_ref).wavelengthArray});
+eps_lab_ref   = import_permittivities({C_ref(:,1)});%, {param(ia_ref).wavelengthArray});
 wl_ref = {param(ia_ref).wavelengthArray};
-for i=1:numel(eps_lab_ref)
-    eps_lab_ref2{i}   = eps_lab_ref{i}(wl_ref{i});
+
+% {1} for interoperability with fill_layer
+for i=1:numel(eps_lab_ref{1})
+    eps_lab_ref2{i}   = eps_lab_ref{1}{i}(wl_ref{i});
 end
 
 [param.eps_ref]     = deal(eps_lab_ref2{ic_ref});
@@ -127,10 +129,12 @@ throwaway           = cellfun(@(x) ones(size(x)),{param(:).wavelengthArray},'Uni
 [param.mu_ref]      = deal(throwaway{:});
 
 [C_trn, ia_trn, ic_trn] = unique([[param.trn_medium]',string(cellfun(@(x) num2str(x),{param.wavelengthArray},'UniformOutput',false))'],'rows');
-eps_lab_trn   = import_permittivities(cellstr(C_trn(:,1)));%, {param(ia_trn).wavelengthArray});
+eps_lab_trn   = import_permittivities({C_trn(:,1)});%, {param(ia_trn).wavelengthArray});
 wl_trn = {param(ia_trn).wavelengthArray};
-for i=1:numel(eps_lab_trn)
-    eps_lab_trn2{i}   = eps_lab_trn{i}(wl_trn{i});
+
+% {1} for interoperability with fill_layer
+for i=1:numel(eps_lab_trn{1})
+    eps_lab_trn2{i}   = eps_lab_trn{1}{i}(wl_trn{i});
 end
 
 [param.eps_trn]     = deal(eps_lab_trn2{ic_trn});

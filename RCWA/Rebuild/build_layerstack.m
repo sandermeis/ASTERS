@@ -2,74 +2,149 @@ function layer = build_layerstack(layer)
 
 for i=1:numel(layer)
 
-    % Make an array of layer thickness
+    % If it's not already, change rough layer thickness into an array
     if (layer(i).roughdim>1)&&(numel(layer(i).L)==1)
         layer(i).L = layer(i).L/layer(i).roughdim*ones(1,layer(i).roughdim);
     end
 
-    % uniform layers
-    if layer(i).input==0
+    % Assign uniform layers
+    if iscell(layer(i).input)
+
+        for j=1:numel(layer(i).input)
+            if isa(layer(i).input{j},'Surface')
+                if numel(layer(i).input)==1
+                    input(:, :, 1) = layer(i).input.surfMatrix;
+                    numLay = numel(layer(i).material);
+                    if numLay > 2
+                        warning("Layer is a multilayer but only in the first layer the surface is specified. Proceeding with other layers set to constant thickness.")
+                        sz = size(layer(i).input.surfMatrix);
+                        firstlaymax = max(layer(i).input.surfMatrix, [], 'all');
+                        laythick = sum(layer(i).L) - firstlaymax;
+                        if laythick < 0
+                            warning("First layer already exceeds maximum layer thickness as specified in layers.xlsx; setting constant layers to 0.")
+                            laythick = max(laythick, 0);
+                        end
+                        if numLay == 3
+                            laythick = max(sum(layer(i).L) - firstlaymax, 0);
+                            input(:, :, 2) = laythick * ones(sz);
+                        elseif numLay >= 4
+                            laythick = laythick / (numLay - 2);
+                            for j = 2:numLay - 1
+                                input(:, :, j) = laythick * ones(sz);
+                            end
+                        end
+                    end
+                else
+                    input(:,:,j) = layer(i).input{j}.surfMatrix;
+                end
+            else
+                error("Invalid layer input.")
+            end
+        end
+
+        % Discretize
+        [Z, Lnew, Lrecalc] = discretize_surface(input, layer(i).roughdim, ...
+            layer(i).tolerance, layer(i).reverse, layer(i).optimRough, layer(i).fill, layer(i).add);
+
+        layer(i).geometry.eps_struc = Z;
+
+        if layer(i).recalcRoughL
+            layer(i).L = Lrecalc/layer(i).roughdim*ones(1,layer(i).roughdim);
+        end
+
+        if layer(i).optimRough
+            layer(i).L = Lnew' * sum(layer(i).L)/layer(i).roughdim;
+        end
+
+    elseif layer(i).input == 0 && numel(layer(i).material) == 1
         layer(i).geometry.eps_struc = 1;
         layer(i).geometry.mu  = 1;
+    elseif layer(i).input == 0 && numel(layer(i).material) > 1
+        warning("Multilayer has no surface profile assigned, resetting to uniform.")
+        layer(i).geometry.eps_struc = ones(1, 1, numel(layer(i).material));
+        layer(i).geometry.mu  = ones(1, 1, numel(layer(i).material));
     else
-        %optional optimize, optional eps, optional layer height, feedback
-        if isa(layer(i).input,'Surface')
-            % check for correct dimensions
-            input = layer(i).input.surfMatrix;
-            [Z, Lnew, Lrecalc] = discretize_surface(input, layer(i).roughdim, ...
-                layer(i).tolerance,'reverse',layer(i).reverse,'optimize',layer(i).optimRough);
-
-            layer(i).geometry.eps_struc = Z;
-
-            if layer(i).recalcRoughL
-                layer(i).L = Lrecalc/layer(i).roughdim*ones(1,layer(i).roughdim);
-            end
-
-            if layer(i).optimRough
-                layer(i).L = Lnew' * sum(layer(i).L)/layer(i).roughdim;
-            end
-        else
-            error("Layer not a Surface object")
-            %[Z, L, Lrecalc] = realsurf(input,layer(i).roughdim, param.optimRough, param.reverse, param.tolerance);
-        end
+        error("Invalid layer input.")
     end
+
+
 end
 end
 
-function [dnew, Lnew, Lrecalc] = discretize_surface(Z, Zres, eps, options)
-arguments
-    Z (:,:) {mustBeNumeric}
-    Zres uint8 {mustBeNumeric}
-    eps (1,1) {mustBeNumeric}
-    options.reverse logical = false
-    options.optimize logical = false
-end
+function [dnew, Lnew, Lrecalc] = discretize_surface(Z, Zres, eps, rev, opt, fill, add)
 
-Z = Z - min(Z(:));
+%fill = zeros(size(Z, 3)-1);
+%add = ones(size(Z, 3)-1);
 
-[Nx, Ny] = size(Z);
+[Z_out, Lrecalc] = discretizeLayers(Z, Zres, fill, add);
 
-Lrecalc = max(Z(:));
-
-d = discretize(Z,Zres+1)-1;
-
-Z_out = zeros(Nx, Ny, Zres);
-
-for i = 1:Zres
-    Z_out(:,:,i) = (d>=i);
-end
-
-if options.reverse
-    Z_out = flip(Z_out,3);
+if rev
+    Z_out = flip(Z_out, 3);
 end
 % Optimize probably doesnt work with reverse, should work only for nonzero value,
 %currently also counts zeros
-if options.optimize
-    [dnew,Lnew] = optim_discr(Z_out, eps);
+if opt
+    [dnew, Lnew] = optim_discr(Z_out, eps);
 else
     dnew = Z_out;
     Lnew = 1;
 end
+
+end
+
+
+function [V, totmax] = discretizeLayers(input, Zres, fill, add)
+
+
+[NX, NY, N3] = size(input);
+numLayers = N3+1;
+eps = 1:numLayers;
+y = zeros(NX, NY, N3);
+
+% Minimum 0
+for i = 1:N3
+    y(:, :, i) = input(:, :, i) - min(input(:, :, i), [], 'all');
+    if i>1
+        layersUpToNow = sum(y(:, :, 1:i-1), 3);
+        vq = interpLayerMax(layersUpToNow);
+        y(:, :, i) = add(i-1) * input(:, :, i) + fill(i-1) * max(vq - layersUpToNow,0);
+    end
+end
+
+totmax = max(sum(y, 3), [], 'all');
+dz = totmax/Zres;
+z = linspace(dz, totmax, Zres);
+
+V = zeros(NX, NY, Zres);
+f_cond = zeros(NX, NY, numLayers);
+
+
+for i = 1:Zres
+    for j = 1:numLayers - 1
+        f_cond(:, :, j + 1) = (z(i) <= sum(y(:, :, 1:j), 3));
+
+        f(:, :, j) = eps(j) * (~f_cond(:, :, j) & f_cond(:, :, j + 1));
+    end
+    V(:, :, i) = sum(f, 3);
+end
+% Also assign "rest" surface
+V(V == 0) = eps(j + 1);
+
+end
+
+
+function vq = interpLayerMax(v_in)
+
+[NX, NY] = size(v_in);
+
+superv = [v_in, v_in, v_in;...
+    v_in, v_in, v_in;...
+    v_in, v_in, v_in];
+supermaxima = islocalmax(superv, 1) & islocalmax(superv, 2);
+[X_in, Y_in] = ndgrid(1:size(supermaxima, 1), 1:size(supermaxima, 2));
+F = scatteredInterpolant(X_in(supermaxima), Y_in(supermaxima), superv(supermaxima));
+[Xnew, Ynew] = ndgrid(NX+1:2*NX, NY+1:2*NY);
+vq = F(Xnew, Ynew);
 
 end
 

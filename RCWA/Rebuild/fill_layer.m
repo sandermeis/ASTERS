@@ -1,46 +1,42 @@
-function [layer] = fill_layer(p, n, which_lay)
+function [layer] = fill_layer(param)
 
-surfacetypes=["Cone","Pyramid","Sphere"];
-
-height = p(n).p1;
-numrandom = p(n).p2;
-surfaceindex = p(n).p3;
-res = p(n).p4;
-
-surfacetype = surfacetypes(surfaceindex);
-
-a = Surface(512, 10000);
-f = Feature(res, 5000, height, surfacetype);
-
-a.addRandomFeatures(f, numrandom, "seed", 0, "PBC", true); % add option for random seed
-
-a.placeFeatures("PBC", true, "mode", "merge");
-
-surfaces{1} = a;
-
-% combine all into surf
-% pset becomes index of generated surf (input)
-
-%%%%%%%%%%%%%%%%%%%%%%%
+run("createSurface.m")
 
 % Which layer stacks "which sheets in excel"
 
 fn = "layers.xlsx";
-
-layer = table2struct(readtable(fn,'Sheet',which_lay(n)));
+% make so it interprets input as text
+layer = table2struct(readtable(fn,'Sheet',param.lay));
 
 for j=1:numel(layer)
-    if layer(j).input
-        k = layer(j).input;
-        if isnumeric(k) && k<=length(a) && k>=1
-            layer(j).input = surfaces{k};
-        else
-            error("Wrong layer input")
+    layer(j).material = string(strsplit(layer(j).material,{' ',','}));
+    layer(j).input = string(strsplit(layer(j).input,{' ',','}));
+    if all(ismember(char(layer(j).input), '123456789,:[]'))
+        layer(j).input = num2cell(str2double(layer(j).input));
+    elseif layer(j).input=="u"||layer(j).input=="uniform"||layer(j).input=="Uniform"
+        layer(j).input = 0;
+    else
+        error("Wrong layer input")
+    end
+
+    if numel(layer(j).material)>2
+        layer(j).add = param.add;
+        layer(j).fill = param.fill;
+    end
+
+    if iscell(layer(j).input)
+        for k=1:numel(layer(j).input)
+            layer(j).input{k} = surfaces{layer(j).input{k}};
         end
     end
+
 end
 
+
+%%% MAKE THEM WORK WITH STRING ARRAYS
 layer = build_layerstack(layer);
+
+% check
 eps_lab = import_permittivities({layer.material});
 [layer.permittivities] = deal(eps_lab{:});
 end
