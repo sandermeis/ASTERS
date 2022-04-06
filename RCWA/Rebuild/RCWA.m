@@ -61,48 +61,28 @@ if numSimWarning=="OK"&&~(numCoreWarning=="Cancel")
     %         warning("No rough layers added, using manually entered dimensions")
     %     end
 
-    progressTick = progressBar(false, numRuns);
-    n=1;
-    layer = fill_layer(param(n));
-    Sz = RCWA_transmittance(layer, param(n));
-    fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
+    [~] = progressBar(false, sum([param.wavelengthArray]));
 
-    if options.save
-        fileName = "results/"+folderName+"/sim"+string(n)+".mat";
-        parsave(fileName,Sz,fom,n)
-    end
-
-    progressTick();
-
-    if numRuns>1
-        if options.parallel
-            progressTick = progressBar(options.parallel);
-            parfor n = 2:numRuns
-                layer = fill_layer(param(n));
-                Sz = RCWA_transmittance(layer, param(n));
-                fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
-
-                if options.save
-                    fileName = "results/"+folderName+"/sim"+n+".mat";
-                    parsave(fileName,Sz,fom,n)
-                end
-
-                progressTick();
+    if options.parallel
+        progressTick = progressBar(options.parallel);
+        parfor n = 1:numRuns
+            layer = fill_layer(param(n));
+            Sz = RCWA_transmittance(layer, param(n), progressTick);
+            fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
+            if options.save
+                fileName = "results/"+folderName+"/sim"+n+".mat";
+                parsave(fileName,Sz,fom,n)
             end
-        else
-            progressTick = progressBar(options.parallel);
-
-            for n = 2:numRuns
-                layer = fill_layer(param(n));
-                Sz = RCWA_transmittance(layer, param(n));
-                fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
-
-                if options.save
-                    fileName = "results/"+folderName+"/sim"+n+".mat";
-                    parsave(fileName,Sz,fom,n)
-                end
-
-                progressTick();
+        end
+    else
+        progressTick = progressBar(options.parallel);
+        for n = 1:numRuns
+            layer = fill_layer(param(n));
+            Sz = RCWA_transmittance(layer, param(n), progressTick);
+            fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
+            if options.save
+                fileName = "results/"+folderName+"/sim"+n+".mat";
+                parsave(fileName,Sz,fom,n)
             end
         end
     end

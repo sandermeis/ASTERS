@@ -1,9 +1,10 @@
-function Sz = RCWA_transmittance(layer, param)
+function Sz = RCWA_transmittance(layer, param, progressTick)
 
 Sz = zeros(param.num_H,~param.calcAllRough*numel(layer)+param.calcAllRough*numel([layer.L])+2,numel(param.wavelengthArray));
 
 for iWavelength = 1:numel(param.wavelengthArray)
     Sz(:, :, iWavelength) = RCWA_wl(layer, param, iWavelength);
+    progressTick();
 end
 
 end

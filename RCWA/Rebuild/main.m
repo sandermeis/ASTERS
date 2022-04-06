@@ -24,7 +24,7 @@ close all
 %%
 options.save = true;
 options.parallel = true;
-options.simulationName = 'MaartenTry1';
+options.simulationName = 'MaartenFlatOxidethickness';
 
 %%
 [param, Sz] = RCWA(options);

@@ -8,6 +8,9 @@ fn = "layers.xlsx";
 % make so it interprets input as text
 layer = table2struct(readtable(fn,'Sheet',param.lay));
 
+layer(6).L = 375-param.oxidethickness;
+layer(7).L = param.oxidethickness;
+
 for j=1:numel(layer)
     layer(j).material = string(strsplit(layer(j).material,{' ',','}));
     layer(j).input = string(strsplit(layer(j).input,{' ',','}));

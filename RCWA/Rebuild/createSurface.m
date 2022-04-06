@@ -8,7 +8,6 @@ size = param.size;
 % surfacetypes=["Cone","Pyramid","Sphere"];
 % surfacetype = surfacetypes(surfaceindex);
 
-
 surf_algaas=Surface(res, size);
 surf_oxide=Surface(res, size);
 

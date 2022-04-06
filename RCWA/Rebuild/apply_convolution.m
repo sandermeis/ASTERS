@@ -11,7 +11,7 @@ for i = 1:numel(layer)
         % Maybe add existence check upstream (before iters) all(a==j,'all')
         layer(i).geometry.eps(layer(i).geometry.eps_struc == j) = eps;
 
-        if layer(i).input~=0
+        if iscell(layer(i).input)
             % Convolution
             layer(i).geometry.eps = conv_mat(layer(i).geometry.eps,param.P,param.Q);
             layer(i).geometry.mu_struc = eye(param.P*param.Q);
