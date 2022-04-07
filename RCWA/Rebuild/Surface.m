@@ -486,7 +486,19 @@ classdef Surface < handle
             end
             addFeature(obj,Feature(Z, obj.surfsize),options.x,options.y,options.PBC);
         end
-        
+
+
+        function obj = addUniform(obj,t)
+
+            %ADDROUGHSURF Adds a uniform layer to the Surface as a Feature object.
+            %   Input is ADDUNIFORM(t)
+            %
+            %   't'    	    - Thickness.
+            %
+            %   See also: ADDROUGHSURF
+            addFeature(obj,Feature(t*ones(obj.surfres, obj.surfres), obj.surfsize), 1, 1);
+        end
+
         
         function obj = rotate(obj)
             %ROTATE Rotates Surface object 90 degrees anticlockwise.

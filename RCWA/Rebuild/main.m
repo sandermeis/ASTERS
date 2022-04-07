@@ -10,6 +10,7 @@
 % fix haze 4d figure
 
 % TODO input
+% copy createsurface file into results
 % Feature inputs range
 % Fix useSurfaceSize
 % Make work (give warning) with random strings after + that arent in params
@@ -22,12 +23,12 @@
 clear all
 close all
 %%
-options.save = true;
-options.parallel = true;
-options.simulationName = 'MaartenFlatOxidethickness';
+options.save = false;
+options.parallel = false;
+options.simulationName = 'MaartenOxidesTextured';
 
 %%
 [param, Sz] = RCWA(options);
 %%
-%RCWA_process(folderName)
+RCWA_process(Sz)
 

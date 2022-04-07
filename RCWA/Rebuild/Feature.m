@@ -142,7 +142,9 @@ classdef Feature
                         % normalize
                         obj.shape = "Custom";
                         obj.Z = Z;
-                        obj.Z = obj.Z - min(obj.Z(:));
+                        if min(obj.Z, [], 'all') ~= max(obj.Z, [], 'all')
+                            obj.Z = obj.Z - min(obj.Z(:));
+                        end
                         obj.resolution  = N(1);
  
                         % rescaling

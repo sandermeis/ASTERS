@@ -9,16 +9,15 @@ for i=1:numel(layer)
 
     % Assign uniform layers
     if iscell(layer(i).input)
-
         for j=1:numel(layer(i).input)
             if isa(layer(i).input{j},'Surface')
                 if numel(layer(i).input)==1
-                    input(:, :, 1) = layer(i).input.surfMatrix;
+                    input(:, :, 1) = layer(i).input{1}.surfMatrix;
                     numLay = numel(layer(i).material);
                     if numLay > 2
                         warning("Layer is a multilayer but only in the first layer the surface is specified. Proceeding with other layers set to constant thickness.")
-                        sz = size(layer(i).input.surfMatrix);
-                        firstlaymax = max(layer(i).input.surfMatrix, [], 'all');
+                        sz = size(layer(i).input{1}.surfMatrix);
+                        firstlaymax = max(layer(i).input{1}.surfMatrix, [], 'all');
                         laythick = sum(layer(i).L) - firstlaymax;
                         if laythick < 0
                             warning("First layer already exceeds maximum layer thickness as specified in layers.xlsx; setting constant layers to 0.")
@@ -29,8 +28,8 @@ for i=1:numel(layer)
                             input(:, :, 2) = laythick * ones(sz);
                         elseif numLay >= 4
                             laythick = laythick / (numLay - 2);
-                            for j = 2:numLay - 1
-                                input(:, :, j) = laythick * ones(sz);
+                            for k = 2:numLay - 1
+                                input(:, :, k) = laythick * ones(sz);
                             end
                         end
                     end
@@ -62,6 +61,7 @@ for i=1:numel(layer)
         layer(i).geometry.mu  = 1;
     elseif layer(i).input == 0 && numel(layer(i).material) > 1
         warning("Multilayer has no surface profile assigned, resetting to uniform.")
+        % Possibly doesnt work
         layer(i).geometry.eps_struc = ones(1, 1, numel(layer(i).material));
         layer(i).geometry.mu  = ones(1, 1, numel(layer(i).material));
     else

@@ -19,18 +19,18 @@ size            = 10000
 res             = 512
 truncFactor     = 1
 Hmax            = 9
-lay             = Sheet1
+lay             = Sheet5, Sheet6 + fill
 
 % make it so range can be an input for 1 simulation, with c
 
 % Add any of your own parameters
-height          = 30
-numrandom       = 200
-surfaceindex    = 1
-featres         = 32
-fill            = 0
-add             = 0
-oxidethickness  = 50:100
+height          = 0
+numrandom       = 0
+surfaceindex    = 0
+featres         = 0
+fill            = 0:1
+add             = 1
+%oxidethickness  = 50:2:200
 
 % Booleans
 plot_permfig    = false

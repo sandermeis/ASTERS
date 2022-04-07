@@ -3,10 +3,11 @@ arguments
     options
 end
 
+dt = datestr(datetime,'dd_mm_yy_HH_MM_SS');
 if ~isempty(options.simulationName)
-    folderName = options.simulationName;
+    folderName = options.simulationName + "_" + dt;
 else
-    folderName = "sim_" + datestr(datetime,'dd_mm_yy_HH_MM_SS');
+    folderName = "sim_" + dt;
 end
 
 c = onCleanup(@() progressBar());
@@ -15,22 +16,22 @@ param = load_parameters();
 numRuns = numel(param);
 
 fig = uifigure;
-numSimWarning = uiconfirm(fig,sprintf("About to do %d simulations",numRuns),"title warning");
+numSimWarning = uiconfirm(fig, sprintf("About to do %d simulations", numRuns), "title warning");
 numCoreWarning = '';
 if options.parallel
     numCores = feature('numCores');
-    if numRuns<=numCores
+    if numRuns <= numCores
         title = sprintf("%d simulations <= %d cores",numRuns,numCores);
         msg = "Non parallel might be slightly faster";
-        numCoreWarning = uiconfirm(fig,msg,title, ...
-            'Options',{'Parallel anyway','Non parallel','Cancel'}, ...
-            'DefaultOption',2,'CancelOption',3);
+        numCoreWarning = uiconfirm(fig, msg, title, ...
+            'Options', {'Parallel anyway', 'Non parallel', 'Cancel'}, ...
+            'DefaultOption', 2, 'CancelOption', 3);
         if numCoreWarning == "Non parallel"
             options.parallel = 0;
         end
     end
 end
-if numSimWarning=="OK"&&~(numCoreWarning=="Cancel")
+if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     close(fig)
 
     if options.save
@@ -61,7 +62,7 @@ if numSimWarning=="OK"&&~(numCoreWarning=="Cancel")
     %         warning("No rough layers added, using manually entered dimensions")
     %     end
 
-    [~] = progressBar(false, sum([param.wavelengthArray]));
+    [~] = progressBar(false, numel([param.wavelengthArray]));
 
     if options.parallel
         progressTick = progressBar(options.parallel);
@@ -79,13 +80,15 @@ if numSimWarning=="OK"&&~(numCoreWarning=="Cancel")
         for n = 1:numRuns
             layer = fill_layer(param(n));
             Sz = RCWA_transmittance(layer, param(n), progressTick);
-            fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
+            fom = Jsc(squeeze(sum(Sz, 1)), param(n).wavelengthArray);
             if options.save
-                fileName = "results/"+folderName+"/sim"+n+".mat";
-                parsave(fileName,Sz,fom,n)
+                fileName = "results/" + folderName + "/sim" + n + ".mat";
+                parsave(fileName, Sz, fom, n)
             end
         end
     end
+else
+    close(fig)
 end
 
 if options.save
