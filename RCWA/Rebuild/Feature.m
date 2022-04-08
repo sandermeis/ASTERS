@@ -11,10 +11,13 @@ classdef Feature
     %   a feature with imported data where the specified string is used as
     %   a pathname. The imported matrix must be square.
     %
-    %   f = FEATURE(..., sz) specifies the size of the feature in nanometers.
+    %   f = FEATURE(..., sz) specifies the size of the feature in
+    %   nanometers. If sz is a vector, create an array of Features with
+    %   size corresponding to elements of sz.
     %
     %   f = FEATURE(..., sz, h) specifies the height of the feature in
-    %   nanometers.
+    %   nanometers. If h is a vector, create an array of Features with
+    %   heights corresponding to elements of h.
     %
     %   f = FEATURE(r, sz, h, "Shape") specifies the shape of the feature.
     %   Only possible for non imported data.
@@ -74,7 +77,7 @@ classdef Feature
         %   defaults to 16.
         %
         %   See also FEATURE
-        height (1,1) {mustBeNumeric} = 16
+        height (1,:) {mustBeNumeric} = 16
         
         %SHAPE - Shape of the feature.
         %   SHAPE is a string describing the shape of the feature. SHAPE can
@@ -90,7 +93,7 @@ classdef Feature
         shape string = "Pyramid"
         
     end
-    properties (GetAccess = public, SetAccess = private)
+    properties (GetAccess = public, SetAccess = ?Surface)
         %X - x coordinates of the feature matrix.
         %   X is a matrix giving the x coordinates of the FEATURE.
         %
@@ -115,6 +118,7 @@ classdef Feature
             if nargin==0
                 warning('No shape added, producing feature with default parameters')
             elseif nargin>=1
+                % If single number
                 if isnumeric(varargin{1})&&isscalar(varargin{1})
                     obj.resolution = varargin{1};
                     switch nargin
@@ -130,6 +134,7 @@ classdef Feature
                         otherwise
                             error('wrong number of input arguments')
                     end
+                % If input is a path or a square matrix
                 elseif isstring(varargin{1})||ischar(varargin{1})||(isnumeric(varargin{1})&&ismatrix(varargin{1})&&(size(varargin{1},1)==size(varargin{1},2)))
                     
                     if isstring(varargin{1})||ischar(varargin{1})
@@ -147,14 +152,17 @@ classdef Feature
                         end
                         obj.resolution  = N(1);
  
-                        % rescaling
                         if nargin==2
                             obj.size = varargin{2};
+
+                        % Rescale input height
                         elseif nargin==3
                             obj.size = varargin{2};
                             obj.height = varargin{3};
-                            obj.Z = obj.height * obj.Z/max(obj.Z(:));
-                            warning('Rescaling feature height')
+                            if numel(obj.height)==1
+                                obj.Z = obj.height * obj.Z/max(obj.Z(:));
+                                warning('Rescaling feature height')
+                            end
                         else
                             error('Too many input arguments for custom feature')
                         end
@@ -170,51 +178,57 @@ classdef Feature
             y = linspace(0, obj.size, obj.resolution);
             [obj.X,obj.Y] = meshgrid(x,y);
             
+            if numel(obj.height)>1
+                h = 1;
+            else
+                h = obj.height;
+            end
+
             switch obj.shape
                 case "GratingX"
                     % 1D Grating X
-                    obj.Z = obj.height * (obj.X<(obj.size/2));
+                    obj.Z = h * (obj.X<(obj.size/2));
                 case "GratingY"
                     % 1D Grating Y
-                    obj.Z = obj.height * (obj.Y<(obj.size/2));
+                    obj.Z =  h * (obj.Y<(obj.size/2));
                 case "GratingXY"
                     % 2D Grating XY
-                    obj.Z = obj.height * ((obj.X<(obj.size/2))&(obj.Y<(obj.size/2)));
+                    obj.Z =  h * ((obj.X<(obj.size/2))&(obj.Y<(obj.size/2)));
                 case "Triangle"
                     % 2D Triangle
-                    obj.Z = obj.height * ((2*abs(obj.X-(obj.size/2))+obj.Y)<obj.size);
+                    obj.Z =  h * ((2*abs(obj.X-(obj.size/2))+obj.Y)<obj.size);
                 case "Circle"
                     % 2D Circle, 3D Cylinder
-                    obj.Z = obj.height * ((obj.X-obj.size/2).^2+(obj.Y-obj.size/2).^2<=(obj.size/2).^2);
+                    obj.Z =  h * ((obj.X-obj.size/2).^2+(obj.Y-obj.size/2).^2<=(obj.size/2).^2);
                 case "Sphere"
                     % 3D Half sphere
                     tmp = (1-((obj.X-obj.size/2).^2+(obj.Y-obj.size/2).^2)/(obj.size/2)^2);
-                    obj.Z = obj.height * (tmp+abs(tmp))/2;
+                    obj.Z =  h * (tmp+abs(tmp))/2;
                 case "Pyramid"
                     % 3D Pyramid
                     blaat = @(a,b) max([abs(a-obj.size/2),abs(b-obj.size/2)]);
-                    obj.Z = obj.height * (1-2*arrayfun(blaat,obj.X,obj.Y)/obj.size);
+                    obj.Z =  h * (1-2*arrayfun(blaat,obj.X,obj.Y)/obj.size);
                 case "RidgeX"
                     % 3D Ridge X
                     blaat = @(a) max(abs(a-obj.size/2));
-                    obj.Z = obj.height * (1-2*arrayfun(blaat,obj.X)/obj.size);
+                    obj.Z =  h * (1-2*arrayfun(blaat,obj.X)/obj.size);
                 case "RidgeY"
                     % 3D Ridge Y
                     blaat = @(a) max(abs(a-obj.size/2));
-                    obj.Z = obj.height * (1-2*arrayfun(blaat,obj.Y)/obj.size);
+                    obj.Z =  h * (1-2*arrayfun(blaat,obj.Y)/obj.size);
                 case "WedgeX"
                     % 3D Wedge
-                    obj.Z = obj.height * obj.X/max(obj.X(:));
+                    obj.Z =  h * obj.X/max(obj.X(:));
                 case "WedgeY"
                     % 3D Wedge
-                    obj.Z = obj.height * obj.Y/max(obj.Y(:));
+                    obj.Z =  h * obj.Y/max(obj.Y(:));
                 case "Cone"
                     tmp = (1-sqrt((obj.X-obj.size/2).^2+(obj.Y-obj.size/2).^2)/(obj.size/2));
-                    obj.Z = obj.height * (tmp+abs(tmp))/2;
+                    obj.Z =  h * (tmp+abs(tmp))/2;
                 case "Custom"
                     
                 otherwise
-                    warning('No shape added, producing feature with default shape')
+                    error('Feature name not recognised')
             end
             %%
             

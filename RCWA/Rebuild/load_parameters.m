@@ -1,43 +1,22 @@
 function [param] = load_parameters()
 
-cellpar = readcell("input.txt", 'CommentStyle', '%','Delimiter',{'=','+','-'},'LineEnding',{'\n',';'},'FileType','text','TextType','char','DurationType','text');
+cellpar = readcell("input.txt", 'CommentStyle', '%','Delimiter',{'=','+'},'LineEnding',{'\n',';'},'FileType','text','TextType','char','DurationType','text');
 numParams = size(cellpar,1);
 
+% Parse input file
 for i = 1:numParams
-    if ~any(ismember(cellpar{i,2}, ','))
-        if ~isnumeric(cellpar{i,2})
-        if all(ismember(char(cellpar{i,2}), '0123456789+-.:*/pi()[]'))||string(cellpar{i,2})=="false"||string(cellpar{i,2})=="true"
-            try
-            cellpar{i,2} = eval(cellpar{i,2});
-            catch
-            end
-        else
-            cellpar{i,2} = string(cellpar{i,2});
-        end
-        end
+    if any(ismember(cellpar{i,2}, ','))
+        cellpar{i,2} = parseComma(cellpar{i,2});
     else
-        b = string(strsplit(cellpar{i,2},{' ',','}));
-        b2=cell(size(b));
-        % need to add safety check if numeric
-        for j = 1:numel(b)
-            try
-            if all(ismember(char(b(j)), '0123456789+-.:[] '))||string(b(j))=="false"||string(b(j))=="true"
-                b2{j} = eval(b(j));
-            else
-                b2{j} = b(j);
-            end
-            catch
-            end
-        end
-        cellpar{i,2} = b2;
+        cellpar{i,2} = parseEval(cellpar{i,2});
     end
     try
-    cellpar{i,3} = string(strsplit(cellpar{i,3},{' ',','}));
+        cellpar{i,3} = string(strsplit(cellpar{i,3},{' ',','}));
     catch
     end
 end
-
-%cells with array, except with single c as parameter
+%%
+%cells with array, except with an & as parameter
 cellsNumAndList = false(numParams,1);
 if size(cellpar,2)>2
     for i = 1:numParams
@@ -53,16 +32,16 @@ k = find(cellsNumAndList);
 %cell with just the arrays
 cc = cellpar(cellsNumAndList,:);
 if size(cellpar,2)>2
-for j=1:numel(cc(:,3)) %number of arrays
-    if all(~ismissing(cc{j,3}))&&all(~strcmp(cc{j,3},'c')) % for non missing arrays
-        d=[];
-        for i = 1:numel(cc{j,3}) % loop through combinations
-            d(1) = j;
-            d(1+i) = find(cellfun(@(x) ~isempty(x),strfind(cc(:,1),cc{j,3}(i))));
+    for j=1:numel(cc(:,3)) %number of arrays
+        if all(~ismissing(cc{j,3}))&&all(~strcmp(cc{j,3},'c')) % for non missing arrays
+            d=[];
+            for i = 1:numel(cc{j,3}) % loop through combinations
+                d(1) = j;
+                d(1+i) = find(cellfun(@(x) ~isempty(x),strfind(cc(:,1),cc{j,3}(i))));
+            end
+            cc{j,3} = d;
         end
-        cc{j,3} = d;
     end
-end
 end
 dim = numel(cc(:,2));
 b = cell(1,dim);
@@ -222,3 +201,32 @@ end
 %options.dispSurface
 %options.checkConvergence + which dimension
 %%
+
+function b2 = parseComma(input)
+b = string(strsplit(input,{' ',','}));
+b2=cell(size(b));
+% need to add safety check if numeric
+for j = 1:numel(b)
+    try
+        if all(ismember(char(b(j)), '0123456789+-.:[] '))||string(b(j))=="false"||string(b(j))=="true"
+            b2{j} = eval(b(j));
+        else
+            b2{j} = b(j);
+        end
+    catch
+    end
+end
+end
+
+function out = parseEval(input)
+if ~isnumeric(input)
+    if all(ismember(char(input), '0123456789+-.:*/pi()[]'))||string(input)=="false"||string(input)=="true"
+        try
+            out = eval(input);
+        catch
+        end
+    else
+        out = string(input);
+    end
+end
+end

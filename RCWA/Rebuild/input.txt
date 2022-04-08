@@ -4,9 +4,8 @@ version         = v3.2.0
 % Parameters
 % Add "+ otherparameter1, otherparameter2" to a parameter,
 % to vary those together, use 
-%   -c to pass a whole array as one parameter.
-%   -r repeat parameter
-%   -t vary in tandem
+%   & to pass a whole array as one parameter.
+%   / vary in tandem
 
 wavelengthArray = 350:5:950 -c
 ref_medium      = Air

@@ -8,8 +8,11 @@
 % check my saves on matlab file exchange
 % maarten stuff, layers
 % fix haze 4d figure
+% make addfeature also accept list of obj
+% jsc harmonics plot
 
 % TODO input
+% calculate avg of layer and auto set other layer thickness to keep it constant
 % copy createsurface file into results
 % Feature inputs range
 % Fix useSurfaceSize

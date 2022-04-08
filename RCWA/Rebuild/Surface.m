@@ -133,7 +133,22 @@ classdef Surface < handle
                     warning("Position is out of bounds, no object added")
                 end
             else
-                warning("Feature larger than surface, no object added")
+                fobj.Z = fobj.Z(1:obj.surfres,1:obj.surfres);
+                fobj.resolution = obj.surfres;
+                warning("Feature larger than surface, Feature sampled down to surface size")
+                if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
+                    if isempty(obj.Features)
+                        obj.Features(1).fobj = fobj;
+                        obj.Features(1).xpos = xpos;
+                        obj.Features(1).ypos = ypos;
+                    else
+                        obj.Features(end+1).fobj = fobj;
+                        obj.Features(end).xpos = xpos;
+                        obj.Features(end).ypos = ypos;
+                    end
+                else
+                    warning("Position is out of bounds, no object added")
+                end
             end
             
         end
@@ -298,7 +313,7 @@ classdef Surface < handle
         end
         
         
-        function addRandomFeatures(obj,fobj,number,options)
+        function addRandomFeatures(obj, fobj, number, options)
             arguments
                 obj
                 fobj
@@ -324,15 +339,35 @@ classdef Surface < handle
                 maxx = size(obj.surfMatrix,1)-nx+1;
                 maxy = size(obj.surfMatrix,2)-ny+1;
                 
-                xpos = randi([1,maxx],1,number);
-                ypos = randi([1,maxy],1,number);
-                %placeFeature(obj,i,x,y,options.PBC,options.mode);
-                addFeature(obj,fobj,xpos,ypos,options.PBC);
-            else  
-                xpos = randi([1,obj.surfres],1,number);
-                ypos = randi([1,obj.surfres],1,number);
-                %placeFeature(obj,i,x,y,options.PBC,options.mode);
-                addFeature(obj,fobj,xpos,ypos,options.PBC);
+                if numel(fobj.height)>1
+                    for i = 1:numel(fobj.height)
+                        fcopy = fobj;
+                        fcopy.height = fobj.height(i);
+                        fcopy.Z = fcopy.height * fcopy.Z/max(fcopy.Z,[],'all');
+                        xpos = randi([1, maxx], 1, 1);
+                        ypos = randi([1, maxy], 1, 1);
+                        addFeature(obj, fcopy, xpos, ypos, options.PBC);
+                    end
+                else
+                    xpos = randi([1, obj.surfres], 1, number);
+                    ypos = randi([1, obj.surfres], 1, number);
+                    addFeature(obj, fobj, xpos, ypos, options.PBC);
+                end
+            else
+                if numel(fobj.height)>1
+                    for i = 1:numel(fobj.height)
+                        fcopy = fobj;
+                        fcopy.height = fobj.height(i);
+                        fcopy.Z = fcopy.height * fcopy.Z/max(fcopy.Z,[],'all');
+                        xpos = randi([1, obj.surfres], 1, 1);
+                        ypos = randi([1, obj.surfres], 1, 1);
+                        addFeature(obj, fcopy, xpos, ypos, options.PBC);
+                    end
+                else
+                    xpos = randi([1, obj.surfres], 1, number);
+                    ypos = randi([1, obj.surfres], 1, number);
+                    addFeature(obj, fobj, xpos, ypos, options.PBC);
+                end
             end
         end
         
