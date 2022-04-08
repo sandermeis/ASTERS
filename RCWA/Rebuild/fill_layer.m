@@ -1,12 +1,10 @@
 function [layer] = fill_layer(param)
 
-run("createSurface.m")
-
-% Which layer stacks "which sheets in excel"
-
 fn = "layers.xlsx";
 % make so it interprets input as text
 layer = table2struct(readtable(fn,'Sheet',param.lay));
+
+run("createSurface.m")
 
 % layer(6).L = 375-param.oxidethickness;
 % layer(7).L = param.oxidethickness;

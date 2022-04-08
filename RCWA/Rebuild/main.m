@@ -23,9 +23,9 @@
 clear all
 close all
 %%
-options.save = false;
+options.save = true;
 options.parallel = false;
-options.simulationName = 'MaartenOxidesTextured';
+options.simulationName = 'EscapeConeCheck';
 
 %%
 [param, Sz] = RCWA(options);

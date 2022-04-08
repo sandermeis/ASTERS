@@ -90,7 +90,7 @@ classdef Feature
         shape string = "Pyramid"
         
     end
-    properties (GetAccess = public, SetAccess = private)
+    properties (GetAccess = public, SetAccess = ?Surface)
         %X - x coordinates of the feature matrix.
         %   X is a matrix giving the x coordinates of the FEATURE.
         %

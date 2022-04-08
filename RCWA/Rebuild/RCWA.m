@@ -35,9 +35,9 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     close(fig)
 
     if options.save
-        % onlinepath='schijf/sander/results';
-        mkdir("results",folderName)
-        save("results/"+folderName+"/param.mat","param")
+        pathName = "/run/user/1000/gvfs/smb-share:server=amsbackup-srv.science.ru.nl,share=amsbackup/Students/Sander/results/";
+        mkdir(pathName,folderName)
+        save(pathName+folderName+"/param.mat","param")
     end
 
     % REDO THIS, SKIPPING FOR NOW
@@ -71,7 +71,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             Sz = RCWA_transmittance(layer, param(n), progressTick);
             fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
             if options.save
-                fileName = "results/"+folderName+"/sim"+n+".mat";
+                fileName = pathName + folderName + "/sim" + n + ".mat";
                 parsave(fileName,Sz,fom,n)
             end
         end
@@ -82,7 +82,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             Sz = RCWA_transmittance(layer, param(n), progressTick);
             fom = Jsc(squeeze(sum(Sz, 1)), param(n).wavelengthArray);
             if options.save
-                fileName = "results/" + folderName + "/sim" + n + ".mat";
+                fileName = pathName + folderName + "/sim" + n + ".mat";
                 parsave(fileName, Sz, fom, n)
             end
         end

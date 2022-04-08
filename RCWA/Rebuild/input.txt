@@ -15,20 +15,21 @@ theta           = 0
 phi             = 0
 pTE             = 0.5
 pTM             = 0.5
-size            = 10000
-res             = 512
+size            = 2000,4000,6000
+res             = 512, 1024, 2048
 truncFactor     = 1
 Hmax            = 9
-lay             = Sheet5, Sheet6 + fill
+lay             = Sheet7
 
 % make it so range can be an input for 1 simulation, with c
 
 % Add any of your own parameters
-height          = 0
+%height          = 1500
+angle           = 10, 9, 8, 7
 numrandom       = 0
 surfaceindex    = 0
 featres         = 0
-fill            = 0:1
+fill            = 0
 add             = 1
 %oxidethickness  = 50:2:200
 

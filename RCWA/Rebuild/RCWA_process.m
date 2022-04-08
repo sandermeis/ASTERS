@@ -9,7 +9,9 @@ fulljsc(i) = jsc.fom(4);
 
 end
 
-plot([param.oxidethickness],fulljsc)
+%h = RCWA_plot(fill_layer(param(3)), param(3), param(3).wavelengthArray, Sz)
+
+plot([param(1:4).res],fulljsc(1:4))
 % 
 % p = struct('p1', {param.p1}, 'p2', {param.p2},'p3', {param.p3},'p4', {param.p4});
 % n = 176;

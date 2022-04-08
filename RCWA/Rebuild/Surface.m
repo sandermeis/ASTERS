@@ -133,7 +133,22 @@ classdef Surface < handle
                     warning("Position is out of bounds, no object added")
                 end
             else
-                warning("Feature larger than surface, no object added")
+                fobj.Z = fobj.Z(1:obj.surfres, 1:obj.surfres);
+                fobj.resolution = obj.surfres;
+                warning("Feature larger than surface, Feature sampled down to surface size")
+                if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
+                    if isempty(obj.Features)
+                        obj.Features(1).fobj = fobj;
+                        obj.Features(1).xpos = xpos;
+                        obj.Features(1).ypos = ypos;
+                    else
+                        obj.Features(end+1).fobj = fobj;
+                        obj.Features(end).xpos = xpos;
+                        obj.Features(end).ypos = ypos;
+                    end
+                else
+                    warning("Position is out of bounds, no object added")
+                end
             end
             
         end

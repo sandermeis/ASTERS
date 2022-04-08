@@ -102,7 +102,7 @@ end
 [param.res_x]        = deal(param.res);
 [param.res_y]        = deal(param.res);
 
-test                    = cellfun(@(x) 2*pi./x,{param.wavelengthArray},'UniformOutput',false);
+test                 = cellfun(@(x) 2*pi./x,{param.wavelengthArray},'UniformOutput',false);
 [param.k_0]          = deal(test{:});
 
 [param.P]            = deal(param.Hmax);
