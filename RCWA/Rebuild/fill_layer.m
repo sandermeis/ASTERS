@@ -20,10 +20,10 @@ for j=1:numel(layer)
         error("Wrong layer input")
     end
 
-    if numel(layer(j).material)>2
+
         layer(j).add = param.add;
         layer(j).fill = param.fill;
-    end
+
 
     if iscell(layer(j).input)
         for k=1:numel(layer(j).input)

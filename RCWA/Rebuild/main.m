@@ -15,10 +15,10 @@ close all
 %%
 param = load_parameters();
 %%
-options.desktop = false;
-options.onlinesave = false;
+options.desktop = true;
+options.onlinesave = true;
 options.parallel = false;
-options.simulationName = 'GraphicsTest2';
+options.simulationName = 'OxideUrbach25';
 
 %%
 folderName = RCWA(param, options);

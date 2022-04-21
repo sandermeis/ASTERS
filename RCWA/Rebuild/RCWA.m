@@ -50,13 +50,17 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
         else
             onlinePathName = '/Volumes/amsbackup/Students/Sander/results/';
         end
-
-        mkdir(onlinePathName, folderName)
-        onlinePathName = onlinePathName + folderName;
-        copyfile("input/input.txt", offlinePathName)
-        copyfile("input/layers.xlsx", offlinePathName)
-        copyfile("input/createSurface.m", offlinePathName)
-        copyfile(offlinePathName + "/param.mat", onlinePathName)
+        try
+            mkdir(onlinePathName, folderName)
+            onlinePathName = onlinePathName + folderName;
+            copyfile("input/input.txt", offlinePathName)
+            copyfile("input/layers.xlsx", offlinePathName)
+            copyfile("input/createSurface.m", offlinePathName)
+            copyfile(offlinePathName + "/param.mat", onlinePathName)
+        catch
+            warning("Unable to create online directory")
+            options.onlinesave = false;
+        end
     end
 
     % REDO THIS, SKIPPING FOR NOW
@@ -91,9 +95,11 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
 
             fileName = "results/" + folderName + "/sim" + n + ".mat";
-            parsave(fileName, [], Sz, fom, n)
+
             if options.onlinesave
                 parsave(fileName, onlinePathName, Sz, fom, n)
+            else
+                parsave(fileName, [], Sz, fom, n)
             end
         end
     else
@@ -104,9 +110,11 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             fom = Jsc(squeeze(sum(Sz, 1)), param(n).wavelengthArray);
 
             fileName = "results/" + folderName + "/sim" + n + ".mat";
-            parsave(fileName, [], Sz, fom, n)
+
             if options.onlinesave
                 parsave(fileName, onlinePathName, Sz, fom, n)
+            else
+                parsave(fileName, [], Sz, fom, n)
             end
         end
     end
