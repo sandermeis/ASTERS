@@ -7,31 +7,21 @@
 % image field inside layer
 % check my saves on matlab file exchange
 % maarten stuff, layers
-% fix haze 4d figure
 % make addfeature also accept list of obj
-% jsc harmonics plot
-
-% TODO input
-% calculate avg of layer and auto set other layer thickness to keep it constant
-% copy createsurface file into results
-% Feature inputs range
 % Fix useSurfaceSize
-% Make work (give warning) with random strings after + that arent in params
-% with just 1 paramset, ndgrid doesnt work
-% repeat variable n times
-% multiple wavelength ranges input
-% vary both together (diagonal)
-% "c" plus multiple arrays together
 
 clear all
 close all
 %%
-options.save = false;
+param = load_parameters();
+%%
+options.desktop = false;
+options.onlinesave = false;
 options.parallel = false;
-options.simulationName = 'MaartenOxidesTextured';
+options.simulationName = 'GraphicsTest2';
 
 %%
-[param, Sz] = RCWA(options);
+folderName = RCWA(param, options);
 %%
-RCWA_process(Sz)
+RCWA_process(folderName)
 

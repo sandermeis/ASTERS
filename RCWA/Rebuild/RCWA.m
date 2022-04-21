@@ -1,5 +1,6 @@
-function varargout = RCWA(options)
+function folderName = RCWA(param, options)
 arguments
+    param
     options
 end
 
@@ -12,7 +13,7 @@ end
 
 c = onCleanup(@() progressBar());
 
-param = load_parameters();
+
 numRuns = numel(param);
 
 fig = uifigure;
@@ -34,10 +35,28 @@ end
 if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     close(fig)
 
-    if options.save
-        % onlinepath='schijf/sander/results';
-        mkdir("results",folderName)
-        save("results/"+folderName+"/param.mat","param")
+    offlinePathName = "results/";
+    mkdir(offlinePathName, folderName)
+    offlinePathName = offlinePathName + folderName;
+    save(offlinePathName + "/param.mat", "param")
+    copyfile("input/input.txt", offlinePathName)
+    copyfile("input/layers.xlsx", offlinePathName)
+    copyfile("input/createSurface.m", offlinePathName)
+
+    if options.onlinesave
+        % Pathname for offline and online files
+        if options.desktop
+            onlinePathName = '/run/user/1000/gvfs/smb-share:server=amsbackup-srv.science.ru.nl,share=amsbackup/Students/Sander/results/';
+        else
+            onlinePathName = '/Volumes/amsbackup/Students/Sander/results/';
+        end
+
+        mkdir(onlinePathName, folderName)
+        onlinePathName = onlinePathName + folderName;
+        copyfile("input/input.txt", offlinePathName)
+        copyfile("input/layers.xlsx", offlinePathName)
+        copyfile("input/createSurface.m", offlinePathName)
+        copyfile(offlinePathName + "/param.mat", onlinePathName)
     end
 
     % REDO THIS, SKIPPING FOR NOW
@@ -70,9 +89,11 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             layer = fill_layer(param(n));
             Sz = RCWA_transmittance(layer, param(n), progressTick);
             fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
-            if options.save
-                fileName = "results/"+folderName+"/sim"+n+".mat";
-                parsave(fileName,Sz,fom,n)
+
+            fileName = "results/" + folderName + "/sim" + n + ".mat";
+            parsave(fileName, [], Sz, fom, n)
+            if options.onlinesave
+                parsave(fileName, onlinePathName, Sz, fom, n)
             end
         end
     else
@@ -81,23 +102,16 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             layer = fill_layer(param(n));
             Sz = RCWA_transmittance(layer, param(n), progressTick);
             fom = Jsc(squeeze(sum(Sz, 1)), param(n).wavelengthArray);
-            if options.save
-                fileName = "results/" + folderName + "/sim" + n + ".mat";
-                parsave(fileName, Sz, fom, n)
+
+            fileName = "results/" + folderName + "/sim" + n + ".mat";
+            parsave(fileName, [], Sz, fom, n)
+            if options.onlinesave
+                parsave(fileName, onlinePathName, Sz, fom, n)
             end
         end
     end
 else
     close(fig)
-end
-
-if options.save
-    varargout{1} = param;
-    varargout{2} = folderName;
-
-else
-    varargout{1} = param;
-    varargout{2} = Sz;
 end
 
 end
@@ -164,10 +178,17 @@ end
     end
 end
 
-function parsave(fileName,Sz,fom,n)
+function parsave(fileName, onlinePathName, Sz, fom, n)
 % savefile = varargin{1}; % first input argument
 % for i=2:nargin
 %     savevar.(inputname(i)) = varargin{i}; % other input arguments
 % end
-save(fileName,'Sz','fom','n')
+save(fileName, 'Sz', 'fom', 'n')
+if ~isempty(onlinePathName)
+    try
+        copyfile(onlinePathName, fileName)
+    catch
+        warning("Unable to save file online")
+    end
+end
 end

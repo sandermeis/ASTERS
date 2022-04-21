@@ -1,14 +1,15 @@
-function h = RCWA_plot(layer, param, wavelengthArray, Sz)
+function RCWA_plot(param, Sz, layer, sim_num)
 
 n = fixLayerString(layer, param);
 
-h(1) = tile_harmonics4d(Sz, wavelengthArray, n, param.P, param.Q, param.tr_ind);
+plot_results(param, Sz, n, sim_num);
 
-h(2) = plot_results(squeeze(sum(Sz,1)).', wavelengthArray, n);
+plothaze(param, Sz, n, sim_num);
 
-h(3) = plothaze(Sz, wavelengthArray, n);
+jsc_harmonics(param, Sz, layer, sim_num);
 
 end
+
 
 % figure
 % [Er,Eth,Eph] = plot_field({reshape(r{1},P,Q),reshape(r{2},P,Q),reshape(r{3},P,Q)},beta,labda_x,labda_y,lenx,leny,P,Q);
@@ -55,7 +56,9 @@ end
 end
 
 
-function h = plothaze(Sz, wavelengthArray, n)
+function plothaze(param, Sz, n, sim_num)
+
+wavelengthArray = param.wavelengthArray;
 
 % why abs???
 centralH = squeeze(abs(Sz((end+1)/2,:,:)));
@@ -73,6 +76,7 @@ end
 xlabel('Wavelength (nm)')
 ylabel('Haze')
 legend(n,'location','eastoutside')
+title("Sim "+ string(sim_num),"FontSize",16,"FontWeight",'bold')
 
 
 %%
@@ -93,27 +97,121 @@ legend(n,'location','eastoutside')
 end
 
 
-function h = plot_results(Sz, wavelengthArray, n)
+function plot_results(param, Sz_in, n, sim_num)
 
-h = figure;
-lab1 = wavelengthArray(1);
-lab2 = wavelengthArray(end);
+Sz = squeeze(sum(Sz_in,1)).';
 
-N=size(Sz,2);
+N = size(Sz,2);
 
-x_grid=repmat(wavelengthArray',1,N);
+x_grid=repmat(param.wavelengthArray',1,N);
 
 n(end+1)="R";
 n(end+1)="T";
 
+%A(:, [1 2]) = A(:, [2 1]);
+gaaspos = find(n=="GaAs", 1);
+if ~isempty(gaaspos)
+    Sz(:, [1 gaaspos]) = Sz(:, [gaaspos 1]);
+    n([1 gaaspos]) = n([gaaspos 1]);
+end
+
 for i = 1:N
-    jsc(i) = Jsc(Sz(:,i)', wavelengthArray);
+    jsc(i) = Jsc(Sz(:,i)', param.wavelengthArray);
 end
-area(x_grid,Sz,'EdgeColor','none')
-legstring=n + " Jsc: " + compose('%0.2f',string(jsc)) + " mA/cm^2";
-leg1 = legend(legstring,'Location','eastoutside','FontSize',12);
-xlim([lab1-0.1*(lab2-lab1),lab2+0.1*(lab2-lab1)])
+
+h = figure('Color','w');
+
+colors = [76,144,186;43,194,194;244,184,17;222,102,62;255,145,43]/255;
+%colors = ["#7f58af","#64c5eb","#e84d8a","#feb326"];
+%colors = ["#031f4b","#04396c","#035b96","#6497b1","#b3cde0"];
+%colors = jet(4);
+colororder(colors);
+hx = subplot(1,4,[1,2,3]);
+% pos = get(hx,'Position');
+% pos(1) = 0.055;
+% pos(3) = 0.9;
+% set(hx, 'Position', pos)
+ar = area(x_grid, Sz, 'LineWidth', 2);%;,'EdgeColor','none');
+
+title("Sim " + string(sim_num), "FontSize", 18, "FontWeight", 'bold')
+xlim([param.wavelengthArray(1), param.wavelengthArray(end)])
+ylim([0, 1])
+xlabel("Wavelength (nm)", "FontSize", 16, "FontWeight", 'bold')
+ylabel("Absorption (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+set(hx,'FontSize',14,'LineWidth', 2)
+
+legstring = pad(n) + sprintf(" Jsc: ") + pad(compose('%0.2f',string(jsc)),'left') + sprintf(" mA/cm^2");
+hx2 = subplot(1,4,4);
+hx2.Visible = 'off';
+[~,legend_h,~,~] = legendflex(ar, cellstr(legstring),'ref', hx2, 'anchor', [1 1], 'buffer', [0 0],'FontName','monospaced');
+
+%hold on
+%ar2 = area(x_grid,Sz);
+
+hstyle = {'single','single','cross','single','single','cross'};
+hdir = {0,45,0,90,135,45};
+
+for i=1:numel(ar)
+h_ind = ceil(i/length(colors))-1;
+    if h_ind>0 && h_ind<length(colors)
+        j = mod(i-1,length(hstyle))+1;
+        hatchfill2(ar(i), hstyle{j},'HatchAngle',hdir{j},'HatchDensity',40,'HatchColor','k','HatchLineWidth',2)
+        hatchfill2(legend_h(length(ar)+i), hstyle{j},'HatchAngle',hdir{j},'HatchDensity',40,'HatchColor','k','HatchLineWidth',2)
+    end
 end
+
+end
+
+
+function jsc_harmonics(param, Sz, layer, sim_num)
+
+    n = string([{layer.material},{"R"},{"T"}]);
+    
+    num_lay = size(Sz, 2);
+    h = figure;
+    t = tiledlayout(h,'flow');
+    title(t,"Jsc per harmonic per material, Sim "+ string(sim_num),"FontSize",16,"FontWeight",'bold')
+    cmin_old = 0;
+    cmax_old = 0;
+    for i = 1:num_lay
+        jsc_empty = zeros(param.P,param.Q);
+        h(i) = nexttile;
+        jsc_empty(param.tr_ind) = Jsc(squeeze(Sz(:,i,:)), param.wavelengthArray);
+        im = imagesc(jsc_empty);
+        title(n(i))
+        set(h(i),"Color","none",'YDir','normal','TickLength', [0 0])
+        im.AlphaData = jsc_empty~=0;
+        xticks(1:param.P)
+        yticks(1:param.Q)
+        xticklabels(h(i),num2cell(-0.5*(param.P-1):0.5*(param.P-1)))
+        yticklabels(h(i),num2cell(-0.5*(param.Q-1):0.5*(param.Q-1)))
+
+        h2(i) = axes(t);
+        h2(i).Layout.Tile = h(i).Layout.Tile;
+        set(h2(i),"Color","none",'YDir','normal')
+        h2(i).XLim = [0,param.P];
+        h2(i).YLim = [0,param.Q];
+        h2(i).YTickLabel = {};
+        h2(i).XTickLabel = {};
+        xticks(h2(i), 0:param.P)
+        yticks(h2(i), 0:param.Q)
+        h2(i).XGrid = 'on';
+        h2(i).YGrid = 'on';
+        h2(i).GridAlpha = 1;
+        cmin_new = min(jsc_empty, [], 'all');
+        cmax_new = max(jsc_empty, [], 'all');
+        cmin_old = max(cmin_old, cmin_new);
+        cmax_old = max(cmax_old, cmax_new);
+    %alphamap();
+    %alpha([0;ones(2,1)])
+    %alpha('color');
+    end
+    set(h, 'Colormap', jet, 'CLim', [cmin_old cmax_old])
+    cbh = colorbar(h(end));
+    cbh.Layout.Tile = 'east';
+
+end
+
 
 
 function h = tile_harmonics4d(Sz, wavelengthArray, n, P, Q, tr_ind)
@@ -150,25 +248,18 @@ end
 
 
 function a = repair_harmonics(Sz,P,Q,tr_ind)
-
-num_lay = size(Sz,2);
-num_lab = size(Sz,3);
-a = zeros(P,Q,num_lay,num_lab);
-
-for i=1:num_lay
-    for j=1:num_lab
-        c=a(:,:,i,j);
-        c(tr_ind)=Sz(:,i,j);
-        a(:,:,i,j) = c;
+    num_lay = size(Sz,2);
+    num_lab = size(Sz,3);
+    a = zeros(P,Q,num_lay,num_lab);
+    
+    for i=1:num_lay
+        for j=1:num_lab
+            c=a(:,:,i,j);
+            c(tr_ind)=Sz(:,i,j);
+            a(:,:,i,j) = c;
+        end
     end
 end
-end
-
-
-
-
-
-
 
 
 function [Er,Eth,Eph] = plot_field(s,beta,labda_x,labda_y,Nx,Ny,P,Q)

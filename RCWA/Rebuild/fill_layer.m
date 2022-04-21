@@ -1,15 +1,13 @@
-function [layer] = fill_layer(param)
+function layer = fill_layer(param, folderName)
+arguments
+    param
+    folderName = "input"
+end
 
-run("createSurface.m")
+layer = table2struct(readtable(folderName + "/layers.xlsx", 'Sheet', param.layerSheet));
 
-% Which layer stacks "which sheets in excel"
-
-fn = "layers.xlsx";
-% make so it interprets input as text
-layer = table2struct(readtable(fn,'Sheet',param.lay));
-
-% layer(6).L = 375-param.oxidethickness;
-% layer(7).L = param.oxidethickness;
+% Unsafe w.r.t. cybersecurity
+run(folderName + "/" + param.surfaceFile + ".m")
 
 for j=1:numel(layer)
     layer(j).material = string(strsplit(layer(j).material,{' ',','}));

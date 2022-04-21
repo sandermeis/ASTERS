@@ -1,77 +1,135 @@
 function [param] = load_parameters()
 
-cellpar = readcell("input.txt", 'CommentStyle', '%','Delimiter',{'=','+'},'LineEnding',{'\n',';'},'FileType','text','TextType','char','DurationType','text');
+cellpar = readcell("input/input.txt", 'CommentStyle', '%','Delimiter',{'=','+'},'LineEnding',{'\n',';'},'FileType','text','TextType','string','DurationType','text');
 numParams = size(cellpar,1);
 
 % Parse input file
+isListCells = false(numParams,1);
+isScalarListCell = false(numParams,1);
+
 for i = 1:numParams
-    if any(ismember(cellpar{i,2}, ','))
-        cellpar{i,2} = parseComma(cellpar{i,2});
-    else
-        cellpar{i,2} = parseEval(cellpar{i,2});
-    end
-    try
-        cellpar{i,3} = string(strsplit(cellpar{i,3},{' ',','}));
-    catch
+    if isstring(cellpar{i,2})
+
+        % Remove "&" and count
+        if contains(cellpar{i,2},"&")
+            cellpar{i,2} = erase(cellpar{i,2},"&");
+            isScalarListCell(i) = 1;
+        end
+
+        cellpar{i,2} = parseText(cellpar{i,2});
+
+        if size(cellpar,2)>2 && ~ismissing(cellpar{i,3})
+            cellpar{i,3} = string(strsplit(cellpar{i,3},{' ',','}));
+        end
+
+        % Cells with array
+        isListCells(i) = length(cellpar{i,2})>1;
     end
 end
 %%
-%cells with array, except with an & as parameter
-cellsNumAndList = false(numParams,1);
-if size(cellpar,2)>2
-    for i = 1:numParams
-        cellsNumAndList(i) = length(cellpar{i,2})>1 && any(~strcmp(cellpar{i,3},'c'));%isnumeric(cellpar{i,2})&&
-    end
-else
-    for i = 1:numParams
-        cellsNumAndList(i) = length(cellpar{i,2})>1;
-    end
-end
-%indices cells with array
-k = find(cellsNumAndList);
-%cell with just the arrays
-cc = cellpar(cellsNumAndList,:);
-if size(cellpar,2)>2
-    for j=1:numel(cc(:,3)) %number of arrays
-        if all(~ismissing(cc{j,3}))&&all(~strcmp(cc{j,3},'c')) % for non missing arrays
-            d=[];
-            for i = 1:numel(cc{j,3}) % loop through combinations
-                d(1) = j;
-                d(1+i) = find(cellfun(@(x) ~isempty(x),strfind(cc(:,1),cc{j,3}(i))));
+
+
+
+% Remove "\" and count
+% if contains(cellpar{i,2},"\")
+%     cellpar{i,2} = erase(cellpar{i,2},"\");
+%     cellSteady(i) = 1;
+% end
+
+% Exclude lists that should be considered as a scalar parameter
+isListCells = isListCells & ~isScalarListCell;
+
+% Indices of the cells with array
+k = find(isListCells);
+% Cell with just the arrays
+ListCells = cellpar(isListCells, :);
+
+dim = numel(ListCells(:,2));
+
+% Process extra parameters
+if size(cellpar, 2)>2
+    for j = 1:numel(ListCells(:, 3))
+        % For non missing arrays
+        if all(~ismissing(ListCells{j, 3}))
+            d1 = [];
+            isParallel = [];
+            isRange = {};
+            for i = 1:numel(ListCells{j,3}) % loop through combinations
+                if contains(char(ListCells{j,3}(i)),"(")
+                    ss = strsplit(ListCells{j,3}(i),"(");
+                    ss(2) = "("+ss(2);
+                    isRange{1} = {1};
+                    isRange{end+1} = {parseText(ss(2))};
+                    ListCells{j,3}(i) = ss(1);
+
+                    if contains(char(ListCells{j,3}(i)),"\")
+                        ListCells{j,3}(i) = erase(ListCells{j,3}(i),"\");
+                        isParallel(1) = true;
+                        isParallel(end+1) = true;
+                    else
+                        isParallel(1) = false;
+                        isParallel(end+1) = false;
+                    end
+                else
+                    if contains(char(ListCells{j,3}(i)),"\")
+                        ListCells{j,3}(i) = erase(ListCells{j,3}(i),"\");
+                        isParallel(1) = true;
+                        isParallel(end+1) = true;
+                    else
+                        isParallel(1) = false;
+                        isParallel(end+1) = false;
+                    end
+                end
+                % Replace with vector
+                d1(1) = j;
+                paramNames = ListCells(:,1);
+                paramLoc = find([paramNames{:}]==ListCells{j,3}(i));
+                if ~isempty(paramLoc)
+                    d1(end+1) = paramLoc;
+                else
+                    pname = string(ListCells{j,3}(i));
+                    error("Unable to find parameter " + pname)
+                end
             end
-            cc{j,3} = d;
+            ListCells{j,3} = d1;
+            ListCells{j,4} = isParallel;
+            ListCells{j,5} = isRange;
         end
     end
 end
-dim = numel(cc(:,2));
+
 b = cell(1,dim);
-[b{:}] = ndgrid(cc{:,2});
 
-%if params dont vary at same time
-if size(cellpar,2)>2
-    cm = cornerMatrix(b{1},cc(cellfun(@(x) isnumeric(x),cc(:,3)),3));
-else
-    cm = cornerMatrix(b{1},{});
-end
-for i=1:dim
-    c{i} = b{i}(cm);
-end
-
-for n = 1:length(c{1,1})
-    cp2 = cellpar;
-    for j = 1:dim
-        %if numeric
-        if iscell(c{j}(n))
-            cp2(k(j),2)=c{j}(n);
-        else
-            cp2(k(j),2)={c{j}(n)};
-        end
-        %if not numeric
-        %cp2(k(j),2)={cellpar(c{j}(n))};
+if dim>0
+    % Make grid with all lists
+    [b{:}] = ndgrid(ListCells{:,2});
+    
+    if size(cellpar,2)>2
+        cm = cornerMatrix(b{1},ListCells(cellfun(@(x) isnumeric(x), ListCells(:,3)),3), ListCells(cellfun(@(x) isnumeric(x), ListCells(:,4)),4));
+    else % Only vertices
+        cm = cornerMatrix(b{1},{});
     end
-    param(n) = cell2struct(cp2(:,2),cp2(:,1),1);
-end
 
+    for i=1:dim
+        c{i} = b{i}(cm);
+    end
+    
+    for n = 1:length(c{1,1})
+        cp2 = cellpar;
+        for j = 1:dim
+            %if numeric
+            if iscell(c{j}(n))
+                cp2(k(j),2)=c{j}(n);
+            else
+                cp2(k(j),2)={c{j}(n)};
+            end
+        end
+
+        param(n) = cell2struct(cp2(:,2), string(cp2(:,1)), 1);
+    end
+else
+    param(1) = cell2struct(cellpar(:,2), string(cellpar(:,1)), 1);
+end
 % Do always
 
 %%
@@ -202,31 +260,65 @@ end
 %options.checkConvergence + which dimension
 %%
 
-function b2 = parseComma(input)
-b = string(strsplit(input,{' ',','}));
-b2=cell(size(b));
-% need to add safety check if numeric
-for j = 1:numel(b)
-    try
-        if all(ismember(char(b(j)), '0123456789+-.:[] '))||string(b(j))=="false"||string(b(j))=="true"
-            b2{j} = eval(b(j));
-        else
-            b2{j} = b(j);
-        end
-    catch
+function output = parseText(input)
+% If it contains ',', parse text as list, else as scalar
+output = parseEval(input);
+
+if contains(input, ',')&&isequal(output,input)
+    b = strsplit(input,{' ',','});
+    output = cell(size(b));
+    % need to add safety check if numeric
+    for j = 1:numel(b)
+        output{j} = parseEval(b(j));
     end
-end
+else
+    output = parseEval(input);
 end
 
-function out = parseEval(input)
-if ~isnumeric(input)
-    if all(ismember(char(input), '0123456789+-.:*/pi()[]'))||string(input)=="false"||string(input)=="true"
-        try
-            out = eval(input);
-        catch
+
+    function out = parseEval(input)
+        if all(ismember(char(input), '0123456789+-.:*/pi()[],')) ...
+                || input == "false" || input == "true"
+            try
+                out = eval(input);
+                if isempty(out)
+                    error("Unknown numeric input: " + string(input))
+                end
+            catch
+                error("Unknown numeric input: " + string(input))
+                out = input;
+            end
+        else
+            out = input;
+        end
+    end
+
+end
+
+
+function param = truncation(param)
+%%
+for i=1:numel(param)
+    M = -(param(i).P-1)/2:(param(i).P-1)/2;
+    N = -(param(i).Q-1)/2:(param(i).Q-1)/2;
+    [m,n] = meshgrid(M,N);
+
+    if param(i).truncateHarm
+        TMAP = abs(m/((param(i).P-1)/2)).^(2*param(i).truncFactor) + abs(n/((param(i).Q-1)/2)).^(2*param(i).truncFactor);
+        TMAP(isnan(TMAP))=1;
+        TMAP = (TMAP <= 1);
+        if param(i).truncfig
+            figure
+            imagesc(TMAP);
         end
     else
-        out = string(input);
+        TMAP = ones(size(m));
     end
+
+    % Extract Array Indices
+    param(i).tr_ind = find(TMAP(:));
+    param(i).num_H = length(param(i).tr_ind);
 end
+
+
 end
