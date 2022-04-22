@@ -51,7 +51,7 @@ zid = (cid==1);
 % Find only the "Faces" you want to vary together
 if ~isempty(dimvec)
     for i=1:numel(dimvec)
-        if ~anymissing(dimvec{i})&&~isempty(dimvec{i})
+        if ~any(ismissing(dimvec{i}))&&~isempty(dimvec{i})
             temp = zid;
             temp2 = cid;
             whichParallel{i} = dimvec{i}(logical(isParallel{i}));

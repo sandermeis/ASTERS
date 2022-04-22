@@ -13,12 +13,14 @@
 clear all
 close all
 %%
+addpath("data_daan","data_maarten","input","objects",genpath("packages"),"refractive_indices");
+%%
 param = load_parameters();
 %%
 options.desktop = true;
-options.onlinesave = true;
-options.parallel = false;
-options.simulationName = 'OxideUrbach25';
+options.onlinesave = false;
+options.parallel = true;
+options.simulationName = 'OxideThicknessAlGaAs100';
 
 %%
 folderName = RCWA(param, options);

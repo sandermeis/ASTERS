@@ -43,13 +43,13 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     copyfile("input/layers.xlsx", offlinePathName)
     copyfile("input/createSurface.m", offlinePathName)
 
-    if options.onlinesave
-        % Pathname for offline and online files
         if options.desktop
             onlinePathName = '/run/user/1000/gvfs/smb-share:server=amsbackup-srv.science.ru.nl,share=amsbackup/Students/Sander/results/';
         else
             onlinePathName = '/Volumes/amsbackup/Students/Sander/results/';
         end
+
+    if options.onlinesave
         try
             mkdir(onlinePathName, folderName)
             onlinePathName = onlinePathName + folderName;

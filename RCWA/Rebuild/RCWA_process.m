@@ -3,23 +3,32 @@ function RCWA_process(folderName)
 p = load("results/"+folderName+"/param.mat","param");
 param=p.param;
 
+%algaasthickness = 1:1:10;
+oxidethickness  = 10:10:2000;
+%[X,Y] = ndgrid(algaasthickness,oxidethickness);
+fulljsc = zeros(size(oxidethickness));
+
 for i = 1:numel(param)
 
 A = load("results/"+folderName+"/sim"+string(i)+".mat");
-fulljsc(i) = A.fom(4);
+fulljsc(i) = A.fom(3);
 
-layer = fill_layer(param(i), "results/" + folderName);
+if numel(param)<11||i==23
+    %warning("Too many simulations, not displaying")
+    layer = fill_layer(param(i), "results/" + folderName);
+    RCWA_plot(param(i), A.Sz, layer, i)
+end
 
-RCWA_plot(param(i), A.Sz, layer, i)
 end
 
 
 figure('Color','w');
-plot(1:numel(param),fulljsc, 'LineWidth', 2))
+plot(oxidethickness,fulljsc)
 
 title("Jsc per simulation", "FontSize", 18, "FontWeight", 'bold')
-xlabel("Simulation number", "FontSize", 16, "FontWeight", 'bold')
-ylabel("Jsc (mA/cm^2)", "FontSize", 16, "FontWeight", 'bold')
+%xlabel("Algaas", "FontSize", 16, "FontWeight", 'bold')
+xlabel("Oxide", "FontSize", 16, "FontWeight", 'bold')
+%zlabel("Jsc (mA/cm^2)", "FontSize", 16, "FontWeight", 'bold')
 
 
 %displayDiscretized(V, numLayers, onlymiddle)

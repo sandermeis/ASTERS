@@ -1,10 +1,11 @@
 function RCWA_plot(param, Sz, layer, sim_num)
 
-n = fixLayerString(layer, param);
+%n = fixLayerString(layer, param);
+%n = {layer.material};
 
-plot_results(param, Sz, n, sim_num);
+plot_results(param, Sz, layer, sim_num);
 
-plothaze(param, Sz, n, sim_num);
+plothaze(param, Sz, layer, sim_num);
 
 jsc_harmonics(param, Sz, layer, sim_num);
 
@@ -56,7 +57,7 @@ end
 end
 
 
-function plothaze(param, Sz, n, sim_num)
+function plothaze(param, Sz, layer, sim_num)
 
 wavelengthArray = param.wavelengthArray;
 
@@ -66,9 +67,16 @@ sumH = squeeze(sum(abs(Sz),1));
 diffH = sumH - centralH;
 haze = arrayfun(@(a, b) a/b * (b>1e-12),diffH,sumH);
 
-n = [n, "R", "T"];
-h = figure;
-colororder(hsv(8))
+n = {layer.material};
+n(end+1) = {"R"};
+n(end+1) = {"T"};
+
+for j=1:numel(n)
+n{j} = [n{j}{:}];
+end
+
+figure
+colororder(parula(size(haze,1)))
 for i=1:size(haze,1)
     hold on
     plot(wavelengthArray,abs(haze(i,:)).','LineWidth',2)
@@ -97,7 +105,7 @@ title("Sim "+ string(sim_num),"FontSize",16,"FontWeight",'bold')
 end
 
 
-function plot_results(param, Sz_in, n, sim_num)
+function plot_results(param, Sz_in, layer, sim_num)
 
 Sz = squeeze(sum(Sz_in,1)).';
 
@@ -105,15 +113,20 @@ N = size(Sz,2);
 
 x_grid=repmat(param.wavelengthArray',1,N);
 
-n(end+1)="R";
-n(end+1)="T";
+n = {layer.material};
+n(end+1) = {"R"};
+n(end+1) = {"T"};
+
+for j=1:numel(n)
+n{j} = [n{j}{:}];
+end
 
 %A(:, [1 2]) = A(:, [2 1]);
-gaaspos = find(n=="GaAs", 1);
-if ~isempty(gaaspos)
-    Sz(:, [1 gaaspos]) = Sz(:, [gaaspos 1]);
-    n([1 gaaspos]) = n([gaaspos 1]);
-end
+% gaaspos = find(n=="GaAs", 1);
+% if ~isempty(gaaspos)
+%     Sz(:, [1 gaaspos]) = Sz(:, [gaaspos 1]);
+%     n([1 gaaspos]) = n([gaaspos 1]);
+% end
 
 for i = 1:N
     jsc(i) = Jsc(Sz(:,i)', param.wavelengthArray);
@@ -165,7 +178,13 @@ end
 
 function jsc_harmonics(param, Sz, layer, sim_num)
 
-    n = string([{layer.material},{"R"},{"T"}]);
+n = {layer.material};
+n(end+1) = {"R"};
+n(end+1) = {"T"};
+
+for j=1:numel(n)
+n{j} = [n{j}{:}];
+end
     
     num_lay = size(Sz, 2);
     h = figure;

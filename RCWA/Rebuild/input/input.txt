@@ -18,11 +18,11 @@ pTM             = 0.5
 size            = 10000
 res             = 512
 truncFactor     = 1
-Hmax            = 13
+Hmax            = 5
 
 % These are the layers.xlsx file tab and surface creation file respectively
 % -------------------------------------------------------------------------
-layerSheet      = OxideDoubleTextured, OxideTexturedUni
+layerSheet      = OxidePlanar
 surfaceFile     = createSurface
 
 % Add any of your own parameters
@@ -34,6 +34,11 @@ surfaceindex    = 0
 featres         = 0
 fill            = 0.5
 add             = 0.5
+urbach          = 25
+%[1,5,10,15,20,25] + algaasthickness
+algaasthickness = 100
+%:1:10 + oxidethickness
+oxidethickness  = 10:10:2000
 
 % Booleans
 plot_permfig    = false
