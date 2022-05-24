@@ -34,7 +34,7 @@ Articles/TM/Charalambos, C. et al. Appl. Opt. 41, 19 (2002).pdf
 Articles/TM/Missoni, L. et al. Optical Materials. 109 110012 (2020).pdf
 Articles/TM/Pettersson, L. et al. J. Appl. Phys. 86, 1 (1999).pdf
 <<<<<<< Updated upstream
-RCWA old/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_100.fig
+RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_100.fig
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_150.fig
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_200.fig
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_250.fig
@@ -61,6 +61,7 @@ RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_550.fig
 RCWA/Transmittance/Rough/figs/RCWA_730_81_GaPthickness_800.fig
 RCWA/Transmittance/Rough/figs/RCWA_ARough2_81_GaPthickness_360.fig
 RCWA/Transmittance/Rough/figs/RCWA_ARough_81_GaPthickness_360.fig
+RCWA/Rebuild
 RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim4.mat
 RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim3.mat
 RCWA/Rebuild/results/sim_25_03_22_16_26_19/sim2.mat
