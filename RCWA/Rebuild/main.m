@@ -1,5 +1,6 @@
 % TODO
 %
+% Error when harmonics and xy resolution are close, p0+pfft=0 as index
 % resolution matching feature/surface
 % check perm outside range wavelengths
 % Auto break on conv check
@@ -20,10 +21,11 @@ param = load_parameters();
 options.desktop = true;
 options.onlinesave = false;
 options.parallel = true;
-options.simulationName = 'OxideThicknessAlGaAs100';
+options.simulationName = 'WedgeAlGaAs2kConvergenceTest';
 
 %%
 folderName = RCWA(param, options);
 %%
+folderName = "SpacerThicknessTest_18_05_22_12_54_16";
 RCWA_process(folderName)
 

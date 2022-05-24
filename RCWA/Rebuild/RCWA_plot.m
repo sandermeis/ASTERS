@@ -5,9 +5,9 @@ function RCWA_plot(param, Sz, layer, sim_num)
 
 plot_results(param, Sz, layer, sim_num);
 
-plothaze(param, Sz, layer, sim_num);
+%plothaze(param, Sz, layer, sim_num);
 
-jsc_harmonics(param, Sz, layer, sim_num);
+%jsc_harmonics(param, Sz, layer, sim_num);
 
 end
 
@@ -132,7 +132,7 @@ for i = 1:N
     jsc(i) = Jsc(Sz(:,i)', param.wavelengthArray);
 end
 
-h = figure('Color','w');
+h = figure('Color','w','Position', [100 100 1300 600]);
 
 colors = [76,144,186;43,194,194;244,184,17;222,102,62;255,145,43]/255;
 %colors = ["#7f58af","#64c5eb","#e84d8a","#feb326"];
@@ -195,7 +195,7 @@ end
     for i = 1:num_lay
         jsc_empty = zeros(param.P,param.Q);
         h(i) = nexttile;
-        jsc_empty(param.tr_ind) = Jsc(squeeze(Sz(:,i,:)), param.wavelengthArray);
+        jsc_empty(param.tr_ind) = sum(squeeze(Sz(:,i,:)),2);%Jsc(squeeze(Sz(:,i,:)), param.wavelengthArray);
         im = imagesc(jsc_empty);
         title(n(i))
         set(h(i),"Color","none",'YDir','normal','TickLength', [0 0])

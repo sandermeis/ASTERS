@@ -6,9 +6,9 @@ arguments
 end
 
 looparr = 1:numLayers;
-if onlymiddle
-    looparr = looparr(2:end-1);
-end
+% if onlymiddle
+%     looparr = looparr(2:end-1);
+% end
 
 clrmap = hsv(numLayers);
 for i=looparr

@@ -4,37 +4,45 @@ p = load("results/"+folderName+"/param.mat","param");
 param=p.param;
 
 %algaasthickness = 1:1:10;
-oxidethickness  = 10:10:2000;
+oxidethickness  = 180:40:220;
 %[X,Y] = ndgrid(algaasthickness,oxidethickness);
-fulljsc = zeros(size(oxidethickness));
+%fulljsc = zeros(size(oxidethickness));
 
 for i = 1:numel(param)
-
 A = load("results/"+folderName+"/sim"+string(i)+".mat");
-fulljsc(i) = A.fom(3);
-
-if numel(param)<11||i==23
+%fulljsc(i) = A.fom(1);
+% SS = A.Sz;
+% SS2 = squeeze(sum(SS,1));
+% SS3(i,:) = SS2(4,:);
+%plot(param(1).wavelengthArray,SS2(4,:),'LineWidth',2)
+%hold on
+%if numel(param)<11
     %warning("Too many simulations, not displaying")
     layer = fill_layer(param(i), "results/" + folderName);
+    %displayDiscretized(layer(1).geometry.eps_struc, 2)
+    try
     RCWA_plot(param(i), A.Sz, layer, i)
+    catch
+    end
+%end
 end
+% plot(5:2:15,mean(abs(diff(SS3,1)),2)-0.02,'LineWidth',2)
+% hold on
+% bb=load('bb.mat');
+% plot(9:2:19,bb.bb,'LineWidth',2)
+% xlabel("Harmonics (#)","FontSize", 16, "FontWeight", 'bold')
+% ylabel("Mean reflectivity difference (a.u.)","FontSize", 16, "FontWeight", 'bold')
+% title("Convergence of two wedges of different sizes","FontSize", 16, "FontWeight", 'bold')
+% legend(["2500 nm wide","7500 nm wide"])
+%legend(["3","5","7","9","11","13","15"])
 
-end
-
-
-figure('Color','w');
-plot(oxidethickness,fulljsc)
-
-title("Jsc per simulation", "FontSize", 18, "FontWeight", 'bold')
-%xlabel("Algaas", "FontSize", 16, "FontWeight", 'bold')
-xlabel("Oxide", "FontSize", 16, "FontWeight", 'bold')
-%zlabel("Jsc (mA/cm^2)", "FontSize", 16, "FontWeight", 'bold')
-
-
-%displayDiscretized(V, numLayers, onlymiddle)
-
-
-
+% figure('Color','w');
+% plot(oxidethickness,fulljsc)
+% 
+% title("Jsc per simulation", "FontSize", 18, "FontWeight", 'bold')
+% %xlabel("Algaas", "FontSize", 16, "FontWeight", 'bold')
+% xlabel("Oxide", "FontSize", 16, "FontWeight", 'bold')
+% ylabel("Jsc (mA/cm^2)", "FontSize", 16, "FontWeight", 'bold')
 
 
 % h = RCWA_plot(fill_layer(param(3)),param(3),param(3).wavelengthArray, Sz)

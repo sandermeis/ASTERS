@@ -4,7 +4,11 @@ arguments
     folderName = "input"
 end
 
-layer = table2struct(readtable(folderName + "/layers.xlsx", 'Sheet', param.layerSheet));
+fn = folderName + "/layers.xlsx";
+
+opts = detectImportOptions(fn);
+opts = setvartype(opts, 'input', 'string');  %or 'char' if you prefer
+layer = table2struct(readtable(fn, opts, 'Sheet', param.layerSheet));
 
 % Unsafe w.r.t. cybersecurity
 run(folderName + "/" + param.surfaceFile + ".m")
@@ -20,10 +24,8 @@ for j=1:numel(layer)
         error("Wrong layer input")
     end
 
-
-        layer(j).add = param.add;
-        layer(j).fill = param.fill;
-
+    layer(j).add = param.add;
+    layer(j).fill = param.fill;
 
     if iscell(layer(j).input)
         for k=1:numel(layer(j).input)
