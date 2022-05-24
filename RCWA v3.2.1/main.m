@@ -21,14 +21,22 @@ param = load_parameters();
 %%
 options.desktop = true;
 options.onlinesave = false;
-options.parallel = true;
-options.simulationName = 'WedgeAlGaAs2kConvergenceTest';
+options.parallel = false;
+options.simulationName = 'StructureTom';
 
 %%
 folderName = RCWA(param, options);
 %%
-folderName = "SpacerThicknessTest_18_05_22_12_54_16";
+
 RCWA_process(folderName)
+
+% folderName = "MaartenFlatOxideTest2_24_05_22_11_38_13";
+% RCWA_process(folderName)
+% folderName = "MaartenTexturedOxideTest_24_05_22_12_10_13";
+% RCWA_process(folderName)
+
+% folderName = "SpacerThicknessTest_18_05_22_12_54_16";
+
 
 % foldernames = ["DuplicateSurfaceTestSteppedGratingGaAsConvergence_18_05_22_14_45_33", "DuplicateSurfaceTestSteppedGratingGaAsTry2_18_05_22_14_01_44","DuplicateSurfaceTestSteppedGratingGaAsConvergence1113_18_05_22_15_45_18"];
 % 

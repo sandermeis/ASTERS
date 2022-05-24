@@ -1,20 +1,20 @@
-function RCWA_plot(param, Sz, layer, sim_num, titlestring)
+function RCWA_plot(param, Sz, layer, sim_num, title)
 arguments
 param
 Sz
 layer
 sim_num
-titlestring = "Sim " + string(sim_num)
+title = "Sim " + string(sim_num)
 end
 
 %n = fixLayerString(layer, param);
 %n = {layer.material};
 
-plot_results(param, Sz, layer, sim_num, titlestring);
+plot_results(param, Sz, layer, sim_num, title);
 
-%plothaze(param, Sz, layer, sim_num, titlestring);
+%plothaze(param, Sz, layer, sim_num, title);
 
-%jsc_harmonics(param, Sz, layer, sim_num, titlestring);
+%jsc_harmonics(param, Sz, layer, sim_num, title);
 
 end
 
@@ -183,7 +183,7 @@ end
 end
 
 
-function jsc_harmonics(param, Sz, layer, sim_num, titlestring)
+function jsc_harmonics(param, Sz, layer, sim_num, title)
 
 n = {layer.material};
 n(end+1) = {"R"};
@@ -196,7 +196,7 @@ end
     num_lay = size(Sz, 2);
     h = figure;
     t = tiledlayout(h,'flow');
-    title(t,"Jsc per harmonic per material, " + titlestring,"FontSize",16,"FontWeight",'bold')
+    title(t,"Jsc per harmonic per material, " + title,"FontSize",16,"FontWeight",'bold')
     cmin_old = 0;
     cmax_old = 0;
     for i = 1:num_lay

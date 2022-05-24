@@ -54,10 +54,6 @@ surf_tom2 = Surface(param.res, param.size);
 % surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1);
 % surf_oxide_uniform.addUniform(70);
 
-surf_tom0.addFeature(Feature("data_tom/c0_10um.txt",10000),1,1);
-surf_tom1.addFeature(Feature("data_tom/c1_10um.txt",10000),1,1);
-surf_tom2.addFeature(Feature("data_tom/c2_10um.txt",10000),1,1);
-
 
 % surf_s.placeFeatures("PBC", true, "mode", "add");
 % surf_m.placeFeatures("PBC", true, "mode", "add");

@@ -29,13 +29,17 @@ if numel(param)>11&&(i==1||i==16)
     
     layer = fill_layer(param(i), "results/" + folderName);
     %displayDiscretized(layer(1).geometry.eps_struc, 2)
+    try
     RCWA_plot(param(i), A.Sz, layer, i, "Flat sim "+string(i))
-elseif numel(param)<11
+    catch
+    end
+else
     layer = fill_layer(param(i), "results/" + folderName);
     %displayDiscretized(layer(1).geometry.eps_struc, 2)
-
+    try
     RCWA_plot(param(i), A.Sz, layer, i, "Textured sim "+string(i))
-
+    catch
+    end
 end
 
 end
