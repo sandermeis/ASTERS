@@ -1,5 +1,15 @@
-function RCWA_process(folderName)
+function RCWA_process(folderName, whichsims)
+arguments
+folderName
+whichsims = []
+end
 
+process1(folderName)
+
+end
+
+
+function process1(folderName)
 p = load("results/"+folderName+"/param.mat","param");
 param=p.param;
 
@@ -69,6 +79,133 @@ end
 end
 
 
+function process2(folderName, whichsims)
+a={};
+b={};
+c={};
+d={};
+for j=1:numel(folderName)
+p = load("results/"+folderName(j)+"/param.mat","param");
+param=p.param;
+wl = param(1).wavelengthArray;
+for i = 1:numel(param)
+
+A = load("results/"+folderName(j)+"/sim"+string(i)+".mat");
+
+layer = fill_layer(param(i), "results/" + folderName(j));
+
+% S = squeeze(sum(A.Sz,1));
+% R = S(4,:);
+% if param(i).size==2500
+%     if isempty(a)
+%         a{1}=R;
+%     else
+%         a{end+1}=R;
+%     end
+% 
+% 
+% elseif param(i).size==5000
+%     if isempty(b)
+%         b{1}=R;
+%     else
+%         b{end+1}=R;
+%     end
+% 
+% elseif param(i).size==7500
+%     if isempty(c)
+%         c{1}=R;
+%     else
+%         c{end+1}=R;
+%     end
+% elseif param(i).size==10000
+%     if isempty(d)
+%         d{1}=R;
+%     else
+%         d{end+1}=R;
+%     end
+% end
+
+
+
+% if isempty(whichsims)
+%     RCWA_plot(param(i), A.Sz, layer, i)
+%     %displayDiscretized(layer(2).geometry.eps_struc,2)
+% elseif ismember(i,whichsims)
+%     RCWA_plot(param(i), A.Sz, layer, i)
+%     %displayDiscretized(layer(2).geometry.eps_struc,2)
+% end
+% end
+SS=A.Sz;
+SS(isnan(SS))=0;
+RCWA_plot(param(i), SS, layer, i)
+
+end
+end
+
+
+% tiledlayout('flow')
+% nexttile
+% 
+% for i=1:numel(a)-1
+% a{1}(isnan(a{1}))=0;
+% a{1+i}(isnan(a{1}))=0;
+% a{1}(isnan(a{1+i}))=0;
+% a{1+i}(isnan(a{1+i}))=0;
+% 
+% plot(wl,abs(a{1}-a{1+i}), 'LineWidth', 2)
+% hold on
+% end
+% title("2500", "FontSize", 18, "FontWeight", 'bold')
+% xlabel("Wavelength nm)", "FontSize", 16, "FontWeight", 'bold')
+% ylabel("Reflection (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+% legend(["3-5","5-7","7-9"])
+% nexttile
+% for i=1:numel(b)-1
+% 
+% b{1}(isnan(b{1}))=0;
+% b{1+i}(isnan(b{1}))=0;
+% b{1}(isnan(b{1+i}))=0;
+% b{1+i}(isnan(b{1+i}))=0;
+% 
+% plot(wl,abs(b{1}-b{1+i}), 'LineWidth', 2)
+% hold on
+% end
+% title("5000", "FontSize", 18, "FontWeight", 'bold')
+% xlabel("Wavelength nm)", "FontSize", 16, "FontWeight", 'bold')
+% ylabel("Reflection (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+% legend(["3-5","5-7","7-9"])
+% nexttile
+% for i=1:numel(c)-1
+% 
+% c{1}(isnan(c{1}))=0;
+% c{1+i}(isnan(c{1}))=0;
+% c{1}(isnan(c{1+i}))=0;
+% c{1+i}(isnan(c{1+i}))=0;
+% 
+% plot(wl,abs(c{1}-c{1+i}), 'LineWidth', 2)
+% hold on
+% end
+% title("7500", "FontSize", 18, "FontWeight", 'bold')
+% xlabel("Wavelength nm)", "FontSize", 16, "FontWeight", 'bold')
+% ylabel("Reflection (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+% legend(["3-5","5-7","7-9"])
+% nexttile
+% for i=1:numel(d)-1
+% 
+% d{1}(isnan(d{1}))=0;
+% d{1+i}(isnan(d{1}))=0;
+% d{1}(isnan(d{1+i}))=0;
+% d{1+i}(isnan(d{1+i}))=0;
+% 
+% plot(wl,abs(d{1}-d{1+i}), 'LineWidth', 2)
+% hold on
+% end
+% title("10000", "FontSize", 18, "FontWeight", 'bold')
+% xlabel("Wavelength nm)", "FontSize", 16, "FontWeight", 'bold')
+% ylabel("Reflection (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+% legend(["3-5","5-7","7-9"])
+end
+
 
 function disp_permittivity()
         % this can happen after everything is imported
@@ -95,7 +232,6 @@ function disp_permittivity()
             legend(string({layer.material}),'location','eastoutside');
         end
 end
-
 
 
 function plotLayer(layer,i)

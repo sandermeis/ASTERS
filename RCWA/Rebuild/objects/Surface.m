@@ -493,9 +493,9 @@ classdef Surface < handle
                 obj
                 options.PBC logical = true
                 options.mode string = "Rough"
-                options.sigma double = 100
-                options.hurst double = 0.5
-                options.height double = 100
+                options.sigma (1,1) double = 100
+                options.hurst (1,1) double = 0.5
+                options.height (1,1) double = 100
                 options.x (1,1) {mustBeInteger} = 1
                 options.y (1,1) {mustBeInteger} = 1
             end
