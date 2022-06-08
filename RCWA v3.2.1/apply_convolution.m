@@ -1,15 +1,16 @@
 function layer = apply_convolution(layer, param, iter)
 
 for i = 1:numel(layer)
-    for j = 1:numel(layer(i).permittivities)
+    
         % Start fresh at every wavelength
         layer(i).geometry.eps = layer(i).geometry.eps_struc;
-
+        for j = 1:numel(layer(i).permittivities)
         % Assign permittivity at specific wavelength
         eps = layer(i).permittivities{j}(param.wavelengthArray(iter)); % wl using interpolant
 
         % Maybe add existence check upstream (before iters) all(a==j,'all')
         layer(i).geometry.eps(layer(i).geometry.eps_struc == j) = eps;
+        end
 
         if iscell(layer(i).input)
             % Convolution
@@ -20,7 +21,7 @@ for i = 1:numel(layer)
             layer(i).geometry.mu = layer(i).geometry.mu_struc(param.tr_ind,param.tr_ind);
             layer(i).geometry.eps = layer(i).geometry.eps(param.tr_ind,param.tr_ind,:);
         end
-    end
+
 end
 end
 

@@ -9,7 +9,7 @@ version         = v3.2.1
 %   Add \ to vary parameters in tandem, e.g. "Par + \otherPar"
 % -------------------------------------------------------------------------
 
-wavelengthArray = &300:5:1000
+wavelengthArray = &350:5:900
 ref_medium      = Air
 trn_medium      = Air
 theta           = 0
@@ -47,5 +47,5 @@ oxidethickness  = 200
 plot_permfig    = false
 useSurfaceSize  = false
 calcAllRough    = false
-truncateHarm    = true
+truncateHarm    = false
 truncfig        = false

@@ -15,14 +15,14 @@
 clear all
 close all
 %%
-addpath("data_daan","data_maarten","input","objects",genpath("packages"),"refractive_indices");
+addpath("data_daan","data_maarten","data_tom","input","objects",genpath("packages"),"refractive_indices");
 %%
 param = load_parameters();
 %%
 options.desktop = true;
 options.onlinesave = false;
 options.parallel = false;
-options.simulationName = 'StructureTom';
+options.simulationName = 'Tom';
 
 %%
 folderName = RCWA(param, options);

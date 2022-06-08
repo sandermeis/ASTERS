@@ -34,7 +34,7 @@ elseif numel(param)<11
     layer = fill_layer(param(i), "results/" + folderName);
     %displayDiscretized(layer(1).geometry.eps_struc, 2)
 
-    RCWA_plot(param(i), A.Sz, layer, i, "Textured sim "+string(i))
+    RCWA_plot(param(i), A.Sz, layer, i, "Sim "+string(i))
 
 end
 
