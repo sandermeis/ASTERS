@@ -27,15 +27,15 @@ tic
 % roughdim=[25, 0, 0, 0, 0];
 % L=[400, 50, 50, 125, 3000];
 
-n           = ["InGaP","Al03GaAs","InGaP","GaP","Ag","Ag"];
-shape       = [0,0,0,0,6,0];
-roughdim	= [0,0,0,0,20,0];
-L           = [125,50,50,gap_length,213,3000];
+n           = ["GaAs","GaAs","Ag"];
+shape       = [0,0,3];
+roughdim	= [0,1,0];
+L           = [300,100,3000];
 
 roughness = 2;
 
-lab1 = 650;
-lab2 = 700;
+lab1 = 350;
+lab2 = 900;
 dlab = 5;
 lam0_r = lab1:dlab:lab2;
 

@@ -1,17 +1,25 @@
-function layer = build_layerstack(layer)
+function layer = build_layerstack(layer, param)
 
-for i=1:numel(layer)
+% Loop through layers
+for i = 1:numel(layer)
 
-    % If it's not already, change rough layer thickness into an array
-    if (layer(i).roughdim>1)&&(numel(layer(i).L)==1)
-        layer(i).L = layer(i).L/layer(i).roughdim*ones(1,layer(i).roughdim);
-    end
+    % Structured layers
 
-    % Assign uniform layers
+    % Check if layer is cell, else check for uniform, else error invalid input
     if iscell(layer(i).input)
-        for j=1:numel(layer(i).input)
-            if isa(layer(i).input{j},'Surface')
-                if numel(layer(i).input)==1
+        % If L is a scalar, and layer is not uniform, change layer thickness
+        % into a vector
+        if (layer(i).roughdim>1)&&(numel(layer(i).L)==1)
+            layer(i).L = layer(i).L/layer(i).roughdim*ones(1,layer(i).roughdim);
+        end
+
+        % Loop through composite layer
+        for j = 1:numel(layer(i).input)
+            % Check if layer is a Surface object, else error invalid input
+            if isa(layer(i).input{j},'Surface') && layer(i).roughdim>1
+                % If layer is a multilayer, but layer cell only has one
+                % Surface entry, else fill as normal
+                if numel(layer(i).input) == 1
                     input(:, :, 1) = layer(i).input{1}.surfMatrix;
                     numLay = numel(layer(i).material);
                     if numLay > 2
@@ -34,143 +42,83 @@ for i=1:numel(layer)
                         end
                     end
                 else
+                    % something off, third index probs doesnt work with
+                    % discretize
                     input(:,:,j) = layer(i).input{j}.surfMatrix;
                 end
+
+                % Discretize
+                [Z, Lnew, Lrecalc] = discretize_surface(input, layer(i).roughdim, ...
+                    layer(i).tolerance, layer(i).reverse, layer(i).optimRough, layer(i).fill, layer(i).add);
+
+                layer(i).geometry.eps_struc = Z;
+
+                if layer(i).recalcRoughL
+                    layer(i).L = Lrecalc/layer(i).roughdim*ones(1,layer(i).roughdim);
+                    warning(sprintf("Recalculated %s layer thickness to %d nm",join(layer(i).material(:),", "),Lrecalc))
+                end
+
+                if layer(i).optimRough
+                    layer(i).L = Lnew' * sum(layer(i).L)/layer(i).roughdim;
+                end
+            % Already discretized input: Check if there is 1 input, and it is numeric, square and binary
+            elseif (numel(layer(i).input) == 1) && isnumeric(layer(i).input{1}) && (size(layer(i).input{1},1)==size(layer(i).input{1},2)) && all((layer(i).input{1}==0)|(layer(i).input{1}==1),'all')
+                warning("Assuming binary input")
+                layer(i).geometry.eps_struc = layer(i).input{1};
+                layer(i).geometry.eps_struc(layer(i).geometry.eps_struc==1)=2;
+                layer(i).geometry.eps_struc(layer(i).geometry.eps_struc==0)=1;
+
+                if layer(i).roughdim~=size(layer(i).input{j},3)
+                    layer(i).roughdim=size(layer(i).input{j},3);
+                    layer(i).L = sum(layer(i).L)/layer(i).roughdim*ones(1,layer(i).roughdim);
+                    warning("Input array does not match roughdim, overwriting roughdim")
+                end
+                
+                if numel(layer(i).material)~=max(layer(i).geometry.eps_struc,[],'all')
+                    % numer of materials smaller than number of multilayers
+                    if numel(layer(i).material)<max(layer(i).geometry.eps_struc,[],'all')
+                        warning("Multilayer has 2 components, however only 1 material(s) are specified, setting to previous layer material")
+                        if i==1 % Possibly need to add something for reverse
+                            layer(i).material(2)=layer(i).material(1);
+                            layer(i).material(1)=param.ref_medium;
+                        else
+                            layer(i).material(2)=layer(i).material(1);
+                            layer(i).material(1)=layer(i-1).material(end);
+                        end
+                        % numer of materials larger than number of multilayers
+                    else
+                        error("Too many materials for input multilayer")
+                    end
+                end
             else
+                %maybe add direct multilayer input like [1, 2, 3]
                 error("Invalid layer input.")
             end
         end
 
-        % Discretize
-        [Z, Lnew, Lrecalc] = discretize_surface(input, layer(i).roughdim, ...
-            layer(i).tolerance, layer(i).reverse, layer(i).optimRough, layer(i).fill, layer(i).add);
-
-        layer(i).geometry.eps_struc = Z;
-
-        if layer(i).recalcRoughL
-            layer(i).L = Lrecalc/layer(i).roughdim*ones(1,layer(i).roughdim);
-            warning(sprintf("Recalculated %s layer thickness to %d nm",join(layer(i).material(:),", "),Lrecalc))
-        end
-
-        if layer(i).optimRough
-            layer(i).L = Lnew' * sum(layer(i).L)/layer(i).roughdim;
-        end
-
+    % Uniform layers
     elseif layer(i).input == 0 && numel(layer(i).material) == 1
         layer(i).geometry.eps_struc = 1;
         layer(i).geometry.mu  = 1;
+        if layer(i).roughdim>1
+            warning("Roughdim can't be larger than 1 for uniform layers, overwriting roughdim to 1")
+            layer(i).roughdim = 1;
+        end
+    % Uniform multilayer
     elseif layer(i).input == 0 && numel(layer(i).material) > 1
         warning("Multilayer has no surface profile assigned, resetting to uniform.")
-        % Possibly doesnt work
+        % Possibly doesnt work TEST TEST TEST
         layer(i).geometry.eps_struc = ones(1, 1, numel(layer(i).material));
         layer(i).geometry.mu  = ones(1, 1, numel(layer(i).material));
+        % !! have to change L as well, not currently implemented
     else
         error("Invalid layer input.")
     end
 
-
 end
 end
 
-function [dnew, Lnew, Lrecalc] = discretize_surface(Z, Zres, eps, rev, opt, fill, add)
 
-%fill = zeros(size(Z, 3)-1);
-%add = ones(size(Z, 3)-1);
-
-[Z_out, Lrecalc] = discretizeLayers(Z, Zres, fill, add);
-
-if rev
-    Z_out = flip(Z_out, 3);
-end
-% Optimize probably doesnt work with reverse, should work only for nonzero value,
-%currently also counts zeros
-if opt
-    [dnew, Lnew] = optim_discr(Z_out, eps);
-else
-    dnew = Z_out;
-    Lnew = 1;
-end
-
-end
-
-
-function [V, totmax] = discretizeLayers(input, Zres, fill, add)
-
-
-[NX, NY, N3] = size(input);
-numLayers = N3+1;
-eps = 1:numLayers;
-y = zeros(NX, NY, N3);
-
-% Minimum 0
-for i = 1:N3
-    y(:, :, i) = input(:, :, i) - min(input(:, :, i), [], 'all');
-    if i>1
-        layersUpToNow = sum(y(:, :, 1:i-1), 3);
-        vq = interpLayerMax(layersUpToNow);
-        y(:, :, i) = add(i-1) * input(:, :, i) + fill(i-1) * max(vq - layersUpToNow,0);
-    end
-end
-
-totmax = max(sum(y, 3), [], 'all');
-dz = totmax/Zres;
-z = linspace(dz, totmax, Zres);
-
-V = zeros(NX, NY, Zres);
-f_cond = zeros(NX, NY, numLayers);
-
-
-for i = 1:Zres
-    for j = 1:numLayers - 1
-        f_cond(:, :, j + 1) = (z(i) <= sum(y(:, :, 1:j), 3));
-
-        f(:, :, j) = eps(j) * (~f_cond(:, :, j) & f_cond(:, :, j + 1));
-    end
-    V(:, :, i) = sum(f, 3);
-end
-% Also assign "rest" surface
-V(V == 0) = eps(j + 1);
-
-end
-
-
-function vq = interpLayerMax(v_in)
-
-[NX, NY] = size(v_in);
-
-superv = [v_in, v_in, v_in;...
-    v_in, v_in, v_in;...
-    v_in, v_in, v_in];
-supermaxima = islocalmax(superv, 1) & islocalmax(superv, 2);
-[X_in, Y_in] = ndgrid(1:size(supermaxima, 1), 1:size(supermaxima, 2));
-F = scatteredInterpolant(X_in(supermaxima), Y_in(supermaxima), superv(supermaxima));
-[Xnew, Ynew] = ndgrid(NX+1:2*NX, NY+1:2*NY);
-vq = F(Xnew, Ynew);
-
-end
-
-
-function [dnew, Lnew] = optim_discr(d, eps)
-[Nx, Ny, Nz] = size(d);
-sameEdges = zeros(1,Nz);
-sameEdges(1) = 1;
-k = 1;
-d_st = d(:,:,1);
-for i = 2:length(sameEdges)
-
-    likeness = d(:,:,i)==d_st;
-    if (1-sum(likeness(:))/(Nx*Ny))>eps %larger than margin, so doesnt match
-        k = k + 1;
-        d_st = d(:,:,i);
-    end
-    sameEdges(i) = k;
-end
-
-[~, ia, ic] = unique(sameEdges);
-dnew = d(:,:,ia);
-Lnew = accumarray(ic,1);
-
-end
 
 
 

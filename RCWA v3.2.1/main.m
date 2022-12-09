@@ -11,18 +11,27 @@
 % maarten stuff, layers
 % make addfeature also accept list of obj
 % Fix useSurfaceSize
+% Make it so it copies whatever you named your 'createsurface', now just works for param(1)
+
+% bb=readmatrix("refractive_indices/GaAs.csv");
+% plot(2*pi./(bb(:,1)/1000), bb(:,1)/1000);
+% hold on;
+% plot(2*pi./(bb(:,1)/1000).*bb(:,2), bb(:,1)/1000)
+% ylim([0.5,1])
+
+%%
 
 clear all
-close all
+%close all
 %%
-addpath("data_daan","data_maarten","data_tom","input","objects",genpath("packages"),"refractive_indices");
+addpath("data_daan","data_maarten","data_tom","side_projects","side_projects/generated_surfaces","input","objects",genpath("packages"),"refractive_indices");
 %%
 param = load_parameters();
 %%
 options.desktop = true;
 options.onlinesave = false;
 options.parallel = false;
-options.simulationName = 'Tom';
+options.simulationName = 'RetryBugFix';
 
 %%
 folderName = RCWA(param, options);

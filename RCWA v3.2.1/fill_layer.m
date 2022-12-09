@@ -13,11 +13,15 @@ layer = table2struct(readtable(fn, opts, 'Sheet', param.layerSheet));
 % Unsafe w.r.t. cybersecurity
 run(folderName + "/" + param.surfaceFile + ".m")
 
+% Loop through layers
 for j=1:numel(layer)
     layer(j).material = string(strsplit(layer(j).material,{' ',','}));
     layer(j).input = string(strsplit(layer(j).input,{' ',','}));
-    if all(ismember(char(layer(j).input), '123456789,:[]'))
+
+    % If input is numbers
+    if all(ismember(char(layer(j).input), '123456789'))
         layer(j).input = num2cell(str2double(layer(j).input));
+    % If input is uniform
     elseif layer(j).input=="u"||layer(j).input=="uniform"||layer(j).input=="Uniform"
         layer(j).input = 0;
     else
@@ -26,9 +30,9 @@ for j=1:numel(layer)
 
     layer(j).add = param.add;
     layer(j).fill = param.fill;
-
+    % Add Surfaces from the 'surfaces' cell array, based on the index entered in input
     if iscell(layer(j).input)
-        for k=1:numel(layer(j).input)
+        for k = 1:numel(layer(j).input)
             layer(j).input{k} = surfaces{layer(j).input{k}};
         end
     end
@@ -37,7 +41,7 @@ end
 
 
 %%% MAKE THEM WORK WITH STRING ARRAYS
-layer = build_layerstack(layer);
+layer = build_layerstack(layer, param);
 
 % check
 eps_lab = import_permittivities({layer.material});

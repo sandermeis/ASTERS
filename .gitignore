@@ -119,6 +119,10 @@ RCWA/untitled3.m
 RCWA/untitled2.m
 RCWA/untitled.m
 RCWA v3.2.1/results/
+RCWA v3.2.1/side_projects/
+RCWA v3.2.1/halfway presentation/
+RCWA v3.2.1/refractive_indices/Hirst/
+*.asv
 >>>>>>> Stashed changes
 ri/A2.mat
 ri/feature1.csv
@@ -140,3 +144,5 @@ RCWA/Rebuild/input2.txt
 RCWA/Rebuild/disp_permittivity.m
 RCWA/Rebuild/analyze_distribution.m
 >>>>>>> Stashed changes
+RCWA v3.2.1/RCWA_plot.asv
+RCWA v3.2.1/RCWA_process.asv

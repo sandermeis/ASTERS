@@ -1,20 +1,27 @@
-function RCWA_plot(param, Sz, layer, sim_num, titlestring)
+function RCWA_plot(param, Sz, layer, sim_num, titlestring, whichdisp)
 arguments
 param
 Sz
 layer
 sim_num
 titlestring = "Sim " + string(sim_num)
+whichdisp = 3
 end
 
 %n = fixLayerString(layer, param);
 %n = {layer.material};
-
+switch whichdisp
+    case 1
 plot_results(param, Sz, layer, sim_num, titlestring);
-
-%plothaze(param, Sz, layer, sim_num, titlestring);
-
-%jsc_harmonics(param, Sz, layer, sim_num, titlestring);
+    case 2
+plothaze(param, Sz, layer, sim_num, titlestring);
+    case 3
+jsc_harmonics(param, Sz, layer, sim_num, titlestring);
+    case 4
+   plot_results(param, Sz, layer, sim_num, titlestring);
+   plothaze(param, Sz, layer, sim_num, titlestring);
+   jsc_harmonics(param, Sz, layer, sim_num, titlestring);
+end
 
 end
 
@@ -202,7 +209,7 @@ end
     for i = 1:num_lay
         jsc_empty = zeros(param.P,param.Q);
         h(i) = nexttile;
-        jsc_empty(param.tr_ind) = sum(squeeze(Sz(:,i,:)),2);%Jsc(squeeze(Sz(:,i,:)), param.wavelengthArray);
+        jsc_empty(param.tr_ind) = Jsc(squeeze(Sz(:,i,:)), param.wavelengthArray); %sum(squeeze(Sz(:,i,:)),2);
         im = imagesc(jsc_empty);
         title(n(i))
         set(h(i),"Color","none",'YDir','normal','TickLength', [0 0])
@@ -224,8 +231,10 @@ end
         h2(i).XGrid = 'on';
         h2(i).YGrid = 'on';
         h2(i).GridAlpha = 1;
-        cmin_new = min(jsc_empty, [], 'all');
-        cmax_new = max(jsc_empty, [], 'all');
+        j_nocentral = jsc_empty;
+        j_nocentral(round(param.P/2),round(param.Q/2))=NaN;
+        cmin_new = min(j_nocentral, [], 'all');
+        cmax_new = max(j_nocentral, [], 'all');
         cmin_old = max(cmin_old, cmin_new);
         cmax_old = max(cmax_old, cmax_new);
     %alphamap();

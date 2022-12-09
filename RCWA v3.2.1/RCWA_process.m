@@ -4,8 +4,37 @@ folderName
 whichsims = []
 end
 
-process1(folderName)
+process3(folderName)
 
+end
+
+function process4(folderName)
+p = load("results/"+folderName+"/param.mat","param");
+param=p.param;
+
+for i = 1:numel(param)
+A = load("results/"+folderName+"/sim"+string(i)+".mat");
+
+layer = fill_layer(param(i), "results/" + folderName);
+%     %displayDiscretized(layer(1).geometry.eps_struc, 2)
+Sz=squeeze(sum(A.Sz(:,2,:)+A.Sz(:,3,:),1));
+plot(param.wavelengthArray,Sz)
+ylim([0,1])
+end
+end
+
+
+function process3(folderName)
+p = load("results/"+folderName+"/param.mat","param");
+param=p.param;
+
+for i = 1:numel(param)
+A = load("results/"+folderName+"/sim"+string(i)+".mat");
+
+layer = fill_layer(param(i), "results/" + folderName);
+%     %displayDiscretized(layer(1).geometry.eps_struc, 2)
+RCWA_plot(param(i), A.Sz, layer, i, "Flat sim "+string(i),4)
+end
 end
 
 
@@ -13,30 +42,78 @@ function process1(folderName)
 p = load("results/"+folderName+"/param.mat","param");
 param=p.param;
 
-oxidethickness  = [param.oxidethickness];
+
+simit  = [param.simit];
+std  = [param.layerSheet];
+szz = [param.size];
 %[X,Y] = ndgrid(algaasthickness,oxidethickness);
 %fulljsc = zeros(size(oxidethickness));
 
+S1=zeros(1,numel(param));
+S2=zeros(1,numel(param));
+S3=zeros(1,numel(param));
+
 for i = 1:numel(param)
 A = load("results/"+folderName+"/sim"+string(i)+".mat");
-fulljsc(i) = A.fom(4);
-% SS = A.Sz;
-% SS2 = squeeze(sum(SS,1));
-% SS3(i,:) = SS2(4,:);
+
+% bb=readmatrix("refractive_indices/GaAs.csv");
+% tiledlayout("flow")
+% nexttile
+% plot(bb(:,1)/1000,2*pi./(bb(:,1)/1000));
+% hold on
+% plot(bb(:,1)/1000,2*pi./(bb(:,1)/1000).*bb(:,2))
+% hold on
+% 
+% for iii=1:size(A.Kz,1)
+% % plot(param(1).wavelengthArray/1000,(2*pi./(param(1).wavelengthArray/1000)).'.*squeeze(real(A.Kz(iii,2,:))))
+% plot(param(1).wavelengthArray/1000,2*pi./(param(1).wavelengthArray/1000).'.*squeeze(real(sqrt(A.Kx(iii,:).^2+A.Ky(iii,:).^2+squeeze(A.Kz(iii,2,:)).'.^2))));
+% hold on
+% end
+% % legend(["k0","kgaas","Mode1","Mode2","Mode3","Mode4","Mode5","Mode6","Mode7","Mode8","Mode9"])
+% xlim([0.4,.9])
+% 
+% nexttile
+% plot(bb(:,1)/1000,2*pi./(bb(:,1)/1000).*bb(:,3))
+% hold on
+% for iii=1:size(A.Kz,1)
+% plot(param(1).wavelengthArray/1000,abs((2*pi./(param(1).wavelengthArray/1000)).'.*squeeze(imag(A.Kz(iii,2,:)))))
+% hold on
+% end
+% legend(["kgaas","Mode1","Mode2","Mode3","Mode4","Mode5","Mode6","Mode7","Mode8","Mode9"])
+% xlim([0.4,.9])
+
+if simit(i)==1
+S1(i) = sum(A.Sz(:,2,:),1)+sum(A.Sz(:,3,:),1);
+elseif simit(i)==262144
+S2(i) = sum(A.Sz(:,2,:),1)+sum(A.Sz(:,3,:),1);
+end
+
+SS = A.Sz;
+SS2 = squeeze(sum(SS,1));
+SS3(i) = SS2(2)+SS2(3);
 %plot(param(1).wavelengthArray,SS2(4,:),'LineWidth',2)
 %hold on
-if numel(param)>11&&(i==1||i==16)
-    
-    layer = fill_layer(param(i), "results/" + folderName);
-    %displayDiscretized(layer(1).geometry.eps_struc, 2)
-    RCWA_plot(param(i), A.Sz, layer, i, "Flat sim "+string(i))
-elseif numel(param)<11
-    layer = fill_layer(param(i), "results/" + folderName);
-    %displayDiscretized(layer(1).geometry.eps_struc, 2)
 
-    RCWA_plot(param(i), A.Sz, layer, i, "Sim "+string(i))
 
-end
+
+%layer = fill_layer(param(i), "results/" + folderName);
+%RCWA_plot(param(i), A.Sz, layer, i, "Surface "+string(i),3)
+
+
+
+% if numel(param)>11&&(i==1||i==16)
+%     
+%     layer = fill_layer(param(i), "results/" + folderName);
+%     %displayDiscretized(layer(1).geometry.eps_struc, 2)
+%     RCWA_plot(param(i), A.Sz, layer, i, "Flat sim "+string(i),2)
+% elseif numel(param)<11
+%     layer = fill_layer(param(i), "results/" + folderName);
+%     %displayDiscretized(layer(1).geometry.eps_struc, 2)
+% 
+%     RCWA_plot(param(i), A.Sz, layer, i, "Surface "+string(i),1)
+%     RCWA_plot(param(i), A.Sz, layer, i, "Surface "+string(i),2)
+
+% end
 
 end
 % plot(5:2:15,mean(abs(diff(SS3,1)),2)-0.02,'LineWidth',2)
@@ -50,12 +127,22 @@ end
 %legend(["3","5","7","9","11","13","15"])
 
 figure('Color','w');
-plot(oxidethickness,fulljsc)
-
+%S1=S1(9:31);
+% S1(isnan(S1))=0;
+% plot(szz(S1~=0),S1(S1~=0))
+% 
+% hold on
+% %S2=S2(40:62);
+% S1(isnan(S2))=0;
+% plot(szz(S2~=0),S2(S2~=0))
+%plot(1:3,S3)
+% 
+plot(szz,SS3)
 title("Jsc per simulation", "FontSize", 18, "FontWeight", 'bold')
-%xlabel("Algaas", "FontSize", 16, "FontWeight", 'bold')
-xlabel("Oxide", "FontSize", 16, "FontWeight", 'bold')
+% xlabel("Algaas", "FontSize", 16, "FontWeight", 'bold')
+xlabel("size", "FontSize", 16, "FontWeight", 'bold')
 ylabel("Jsc (mA/cm^2)", "FontSize", 16, "FontWeight", 'bold')
+legend
 
 
 % h = RCWA_plot(fill_layer(param(3)),param(3),param(3).wavelengthArray, Sz)

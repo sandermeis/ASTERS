@@ -29,34 +29,86 @@
 % base_l = [base_s, base_s, base_s; base_s, base_s, base_s; base_s, base_s, base_s];
 % base_xl = [base_m, base_m; base_m, base_m];
 
-%surf_silver = Surface(param.res, param.size);
-% surf_random = Surface(param.res, param.size);
-% surf_algaas = Surface(param.res, param.size);
-% surf_oxide = Surface(param.res, param.size);
+% surf_silver = Surface(param.res, param.size);
+surf_random = Surface(param.res, param.size);
+surf_algaas = Surface(param.res, param.size);
+surf_oxide = Surface(param.res, param.size);
 % surf_oxide_uniform = Surface(param.res, param.size);
 
-surf_tom0 = Surface(param.res, param.size);
-surf_tom1 = Surface(param.res, param.size);
-surf_tom2 = Surface(param.res, param.size);
+%B=readmatrix("side_projects/Gaussian_swaps3_1.txt");
+B=readmatrix("side_projects/generated_surfaces/2Doptim51K3_"+param.simit+".txt");
+%B=readmatrix("side_projects/surf_no_zero.txt");
+B=reshape(B,size(B,1),size(B,1),[]);
+
+
+% B=[0,0,0,0,1,1,1,1,1,1;
+%     0,0,0,0,1,1,1,1,1,1;
+%     0,0,0,0,0,0,1,1,0,0;
+%     0,0,0,0,0,0,1,1,0,0;
+%     0,0,0,0,1,1,1,1,1,1;
+%     0,0,0,0,1,1,1,1,1,1;
+%     1,1,1,1,1,1,0,0,0,0;
+%     1,1,1,1,1,1,0,0,0,0;
+%     0,0,0,0,1,1,0,0,1,1;
+%     0,0,0,0,1,1,0,0,1,1
+% ];
+
+%QRA1+2-1 (res 3)
+
+% B= [1,0,0;
+%     1,1,1;
+%     1,0,0;
+% ];
+
+%QRA5+8+9+10+13+16
+
+% 1 (res 9)
+% B= [0,0,1,1,1,1,0,0,0;
+%     1,1,0,0,0,1,0,1,0;
+%     1,1,0,0,1,0,0,1,0;
+%     1,0,1,1,1,0,0,1,1;
+%     1,0,0,1,0,0,0,0,1;
+%     1,1,1,1,0,1,1,0,0;
+%     1,1,0,0,0,0,1,0,0;
+%     1,0,0,0,0,0,1,1,0;
+%     1,1,1,1,0,1,1,1,0;
+% ];
+
+% 2 (res 9)
+% B= [1,0,0,1,1,0,1,0,1;
+%     1,1,0,1,1,0,0,0,0;
+%     0,0,1,1,0,0,1,1,1;
+%     0,0,0,0,1,0,1,0,0;
+%     1,1,0,1,1,1,1,0,0;
+%     0,1,1,0,0,0,1,1,0;
+%     0,1,1,0,0,0,0,0,1;
+%     0,1,1,1,1,1,0,1,1;
+%     1,0,0,0,1,0,1,1,0;
+% ];
+
+% B=repmat(B,9,9);
+
+
+%B=ones(64,64,5);
+%B(:,:,1)=0;
+%B=zeros(64,64,2);
+%B(:,:,1:2)=1;
+%B=ones(256,256);
+%%
+
 
 % surf_s.addFeature(Feature(base_s,2500),1,1);
 % surf_m.addFeature(Feature(base_m,5000),1,1);
 % surf_l.addFeature(Feature(base_l,7500),1,1);
 % surf_xl.addFeature(Feature(base_xl,10000),1,1);
 
-% f = Feature(32, 625, 100, "Cone");
 
-% surf_silver.addRandomFeatures(f,20)
 % surf_silver.addFeature(Feature(param.res,param.size,height,"WedgeX"),1,1);
-% surf_random.addRoughsurf('mode','Rough','height',100)
+surf_random.addRoughsurf('mode','Rough','height',145)
 % surf_random2.addRoughsurf('mode','Rough','height',100)
-% surf_algaas.addFeature(Feature("data_maarten/AlGaAs_surface1_10um.csv",10000),1,1);
-% surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1);
+surf_algaas.addFeature(Feature("data_maarten/AlGaAs_surface1_10um.csv",10000),1,1);
+surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1);
 % surf_oxide_uniform.addUniform(70);
-
-surf_tom0.addFeature(Feature("data_tom/c0_10um.txt",10000),1,1);
-surf_tom1.addFeature(Feature("data_tom/c1_10um.txt",10000),1,1);
-surf_tom2.addFeature(Feature("data_tom/c2_10um.txt",10000),1,1);
 
 
 % surf_s.placeFeatures("PBC", true, "mode", "add");
@@ -64,26 +116,18 @@ surf_tom2.addFeature(Feature("data_tom/c2_10um.txt",10000),1,1);
 % surf_l.placeFeatures("PBC", true, "mode", "add");
 % surf_xl.placeFeatures("PBC", true, "mode", "add");
 
-surf_tom0.placeFeatures("PBC", true, "mode", "add");
-surf_tom1.placeFeatures("PBC", true, "mode", "add");
-surf_tom2.placeFeatures("PBC", true, "mode", "add");
-
-% surf_silver.placeFeatures("PBC", true, "mode", "replace");
-% surf_random.placeFeatures("PBC", true, "mode", "add");
-% surf_algaas.placeFeatures("PBC", true, "mode", "add");
-% surf_oxide.placeFeatures("PBC", true, "mode", "add");
+% surf_silver.placeFeatures("PBC", true, "mode", "add");
+surf_random.placeFeatures("PBC", true, "mode", "add");
+surf_algaas.placeFeatures("PBC", true, "mode", "add");
+surf_oxide.placeFeatures("PBC", true, "mode", "add");
 % surf_oxide_uniform.placeFeatures("PBC", true, "mode", "add");
 % surf_oxide.plot
-% surf_silver.plot
+
 % surf_r.plot
 % axis off
 %%
 % Add surfaces here, index can be used in the "input" field in layers.xlsx
 % -------------------------------------------------------------------------
-
-surfaces{1} = surf_tom0;
-surfaces{2} = surf_tom1;
-surfaces{3} = surf_tom2;
 
 % if param.res==128
 % surfaces{1} = surf_r;
@@ -95,10 +139,13 @@ surfaces{3} = surf_tom2;
 % surfaces{1} = surf_xl;
 % end
 
+
+surfaces{1} = surf_random;
+
 % surfaces{1} = surf_silver;
-% surfaces{1} = surf_algaas;
-% surfaces{2} = surf_oxide;
-% surfaces{2} = surf_silver;
+%surfaces{1} = surf_algaas;
+%surfaces{2} = surf_oxide;
+% surfaces{3} = surf_random;
 % surfaces{3} = surf_oxide_uniform;
 
 %% Modify "layer" struct here
@@ -106,8 +153,8 @@ surfaces{3} = surf_tom2;
 
 % layer(3).material = "GaAs_"+string(param.urbach)+"meV";
 %layer(6).L = param.algaasthickness;
-% layer(7).L = param.oxidethickness;
-% layer(2).L = param.oxidethickness;
+%layer(7).L = param.oxidethickness;
+%layer(3).L = param.oxidethickness;
 % layer(2).roughdim = zres;
 
 
