@@ -134,7 +134,7 @@ for i = 1:numel(layer)
     % calcAllRough 0: Only first and last sublayer fields are calculated
     if ~param.calcAllRough
         % Calculate field at start of first layer
-        field_begin = F{i, 1} * [eye(2 * param.num_H), zeros(2 * param.num_H); zeros(2 * param.num_H), X{i, 1}] *c _im{i, 1};
+        field_begin = F{i, 1} * [eye(2 * param.num_H), zeros(2 * param.num_H); zeros(2 * param.num_H), X{i, 1}] * c_im{i, 1};
         % Calculate field at end of last layer
         field_end = F{i, j} * [X{i,j}, zeros(2 * param.num_H); zeros(2 * param.num_H), eye(2 * param.num_H)] * c_im{i, j};
 

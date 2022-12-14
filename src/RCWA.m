@@ -4,6 +4,7 @@ arguments
     options
 end
 
+% Set simulation name based on date and time
 dt = datestr(datetime,'dd_mm_yy_HH_MM_SS');
 if ~isempty(options.simulationName)
     folderName = options.simulationName + "_" + dt;
@@ -13,9 +14,9 @@ end
 
 c = onCleanup(@() progressBar());
 
-
 numRuns = numel(param);
 
+% Confirmation box
 fig = uifigure;
 numSimWarning = uiconfirm(fig, sprintf("About to do %d simulations", numRuns), "title warning");
 numCoreWarning = '';
@@ -32,35 +33,42 @@ if options.parallel
         end
     end
 end
+
+% Proceed
 if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     close(fig)
-
+    
+    % Create path in results folder
     offlinePathName = "results/";
     mkdir(offlinePathName, folderName)
+
     offlinePathName = offlinePathName + folderName;
+
+    % Save parameter file, input, layers and surface file(s)
     save(offlinePathName + "/param.mat", "param")
     copyfile("input/input.txt", offlinePathName)
     copyfile("input/layers.xlsx", offlinePathName)
-            % following line needs update, for loop over all
-            % surfacefilenames
-    copyfile("input/"+param(1).surfaceFile+".m", offlinePathName)
+    surfaceFiles = [param.surfaceFile];
+    for sf = 1:numel(surfaceFiles)
+        copyfile("input/" + surfaceFiles(sf) + ".m", offlinePathName)
+    end
 
-        if options.desktop
-            onlinePathName = '/run/user/1000/gvfs/smb-share:server=amsbackup-srv.science.ru.nl,share=amsbackup/Students/Sander/results/';
-        else
-            onlinePathName = '/Volumes/amsbackup/Students/Sander/results/';
-        end
-
+    % If enabled, copy these files to online location
     if options.onlinesave
         try
-            mkdir(onlinePathName, folderName)
-            onlinePathName = onlinePathName + folderName;
-            copyfile("input/input.txt", offlinePathName)
-            copyfile("input/layers.xlsx", offlinePathName)
-            copyfile("input/"+param(1).surfaceFile+".m", offlinePathName)
-            % following line needs update, for loop over all
-            % surfacefilenames
+            mkdir(options.onlinePathName, folderName)
+            onlinePathName = options.onlinePathName + folderName;
+
+            % Save parameter files in online folder
             copyfile(offlinePathName + "/param.mat", onlinePathName)
+            copyfile("input/input.txt", onlinePathName)
+            copyfile("input/layers.xlsx", onlinePathName)
+
+            surfaceFiles = [param.surfaceFile];
+            for sf = 1:numel(surfaceFiles)
+                copyfile("input/" + surfaceFiles(sf) + ".m", onlinePathName)
+            end
+
         catch
             warning("Unable to create online directory")
             options.onlinesave = false;
@@ -89,8 +97,10 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     %         warning("No rough layers added, using manually entered dimensions")
     %     end
 
+    % Initialize progress bar
     [~] = progressBar(false, numel([param.wavelengthArray]));
 
+    % Simulation in parallel
     if options.parallel
         progressTick = progressBar(options.parallel);
         parfor n = 1:numRuns
@@ -106,15 +116,24 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
                 parsave(fileName, [], Sz, fields, Kx, Ky, Kz, fom, n)
             end
         end
+    % Simulation in series
     else
         progressTick = progressBar(options.parallel);
+        % Loop over parameter set
         for n = 1:numRuns
+
+            % Create layer struct using parameters
             layer = fill_layer(param(n));
+
+            % Run simulation
             [Sz, fields, Kx, Ky, Kz] = RCWA_transmittance(layer, param(n), progressTick);
+            
+            % Calculate short circuit current
             fom = Jsc(squeeze(sum(Sz, 1)), param(n).wavelengthArray);
 
             fileName = "results/" + folderName + "/sim" + n + ".mat";
 
+            % Save these parameters as .mat in previously created folder
             if options.onlinesave
                 parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
             else
@@ -128,7 +147,7 @@ end
 
 end
 
-
+% Progress bar which also works in parallel simulations
 function progressOut = progressBar(varargin)
 persistent iters wb tocArray maxIter;
 if nargin==2
@@ -190,6 +209,7 @@ end
     end
 end
 
+% Save results during execution
 function parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
 % savefile = varargin{1}; % first input argument
 % for i=2:nargin

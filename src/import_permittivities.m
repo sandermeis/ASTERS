@@ -12,7 +12,7 @@ for i=1:numel(materials)
     for j=1:numel(materials{i})
 %     wavelengthArray = wl{i};
     mat = materials{i}(j);
-    file_name = "refractive_indices/"+mat+".csv";
+    file_name = "src/refractive_indices/"+mat+".csv";
     x = csvread(file_name);
 
 %     warning('off','backtrace')

@@ -12,15 +12,15 @@ end
 %n = {layer.material};
 switch whichdisp
     case 1
-plot_results(param, Sz, layer, sim_num, titlestring);
+        plot_results(param, Sz, layer, sim_num, titlestring);
     case 2
-plothaze(param, Sz, layer, sim_num, titlestring);
+        plothaze(param, Sz, layer, sim_num, titlestring);
     case 3
-jsc_harmonics(param, Sz, layer, sim_num, titlestring);
+        jsc_harmonics(param, Sz, layer, sim_num, titlestring);
     case 4
-   plot_results(param, Sz, layer, sim_num, titlestring);
-   plothaze(param, Sz, layer, sim_num, titlestring);
-   jsc_harmonics(param, Sz, layer, sim_num, titlestring);
+        plot_results(param, Sz, layer, sim_num, titlestring);
+        plothaze(param, Sz, layer, sim_num, titlestring);
+        jsc_harmonics(param, Sz, layer, sim_num, titlestring);
 end
 
 end

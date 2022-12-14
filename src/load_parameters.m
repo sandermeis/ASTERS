@@ -1,8 +1,6 @@
 function [param] = load_parameters()
 
-addpath("data_daan","data_maarten","input","objects",genpath("packages"),"refractive_indices");
-
-cellpar = readcell("input/input.txt", 'CommentStyle', '%','Delimiter',{'=','+'},'LineEnding',{'\n',';'},'FileType','text','TextType','string','DurationType','text');
+cellpar = readcell("./input/input.txt", 'CommentStyle', '%','Delimiter',{'=','+'},'LineEnding',{'\n',';'},'FileType','text','TextType','string','DurationType','text');
 numParams = size(cellpar,1);
 
 % Parse input file
