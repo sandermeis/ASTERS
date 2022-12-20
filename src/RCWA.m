@@ -75,28 +75,6 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
         end
     end
 
-    % REDO THIS, SKIPPING FOR NOW
-    %     % check if surfaces same dimensions
-    %     issurf = cellfun(@(x) isa(x,"Surface"),{layer.input});
-    %     laynum = find(issurf,1);
-    %     if laynum
-    %         k = [layer(issurf).input];
-    %         k2 = [k.surfsize];
-    %         k3 = [k.surfres];
-    %         if ~all(k2 == k2(1))&&~all(k3 == k3(1))
-    %             error("Mismatching layer dimensions")
-    %         end
-    %
-    %         if param.useSurfaceSize
-    %             param.size_x       = layer(laynum).input.surfsize;
-    %             param.size_y       = layer(laynum).input.surfsize;
-    %             param.res_x        = layer(laynum).input.surfres;
-    %             param.res_y        = layer(laynum).input.surfres;
-    %         end
-    %     elseif param.useSurfaceSize
-    %         warning("No rough layers added, using manually entered dimensions")
-    %     end
-
     % Initialize progress bar
     [~] = progressBar(false, numel([param.wavelengthArray]));
 

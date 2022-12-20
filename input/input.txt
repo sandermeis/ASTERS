@@ -1,15 +1,22 @@
-% Constants
-version         = v3.3.0
+version         = v4.0.0
 
+% Booleans
+% -------------------------------------------------------------------------
+plot_permfig    = false
+calcAllRough    = false
+calcFields      = false
+truncateHarm    = false
+truncfig        = false
 
+% Parameters
+% -------------------------------------------------------------------------
 % Parameters can be added as a list, e.g. "[1,2,3]" or "Par1, Par2, Par3".
 % Add " + otherPar1, otherPar2" to a parameter, to combine parameters, else
 % just the first value of "otherPar" will be used.
 %   Add & to pass a whole array as a single parameter, e.g. "&1:100".
 %   Add \ to vary parameters in tandem, e.g. "Par + \otherPar"
-% -------------------------------------------------------------------------
 
-wavelengthArray = &[600:5:600]
+wavelengthArray = &[200:5:1000]
 ref_medium      = Air
 trn_medium      = Air
 theta           = 0
@@ -17,43 +24,32 @@ phi             = 0
 pTE             = 0.5
 pTM             = 0.5
 
-% Do not enter the same size as wavelength
-size            = 2500;
+% Entering the same size as requested wavelength will give a discontinuity in the results
+size            = 10000
 
-%res must be at least 2x Hmax (make a check for this, option to duplicate array)
-res             = 128
+% res must be at least 2x Hmax
+res             = 512
 truncFactor     = 1
-Hmax            = 13
+Hmax            = 5
+fill            = 0
+add             = 1
 
-% These are the layers.xlsx file tab and surface creation file respectively
+% Source files
 % -------------------------------------------------------------------------
-layerSheet      = Hirst
+% These are the layers.xlsx file tab and surface creation file respectively
+layerSheet      = Standard2
 surfaceFile     = createSurface
 
-% Add any of your own parameters
+% Own parameters
 % -------------------------------------------------------------------------
-
+%Add any of your own parameters
 %simit            = 1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 262144;
 %simit            = 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608
-simit=131072;
-%kval= [5080,80110]+simit
 %height          = 0
 %angle           = 0
 %numrandom       = 0
 %surfaceindex    = 0
 %featres         = 0
-fill             = 0
-add              = 1
 %urbach          = 25
-%[1,5,10,15,20,25] + algaasthickness
-%algaasthickness = 100
-%:1:10 + oxidethickness
 %oxidethickness  = 0:20:180
 
-% Booleans
-plot_permfig    = false
-useSurfaceSize  = false
-calcAllRough    = false
-calcFields      = true
-truncateHarm    = false
-truncfig        = false

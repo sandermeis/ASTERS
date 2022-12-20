@@ -31,14 +31,14 @@
 
 % surf_silver = Surface(param.res, param.size);
 surf_random = Surface(param.res, param.size);
-surf_algaas = Surface(param.res, param.size);
-surf_oxide = Surface(param.res, param.size);
+%surf_algaas = Surface(param.res, param.size);
+%surf_oxide = Surface(param.res, param.size);
 % surf_oxide_uniform = Surface(param.res, param.size);
 
 %B=readmatrix("side_projects/Gaussian_swaps3_1.txt");
-B=readmatrix("side_projects/generated_surfaces/2Doptim51K3_"+param.simit+".txt");
+%B=readmatrix("src/side_projects/generated_surfaces/2Doptim51K3_"+param.simit+".txt");
 %B=readmatrix("side_projects/surf_no_zero.txt");
-B=reshape(B,size(B,1),size(B,1),[]);
+%B=reshape(B,size(B,1),size(B,1),[]);
 
 
 % B=[0,0,0,0,1,1,1,1,1,1;
@@ -101,13 +101,13 @@ B=reshape(B,size(B,1),size(B,1),[]);
 % surf_m.addFeature(Feature(base_m,5000),1,1);
 % surf_l.addFeature(Feature(base_l,7500),1,1);
 % surf_xl.addFeature(Feature(base_xl,10000),1,1);
-
+%%
 
 % surf_silver.addFeature(Feature(param.res,param.size,height,"WedgeX"),1,1);
 surf_random.addRoughsurf('mode','Rough','height',145)
 % surf_random2.addRoughsurf('mode','Rough','height',100)
-surf_algaas.addFeature(Feature("data_maarten/AlGaAs_surface1_10um.csv",10000),1,1);
-surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1);
+%surf_algaas.addFeature(Feature("data_maarten/AlGaAs_surface1_10um.csv",10000),1,1);
+%surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1);
 % surf_oxide_uniform.addUniform(70);
 
 
@@ -118,43 +118,24 @@ surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1)
 
 % surf_silver.placeFeatures("PBC", true, "mode", "add");
 surf_random.placeFeatures("PBC", true, "mode", "add");
-surf_algaas.placeFeatures("PBC", true, "mode", "add");
-surf_oxide.placeFeatures("PBC", true, "mode", "add");
+%surf_algaas.placeFeatures("PBC", true, "mode", "add");
+%surf_oxide.placeFeatures("PBC", true, "mode", "add");
 % surf_oxide_uniform.placeFeatures("PBC", true, "mode", "add");
 % surf_oxide.plot
 
 % surf_r.plot
 % axis off
-%%
-% Add surfaces here, index can be used in the "input" field in layers.xlsx
+%% Add surfaces here, index can be used in the "input" field in layers.xlsx
+% Example: Add two surfaces to the list, which can be accessed in layers.xlsx
+% by entering 1 or 2 for surf_oxide and surf_algaas respectively.
+% surfaces{1} = surf_oxide
+% surfaces{2} = surf_algaas
 % -------------------------------------------------------------------------
-
-% if param.res==128
-% surfaces{1} = surf_r;
-% elseif param.res==256
-% surfaces{1} = surf_m;
-% elseif param.res==384
-% surfaces{1} = surf_l;
-% elseif param.res==512
-% surfaces{1} = surf_xl;
-% end
-
 
 surfaces{1} = surf_random;
 
-% surfaces{1} = surf_silver;
-%surfaces{1} = surf_algaas;
-%surfaces{2} = surf_oxide;
-% surfaces{3} = surf_random;
-% surfaces{3} = surf_oxide_uniform;
 
 %% Modify "layer" struct here
+% Example: Modify thickness of second layer based on the parameter "oxidethickness".
+% layer(2).L = param.oxidethickness;
 % -------------------------------------------------------------------------
-
-% layer(3).material = "GaAs_"+string(param.urbach)+"meV";
-%layer(6).L = param.algaasthickness;
-%layer(7).L = param.oxidethickness;
-%layer(3).L = param.oxidethickness;
-% layer(2).roughdim = zres;
-
-

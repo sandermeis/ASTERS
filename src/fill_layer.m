@@ -14,7 +14,7 @@ layer = table2struct(readtable(fn, opts, 'Sheet', param.layerSheet));
 run(folderName + "/" + param.surfaceFile + ".m")
 
 % Loop through layers
-for j=1:numel(layer)
+for j = 1:numel(layer)
     layer(j).material = string(strsplit(layer(j).material,{' ',','}));
     layer(j).input = string(strsplit(layer(j).input,{' ',','}));
 
@@ -43,7 +43,17 @@ end
 %%% MAKE THEM WORK WITH STRING ARRAYS
 layer = build_layerstack(layer, param);
 
+
+% Check parameters
+for i = 1:numel(layer)
+    if iscell(layer(i).input)
+        if param.res ~= size(layer(i).geometry.eps_struc, 1)
+            error("Device resolution does not match input resolution")
+        end
+    end
+end
+
 % check
-eps_lab = import_permittivities({layer.material});
+eps_lab = import_permittivities({layer.material}, param.wavelengthArray);
 [layer.permittivities] = deal(eps_lab{:});
 end

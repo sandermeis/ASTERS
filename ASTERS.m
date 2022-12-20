@@ -1,15 +1,9 @@
 % To do list
-%
-% Error when harmonics and xy resolution are close, p0+pfft=0 as index
-% wrong parameters when using +\param, param
-% resolution matching feature/surface
-% check perm outside range wavelengths
-% Auto break on conv check
-% Grating test
-% make addfeature also accept list of obj
-% Fix useSurfaceSize
-% Make it so it copies whatever you named your 'createsurface', now just works for param(1)
 
+% auto select plots
+
+%  res must be at least 2x Hmax, make a check for this, option to duplicate array
+% Error when harmonics and xy resolution are close, p0+pfft=0 as index
 %% Optional clearing
 % clear all
 % close all

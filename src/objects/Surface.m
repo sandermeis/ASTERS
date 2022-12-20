@@ -105,10 +105,11 @@ classdef Surface < handle
             arguments
                 obj
                 fobj Feature
-                xpos (1,:) {mustBeInteger}
-                ypos (1,:) {mustBeInteger}
+                xpos (1,:) {mustBeInteger, mustBeEqualSize(xpos, fobj)}
+                ypos (1,:) {mustBeInteger, mustBeEqualSize(ypos, xpos)}
                 PBC logical = true
             end
+            
             %ADDFEATURE Adds Feature object to the Surface.
             %   Input is ADDFEATURE(Feature, xpos, ypos, PBC)
             %
@@ -118,39 +119,40 @@ classdef Surface < handle
             %   PBC     - Periodic boundary conditions (0 or 1)
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
-            if (fobj.resolution<=obj.surfres)
-                if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
-                    if isempty(obj.Features)
-                        obj.Features(1).fobj = fobj;
-                        obj.Features(1).xpos = xpos;
-                        obj.Features(1).ypos = ypos;
+            for i = 1:numel(fobj)
+                if (fobj(i).resolution<=obj.surfres)
+                    if PBC||checkPlacement(obj,xpos(i),ypos(i),fobj(i).resolution,fobj(i).resolution)
+                        if isempty(obj.Features)
+                            obj.Features(1).fobj = fobj(i);
+                            obj.Features(1).xpos = xpos(i);
+                            obj.Features(1).ypos = ypos(i);
+                        else
+                            obj.Features(end+1).fobj = fobj(i);
+                            obj.Features(end).xpos = xpos(i);
+                            obj.Features(end).ypos = ypos(i);
+                        end
                     else
-                        obj.Features(end+1).fobj = fobj;
-                        obj.Features(end).xpos = xpos;
-                        obj.Features(end).ypos = ypos;
+                        warning("Position is out of bounds, no object added")
                     end
                 else
-                    warning("Position is out of bounds, no object added")
-                end
-            else
-                fobj.Z = fobj.Z(1:obj.surfres,1:obj.surfres);
-                fobj.resolution = obj.surfres;
-                warning("Feature larger than surface, Feature sampled down to surface size")
-                if PBC||checkPlacement(obj,xpos,ypos,fobj.resolution,fobj.resolution)
-                    if isempty(obj.Features)
-                        obj.Features(1).fobj = fobj;
-                        obj.Features(1).xpos = xpos;
-                        obj.Features(1).ypos = ypos;
+                    fobj(i).Z = fobj(i).Z(1:obj.surfres,1:obj.surfres);
+                    fobj(i).resolution = obj.surfres;
+                    warning("Feature larger than surface, Feature sampled down to surface size")
+                    if PBC||checkPlacement(obj,xpos(i),ypos(i),fobj(i).resolution,fobj(i).resolution)
+                        if isempty(obj.Features)
+                            obj.Features(1).fobj(i) = fobj(i);
+                            obj.Features(1).xpos = xpos(i);
+                            obj.Features(1).ypos = ypos(i);
+                        else
+                            obj.Features(end+1).fobj(i) = fobj(i);
+                            obj.Features(end).xpos = xpos(i);
+                            obj.Features(end).ypos = ypos(i);
+                        end
                     else
-                        obj.Features(end+1).fobj = fobj;
-                        obj.Features(end).xpos = xpos;
-                        obj.Features(end).ypos = ypos;
+                        warning("Position is out of bounds, no object added")
                     end
-                else
-                    warning("Position is out of bounds, no object added")
                 end
             end
-            
         end
         
         
@@ -578,3 +580,10 @@ classdef Surface < handle
     end
 end
 
+function mustBeEqualSize(a,b)
+if ~isequal(size(a), size(b))
+    eid = 'Size:notEqual';
+    msg = 'Size of inputs must be equal.';
+    throwAsCaller(MException(eid,msg))
+end
+end

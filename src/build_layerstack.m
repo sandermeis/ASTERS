@@ -3,7 +3,7 @@ function layer = build_layerstack(layer, param)
 % Loop through layers
 for i = 1:numel(layer)
 
-    % Structured layers
+    %% Structured layers
 
     % Check if layer is cell, else check for uniform, else error invalid input
     if iscell(layer(i).input)
@@ -15,10 +15,10 @@ for i = 1:numel(layer)
 
         % Loop through composite layer
         for j = 1:numel(layer(i).input)
+            %% Surface object
             % Check if layer is a Surface object, else error invalid input
-            if isa(layer(i).input{j},'Surface') && layer(i).roughdim>1
-                % If layer is a multilayer, but layer cell only has one
-                % Surface entry, else fill as normal
+            if isa(layer(i).input{j},'Surface') && layer(i).roughdim > 1
+                % If layer is a multilayer, but layer cell only has one Surface entry, else fill as normal
                 if numel(layer(i).input) == 1
                     input(:, :, 1) = layer(i).input{1}.surfMatrix;
                     numLay = numel(layer(i).material);
@@ -26,14 +26,19 @@ for i = 1:numel(layer)
                         warning("Layer is a multilayer but only in the first layer the surface is specified. Proceeding with other layers set to constant thickness.")
                         sz = size(layer(i).input{1}.surfMatrix);
                         firstlaymax = max(layer(i).input{1}.surfMatrix, [], 'all');
+                        % Thickness left in multilayer
                         laythick = sum(layer(i).L) - firstlaymax;
                         if laythick < 0
                             warning("First layer already exceeds maximum layer thickness as specified in layers.xlsx; setting constant layers to 0.")
                             laythick = max(laythick, 0);
                         end
+                        % If 2 layers input is unchanged
+                        % If 3 layers, add a uniform layer to input with
+                        % thickness to bring max to total defined thickness
                         if numLay == 3
                             laythick = max(sum(layer(i).L) - firstlaymax, 0);
                             input(:, :, 2) = laythick * ones(sz);
+                        % If 4 or more layers divide remaining thickness evenly over uniform layers
                         elseif numLay >= 4
                             laythick = laythick / (numLay - 2);
                             for k = 2:numLay - 1
@@ -41,6 +46,7 @@ for i = 1:numel(layer)
                             end
                         end
                     end
+                %% Multiple surface inputs
                 else
                     % something off, third index probs doesnt work with
                     % discretize
@@ -61,7 +67,8 @@ for i = 1:numel(layer)
                 if layer(i).optimRough
                     layer(i).L = Lnew' * sum(layer(i).L)/layer(i).roughdim;
                 end
-            % Already discretized input: Check if there is 1 input, and it is numeric, square and binary
+            %% Already discretized input
+            %Check if there is 1 input, and it is numeric, square and binary
             elseif (numel(layer(i).input) == 1) && isnumeric(layer(i).input{1}) && (size(layer(i).input{1},1)==size(layer(i).input{1},2)) && all((layer(i).input{1}==0)|(layer(i).input{1}==1),'all')
                 warning("Assuming binary input")
                 layer(i).geometry.eps_struc = layer(i).input{1};
@@ -74,18 +81,18 @@ for i = 1:numel(layer)
                     warning("Input array does not match roughdim, overwriting roughdim")
                 end
                 
-                if numel(layer(i).material)~=max(layer(i).geometry.eps_struc,[],'all')
+                if numel(layer(i).material) ~= max(layer(i).geometry.eps_struc, [], 'all')
                     % numer of materials smaller than number of multilayers
                     if numel(layer(i).material)<max(layer(i).geometry.eps_struc,[],'all')
                         warning("Multilayer has 2 components, however only 1 material(s) are specified, setting to previous layer material")
-                        if i==1 % Possibly need to add something for reverse
-                            layer(i).material(2)=layer(i).material(1);
-                            layer(i).material(1)=param.ref_medium;
+                        if i == 1 % Possibly need to add something for reverse
+                            layer(i).material(2) = layer(i).material(1);
+                            layer(i).material(1) = param.ref_medium;
                         else
-                            layer(i).material(2)=layer(i).material(1);
-                            layer(i).material(1)=layer(i-1).material(end);
+                            layer(i).material(2) = layer(i).material(1);
+                            layer(i).material(1) = layer(i-1).material(end);
                         end
-                        % numer of materials larger than number of multilayers
+                        % number of materials larger than number of multilayers
                     else
                         error("Too many materials for input multilayer")
                     end
@@ -96,7 +103,7 @@ for i = 1:numel(layer)
             end
         end
 
-    % Uniform layers
+    %% Uniform layers
     elseif layer(i).input == 0 && numel(layer(i).material) == 1
         layer(i).geometry.eps_struc = 1;
         layer(i).geometry.mu  = 1;
@@ -104,7 +111,7 @@ for i = 1:numel(layer)
             warning("Roughdim can't be larger than 1 for uniform layers, overwriting roughdim to 1")
             layer(i).roughdim = 1;
         end
-    % Uniform multilayer
+    %% Uniform multilayer
     elseif layer(i).input == 0 && numel(layer(i).material) > 1
         warning("Multilayer has no surface profile assigned, resetting to uniform.")
         % Possibly doesnt work TEST TEST TEST
