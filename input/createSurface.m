@@ -30,7 +30,7 @@
 % base_xl = [base_m, base_m; base_m, base_m];
 
 % surf_silver = Surface(param.res, param.size);
-surf_random = Surface(param.res, param.size);
+%surf_random = Surface(param.res, param.size);
 %surf_algaas = Surface(param.res, param.size);
 %surf_oxide = Surface(param.res, param.size);
 % surf_oxide_uniform = Surface(param.res, param.size);
@@ -41,6 +41,9 @@ surf_random = Surface(param.res, param.size);
 %B=reshape(B,size(B,1),size(B,1),[]);
 
 
+B = readmatrix("QRanalysis_5to37_32matrixsizeFF6.xls", "Sheet", "Sheet" + param.sh);
+%B = repmat(B,3,3);
+%%
 % B=[0,0,0,0,1,1,1,1,1,1;
 %     0,0,0,0,1,1,1,1,1,1;
 %     0,0,0,0,0,0,1,1,0,0;
@@ -104,9 +107,9 @@ surf_random = Surface(param.res, param.size);
 %%
 
 % surf_silver.addFeature(Feature(param.res,param.size,height,"WedgeX"),1,1);
-surf_random.addRoughsurf('mode','Rough','height',145)
+%surf_random.addRoughsurf('mode','Rough','height',145)
 % surf_random2.addRoughsurf('mode','Rough','height',100)
-%surf_algaas.addFeature(Feature("data_maarten/AlGaAs_surface1_10um.csv",10000),1,1);
+%surf_random.addFeature(Feature("data_maarten/AlGaAs_surface1_10um.csv",10000),1,1);
 %surf_oxide.addFeature(Feature("data_maarten/Oxide_surface1_10um.csv",10000),1,1);
 % surf_oxide_uniform.addUniform(70);
 
@@ -117,7 +120,7 @@ surf_random.addRoughsurf('mode','Rough','height',145)
 % surf_xl.placeFeatures("PBC", true, "mode", "add");
 
 % surf_silver.placeFeatures("PBC", true, "mode", "add");
-surf_random.placeFeatures("PBC", true, "mode", "add");
+%surf_random.placeFeatures("PBC", true, "mode", "add");
 %surf_algaas.placeFeatures("PBC", true, "mode", "add");
 %surf_oxide.placeFeatures("PBC", true, "mode", "add");
 % surf_oxide_uniform.placeFeatures("PBC", true, "mode", "add");
@@ -132,7 +135,7 @@ surf_random.placeFeatures("PBC", true, "mode", "add");
 % surfaces{2} = surf_algaas
 % -------------------------------------------------------------------------
 
-surfaces{1} = surf_random;
+surfaces{1} = B;
 
 
 %% Modify "layer" struct here

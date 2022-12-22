@@ -9,8 +9,8 @@ for i = 1:numel(layer)
     if iscell(layer(i).input)
         % If L is a scalar, and layer is not uniform, change layer thickness
         % into a vector
-        if (layer(i).roughdim>1)&&(numel(layer(i).L)==1)
-            layer(i).L = layer(i).L/layer(i).roughdim*ones(1,layer(i).roughdim);
+        if (layer(i).roughdim > 1) && (numel(layer(i).L) == 1)
+            layer(i).L = layer(i).L / layer(i).roughdim * ones(1, layer(i).roughdim);
         end
 
         % Loop through composite layer
@@ -55,42 +55,42 @@ for i = 1:numel(layer)
 
                 % Discretize
                 [Z, Lnew, Lrecalc] = discretize_surface(input, layer(i).roughdim, ...
-                    layer(i).tolerance, layer(i).reverse, layer(i).optimRough, layer(i).fill, layer(i).add);
+                    param.tolerance, layer(i).reverse, param.optimRough, param.fill, param.add);
 
                 layer(i).geometry.eps_struc = Z;
 
-                if layer(i).recalcRoughL
-                    layer(i).L = Lrecalc/layer(i).roughdim*ones(1,layer(i).roughdim);
-                    warning(sprintf("Recalculated %s layer thickness to %d nm",join(layer(i).material(:),", "),Lrecalc))
+                if param.recalcRoughL
+                    layer(i).L = Lrecalc / layer(i).roughdim * ones(1, layer(i).roughdim);
+                    warning(sprintf("Recalculated %s layer thickness to %d nm", join(layer(i).material(:), ", "), Lrecalc))
                 end
 
                 if layer(i).optimRough
-                    layer(i).L = Lnew' * sum(layer(i).L)/layer(i).roughdim;
+                    layer(i).L = Lnew' * sum(layer(i).L) / layer(i).roughdim;
                 end
             %% Already discretized input
-            %Check if there is 1 input, and it is numeric, square and binary
+            % Check if there is 1 input, and it is numeric, square and binary
             elseif (numel(layer(i).input) == 1) && isnumeric(layer(i).input{1}) && (size(layer(i).input{1},1)==size(layer(i).input{1},2)) && all((layer(i).input{1}==0)|(layer(i).input{1}==1),'all')
                 warning("Assuming binary input")
                 layer(i).geometry.eps_struc = layer(i).input{1};
                 layer(i).geometry.eps_struc(layer(i).geometry.eps_struc==1)=2;
                 layer(i).geometry.eps_struc(layer(i).geometry.eps_struc==0)=1;
 
-                if layer(i).roughdim~=size(layer(i).input{j},3)
-                    layer(i).roughdim=size(layer(i).input{j},3);
-                    layer(i).L = sum(layer(i).L)/layer(i).roughdim*ones(1,layer(i).roughdim);
+                if layer(i).roughdim ~= size(layer(i).input{j},3)
+                    layer(i).roughdim = size(layer(i).input{j},3);
+                    layer(i).L = sum(layer(i).L) / layer(i).roughdim * ones(1, layer(i).roughdim);
                     warning("Input array does not match roughdim, overwriting roughdim")
                 end
                 
                 if numel(layer(i).material) ~= max(layer(i).geometry.eps_struc, [], 'all')
                     % numer of materials smaller than number of multilayers
-                    if numel(layer(i).material)<max(layer(i).geometry.eps_struc,[],'all')
+                    if numel(layer(i).material) < max(layer(i).geometry.eps_struc, [], 'all')
                         warning("Multilayer has 2 components, however only 1 material(s) are specified, setting to previous layer material")
                         if i == 1 % Possibly need to add something for reverse
                             layer(i).material(2) = layer(i).material(1);
                             layer(i).material(1) = param.ref_medium;
                         else
                             layer(i).material(2) = layer(i).material(1);
-                            layer(i).material(1) = layer(i-1).material(end);
+                            layer(i).material(1) = layer(i - 1).material(end);
                         end
                         % number of materials larger than number of multilayers
                     else
@@ -98,7 +98,6 @@ for i = 1:numel(layer)
                     end
                 end
             else
-                %maybe add direct multilayer input like [1, 2, 3]
                 error("Invalid layer input.")
             end
         end
@@ -107,17 +106,17 @@ for i = 1:numel(layer)
     elseif layer(i).input == 0 && numel(layer(i).material) == 1
         layer(i).geometry.eps_struc = 1;
         layer(i).geometry.mu  = 1;
-        if layer(i).roughdim>1
+        if layer(i).roughdim > 1
             warning("Roughdim can't be larger than 1 for uniform layers, overwriting roughdim to 1")
             layer(i).roughdim = 1;
         end
     %% Uniform multilayer
     elseif layer(i).input == 0 && numel(layer(i).material) > 1
-        warning("Multilayer has no surface profile assigned, resetting to uniform.")
-        % Possibly doesnt work TEST TEST TEST
-        layer(i).geometry.eps_struc = ones(1, 1, numel(layer(i).material));
-        layer(i).geometry.mu  = ones(1, 1, numel(layer(i).material));
-        % !! have to change L as well, not currently implemented
+        warning("Multilayer has no surface profile assigned, resetting to evenly spaced uniform multilayer")
+        num_mat = numel(layer(i).material);
+        layer(i).geometry.eps_struc = ones(1, 1, num_mat);
+        layer(i).geometry.mu  = ones(1, 1, num_mat);
+        layer(i).L = sum(layer(i).L) / num_mat * ones(1, num_mat);
     else
         error("Invalid layer input.")
     end

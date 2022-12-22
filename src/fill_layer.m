@@ -28,8 +28,6 @@ for j = 1:numel(layer)
         error("Wrong layer input")
     end
 
-    layer(j).add = param.add;
-    layer(j).fill = param.fill;
     % Add Surfaces from the 'surfaces' cell array, based on the index entered in input
     if iscell(layer(j).input)
         for k = 1:numel(layer(j).input)
@@ -39,12 +37,9 @@ for j = 1:numel(layer)
 
 end
 
-
-%%% MAKE THEM WORK WITH STRING ARRAYS
 layer = build_layerstack(layer, param);
 
-
-% Check parameters
+% Check if surfaces match with parameters
 for i = 1:numel(layer)
     if iscell(layer(i).input)
         if param.res ~= size(layer(i).geometry.eps_struc, 1)
@@ -53,7 +48,8 @@ for i = 1:numel(layer)
     end
 end
 
-% check
+% Get permittivities of the materials used and store in layer struct
 eps_lab = import_permittivities({layer.material}, param.wavelengthArray);
 [layer.permittivities] = deal(eps_lab{:});
+
 end

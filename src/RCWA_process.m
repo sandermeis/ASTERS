@@ -1,7 +1,15 @@
-function RCWA_process(folderName, whichsims)
+function RCWA_process(folderName, plot_options)
 arguments
-folderName (1,:) {isstring}
-whichsims = []
+    folderName (1,:) string
+    plot_options.whichsims (1,:) {mustBeInteger} = []
+    plot_options.which_layer_jsc (1,1) {isstring} = "GaAs"
+    plot_options.which_plot (1,1) string = "All"
+    plot_options.disp_permittivity (1,:) {mustBeInteger} = []
+    plot_options.disp_truncation (1,:) {mustBeInteger} = []
+    plot_options.plot_layers (1,:) {mustBeInteger} = []
+    plot_options.field_direc = []
+    plot_options.field_slice = []
+    plot_options.field_bars = []
 end
 
 for j = 1:numel(folderName)
@@ -12,80 +20,108 @@ for j = 1:numel(folderName)
 
     % Loop through parameter set
     for i = 1:numel(param)
-        if isempty(whichsims) || ismember(i, whichsims)
-            A = load("results/" + folderName(j) + "/sim" + string(i) + ".mat");
-            layer = fill_layer(param(i), "results/" + folderName(j));
-    
-    
-            % plot graphs of jsc per simulation, auto detect variables,
-            % harmonics = convergence plot
+        A = load("results/" + folderName(j) + "/sim" + string(i) + ".mat");
+        layer = fill_layer(param(i), "results/" + folderName(j));
 
-            % figure('Color','w');
-            % 
-            % plot(szz,SS3)
-            % title("Jsc per simulation", "FontSize", 18, "FontWeight", 'bold')
-            % xlabel("size", "FontSize", 16, "FontWeight", 'bold')
-            % ylabel("Jsc (mA/cm^2)", "FontSize", 16, "FontWeight", 'bold')
-            % legend
-    
-            % displayDiscretized(layer(1).geometry.eps_struc, 2)
-
-            RCWA_plot(param(i), A.Sz, layer, i, "Flat sim " + string(i), 4)
+        % find gaas entry (option which layer)
+        gaaspos = find([layer.material] == plot_options.which_layer_jsc, 1);
+        if isempty(gaaspos)
+            warning("Requested material not found, setting requested jsc to first layer")
+            jsc(i) = A.fom(1);
+        else
+            jsc(i) = A.fom(2)+A.fom(3);%A.fom(gaaspos);
         end
+
+        % displayDiscretized(layer(1).geometry.eps_struc, 2)
+
+        if lower(plot_options.which_plot) == "abs"
+            pl = 1;
+        elseif lower(plot_options.which_plot) == "haze"
+            pl = 2;
+        elseif lower(plot_options.which_plot) == "harmonics"
+            pl = 3;
+        elseif lower(plot_options.which_plot) == "all"
+            pl = 4;
+        else
+            error("Wrong input")
+        end
+
+        if isempty(plot_options.whichsims) || ismember(i, plot_options.whichsims)
+            RCWA_plot(param(i), A.Sz, layer, i, "Sim " + string(i), pl)
+
+            % Plot permittivity
+            if ismember(i, plot_options.disp_permittivity)
+                [~] = import_permittivities({layer.material}, param(i).wavelengthArray, true, i);
+            end
+
+            % Display truncation scheme
+            if ismember(i, plot_options.disp_truncation)
+                disp_trunc(param(i).Hmax, param(i).tr_ind, i)
+            end
+
+            if param(i).calcFields
+                show_fields(param, A.fields, plot_options.field_direc, plot_options.field_slice, plot_options.field_bars)
+            end
+
+            if ismember(i, plot_options.plot_layers)
+                for jj = 1:numel(layer)
+                    if iscell(layer(jj).input)
+                        plotLayer(layer, jj)
+                    end
+                end
+            end
+        end
+
+    end
+    
+    if numel(param) > 1
+    figure
+    tiledlayout('flow')
+    for i = 1:numel(param(1).bk)
+        for k = 1:numel(param(1).bk(i).list)
+            jsk_bk(k) = jsc(param(1).bk(i).list(k));
+            val(k) = param(param(1).bk(i).list(k)).(param(1).bk(i).name);
+        end
+        nexttile
+        plot(val, jsk_bk)
+        title("Jsc per simulation", "FontWeight", 'bold')
+        xname = param(1).bk(i).name;
+        xname = string([upper(xname{1}(1)), xname{1}(2:end)]);
+        xlabel(xname, "FontWeight", 'bold')
+        ylabel("Jsc (mA/cm^2)", "FontWeight", 'bold')
+    end
     end
 
-    %show_fields
-
-    %plotlayer
-    %disp permittivity
-
-end
 end
 
+end
 
+function disp_trunc(Hmax, tr_ind, sim_nr)
+M = - (Hmax - 1) / 2:(Hmax - 1) / 2;
+N = - (Hmax - 1) / 2:(Hmax - 1) / 2;
+TMAP = zeros(Hmax,Hmax);
+TMAP(tr_ind) = 1;
 
-function disp_permittivity()
-        % this can happen after everything is imported
-        if options.dispPermeabilityFig
-            t = tiledlayout(1,2);
-            title(t,'Material properties of layer stack')
-            nexttile
-            hold on
-            for i=1:length(ip)
-                plot(wavelengthArray,ip(:,1),"LineWidth",2)
-            end
-            xlabel('Wavelength (nm)')
-            ylabel('Refractive index')
-            xlim([lab1,lab2])
-
-            nexttile
-            hold on
-            for i=1:length(eps_lab)
-                plot(wavelengthArray,ip(:,2),"LineWidth",2)
-            end
-            xlabel('Wavelength (nm)')
-            ylabel('Extinction coefficient')
-            xlim([lab1,lab2])
-            legend(string({layer.material}),'location','eastoutside');
-        end
+figure
+imagesc(TMAP);
+title("Truncation scheme, sim " + sim_nr)
+xticks(1:Hmax)
+yticks(1:Hmax)
+xticklabels(M)
+yticklabels(N)
 end
 
 
 function plotLayer(layer,i)
-    %plot after processing is done
-    if layer(i).input~=0
-        figure % maybe something with reverse
-        if layer(i).reverse
-            mesh(sum(layer(i).geometry.eps_struc .* reshape(layer(i).L,1,1,[]),3))
-            set(gca, 'zdir', 'reverse')
-            zt = get(gca, 'ZTick');
-            set(gca, 'ZTickLabel', fliplr(zt))
-        else
-            mesh(sum(layer(i).geometry.eps_struc .* reshape(layer(i).L,1,1,[]),3))
-        end
-        title("Layer "+i+": "+layer(i).material)
-        zlabel("-Z")
-    else
-        warning('Uniform layer selected, cannot display this structure')
-    end
+figure
+if layer(i).reverse
+    mesh(sum(layer(i).geometry.eps_struc .* reshape(layer(i).L,1,1,[]),3))
+    set(gca, 'zdir', 'reverse')
+    zt = get(gca, 'ZTick');
+    set(gca, 'ZTickLabel', fliplr(zt))
+else
+    mesh(sum(layer(i).geometry.eps_struc .* reshape(layer(i).L,1,1,[]),3))
+end
+title("Layer " + i + ": " + layer(i).material)
+zlabel("-Z")
 end

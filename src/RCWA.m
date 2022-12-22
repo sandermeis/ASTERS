@@ -1,13 +1,16 @@
-function folderName = RCWA(param, options)
+function folderName = RCWA(param, sim_options)
 arguments
     param
-    options
+    sim_options.simulationName = 'Simulation';
+    sim_options.parallel = false;
+    sim_options.onlinesave = false;
+    sim_options.onlinePathName = '/run/user/1000/gvfs/smb-share:server=amsbackup-srv.science.ru.nl,share=amsbackup/Students/Sander/results/';
 end
 
 % Set simulation name based on date and time
 dt = datestr(datetime,'dd_mm_yy_HH_MM_SS');
-if ~isempty(options.simulationName)
-    folderName = options.simulationName + "_" + dt;
+if ~isempty(sim_options.simulationName)
+    folderName = sim_options.simulationName + "_" + dt;
 else
     folderName = "sim_" + dt;
 end
@@ -18,9 +21,9 @@ numRuns = numel(param);
 
 % Confirmation box
 fig = uifigure;
-numSimWarning = uiconfirm(fig, sprintf("About to do %d simulations", numRuns), "title warning");
+numSimWarning = uiconfirm(fig, sprintf("About to do %d simulations", numRuns), "Start simulations");
 numCoreWarning = '';
-if options.parallel
+if sim_options.parallel
     numCores = feature('numCores');
     if numRuns <= numCores
         title = sprintf("%d simulations <= %d cores",numRuns,numCores);
@@ -29,7 +32,7 @@ if options.parallel
             'Options', {'Parallel anyway', 'Non parallel', 'Cancel'}, ...
             'DefaultOption', 2, 'CancelOption', 3);
         if numCoreWarning == "Non parallel"
-            options.parallel = 0;
+            sim_options.parallel = 0;
         end
     end
 end
@@ -54,10 +57,10 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     end
 
     % If enabled, copy these files to online location
-    if options.onlinesave
+    if sim_options.onlinesave
         try
-            mkdir(options.onlinePathName, folderName)
-            onlinePathName = options.onlinePathName + folderName;
+            mkdir(sim_options.onlinePathName, folderName)
+            onlinePathName = sim_options.onlinePathName + folderName;
 
             % Save parameter files in online folder
             copyfile(offlinePathName + "/param.mat", onlinePathName)
@@ -71,7 +74,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
 
         catch
             warning("Unable to create online directory")
-            options.onlinesave = false;
+            sim_options.onlinesave = false;
         end
     end
 
@@ -79,8 +82,8 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     [~] = progressBar(false, numel([param.wavelengthArray]));
 
     % Simulation in parallel
-    if options.parallel
-        progressTick = progressBar(options.parallel);
+    if sim_options.parallel
+        progressTick = progressBar(sim_options.parallel);
         parfor n = 1:numRuns
             layer = fill_layer(param(n));
             [Sz, fields, Kx, Ky, Kz] = RCWA_transmittance(layer, param(n), progressTick);
@@ -88,7 +91,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
 
             fileName = "results/" + folderName + "/sim" + n + ".mat";
 
-            if options.onlinesave
+            if sim_options.onlinesave
                 parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
             else
                 parsave(fileName, [], Sz, fields, Kx, Ky, Kz, fom, n)
@@ -96,7 +99,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
         end
     % Simulation in series
     else
-        progressTick = progressBar(options.parallel);
+        progressTick = progressBar(sim_options.parallel);
         % Loop over parameter set
         for n = 1:numRuns
 
@@ -112,7 +115,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             fileName = "results/" + folderName + "/sim" + n + ".mat";
 
             % Save these parameters as .mat in previously created folder
-            if options.onlinesave
+            if sim_options.onlinesave
                 parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
             else
                 parsave(fileName, [], Sz, fields, Kx, Ky, Kz, fom, n)

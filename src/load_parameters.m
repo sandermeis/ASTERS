@@ -96,56 +96,73 @@ if size(cellpar, 2)>2
     end
 end
 
-b = cell(1,dim);
+nd_array = cell(1,dim);
 
 if dim>0
-    % Make grid with all lists
-    [b{:}] = ndgrid(ListCells{:, 2});
+    % Produce an N-dimensional grid with all variable combinations
+    [nd_array{:}] = ndgrid(ListCells{:, 2});
     
-    if size(cellpar,2)>2
-        cm = cornerMatrix(b{1}, ListCells(cellfun(@(x) isnumeric(x), ListCells(:, 3)), 3), ListCells(cellfun(@(x) islogical(x), ListCells(:, 4)), 4));
-    else % Only vertices
-        cm = cornerMatrix(b{1}, {});
+    % cornerMatrix produces a logical array in N-dimensional space to
+    % determine the requested variable combinations.
+
+    % If multiple variables are codependent (faces or volumes in ND space)
+    if size(cellpar,2) > 2
+        cm = cornerMatrix(nd_array{1}, ListCells(cellfun(@(x) isnumeric(x), ListCells(:, 3)), 3), ListCells(cellfun(@(x) islogical(x), ListCells(:, 4)), 4));
+    % If variables are independent (only vertices in ND space)
+    else
+        cm = cornerMatrix(nd_array{1}, {});
     end
 
-    for i=1:dim
-        c{i} = b{i}(cm);
+    for i = 1:dim
+        c{i} = nd_array{i}(cm);
     end
     
-    for n = 1:length(c{1,1})
+    for n = 1:length(c{1, 1})
         cp2 = cellpar;
         for j = 1:dim
             %if numeric
             if iscell(c{j}(n))
-                cp2(k(j),2)=c{j}(n);
+                cp2(k(j), 2) = c{j}(n);
             else
-                cp2(k(j),2)={c{j}(n)};
+                cp2(k(j), 2) = {c{j}(n)};
             end
         end
 
-        param(n) = cell2struct(cp2(:,2), string(cp2(:,1)), 1);
+        param(n) = cell2struct(cp2(:, 2), string(cp2(:, 1)), 1);
     end
 else
-    param(1) = cell2struct(cellpar(:,2), string(cellpar(:,1)), 1);
+    param(1) = cell2struct(cellpar(:, 2), string(cellpar(:, 1)), 1);
 end
-% Do always
 
 %%
+for i = 1:dim
+    for f = 1:numel(param)
+        param(f).bk(i).name = ListCells{i, 1};
+        aaa = [param.(param(f).bk(i).name)];
+        for j = 1:numel(ListCells{i, 2})
+            temp_list(j) = find(aaa==ListCells{i, 2}(j), 1);
+        end
+        param(f).bk(i).val = temp_list;
+        param(f).bk(i).list = temp_list;
+    end
+end
+
+%% Fill
 
 [param.size_x]       = deal(param.size);
 [param.size_y]       = deal(param.size);
 [param.res_x]        = deal(param.res);
 [param.res_y]        = deal(param.res);
 
-test                    = cellfun(@(x) 2*pi./x,{param.wavelengthArray},'UniformOutput',false);
+test                 = cellfun(@(x) 2*pi./x,{param.wavelengthArray},'UniformOutput',false);
 [param.k_0]          = deal(test{:});
 
 [param.P]            = deal(param.Hmax);
 [param.Q]            = deal(param.Hmax);
 [param.num_H]        = deal([param.P] .* [param.Q]);
-%%
 
-param     = truncation(param);
+%% Truncate
+param = truncation(param);
 
 % to not repeat look ups:
 % convert list to string, place next to eachother, and find unique by row
@@ -160,10 +177,10 @@ for i=1:numel(eps_lab_ref{1})
 end
 
 [param.eps_ref]     = deal(eps_lab_ref2{ic_ref});
-throwaway           = cellfun(@(x) ones(size(x)),{param(:).wavelengthArray},'UniformOutput',false);
+throwaway           = cellfun(@(x) ones(size(x)), {param(:).wavelengthArray}, 'UniformOutput', false);
 [param.mu_ref]      = deal(throwaway{:});
 
-[C_trn, ia_trn, ic_trn] = unique([[param.trn_medium]',string(cellfun(@(x) num2str(x),{param.wavelengthArray},'UniformOutput',false))'],'rows');
+[C_trn, ia_trn, ic_trn] = unique([[param.trn_medium]', string(cellfun(@(x) num2str(x), {param.wavelengthArray},'UniformOutput',false))'],'rows');
 eps_lab_trn   = import_permittivities({C_trn(:,1)});%, {param(ia_trn).wavelengthArray});
 wl_trn = {param(ia_trn).wavelengthArray};
 
@@ -177,86 +194,6 @@ end
 
 
 end
-
-
-
-
-% a = Surface(512,10000);
-% f_titan = Feature(round(512/2),5000,500,"Cone");
-% f_giant = Feature(round(512/2.5),5000,450,"Cone");
-% f_large = Feature(round(512/3.5),2500,400,"Cone");
-% f_medium = Feature(round(512/5),1250,300,"Cone");
-% f_small = Feature(round(512/10),625,100,"Cone");
-%
-% a.addRandomFeatures(f_titan,2,"PBC",true)
-% a.addRandomFeatures(f_giant,5,"PBC",true)
-% a.addRandomFeatures(f_large,15,"PBC",true)
-% a.addRandomFeatures(f_medium,80,"PBC",true)
-% a.addRandomFeatures(f_small,100,"PBC",true)
-%
-% a.placeFeatures("PBC",true, "mode", "merge");
-% a.listFeatures()
-% a.report()
-% a.plot()
-% a.resize(128,5000)
-% a.plot()
-% b4 = Feature("Feature1_2500nm.csv",2500);
-%
-% b5 = Feature("Feature1_2500nm.csv",2500);
-% b5 = rotate(b5);
-%a.addFeature(b,1,1);
-% a.addFeature(b5,1,1)
-% a.addFeature(b2,1,1)
-% a.addFeature(b3,1,1)
-%
-
-% a.placeRandomFeatures(1,1000,"PBC",true, "mode", "merge")
-%a.hscale(200)
-%a.addRandomFeatures(b4,3,"PBC",true)
-%a.addRandomFeatures(b5,2,"PBC",true)
-% a.placeFeatures("PBC",true, "mode", "merge");
-%a.placeRandomFeatures(2,3,"PBC",true, "mode", "merge")
-%a.plot();
-
-% % Constants
-% param.version      = "3.0.3";
-%
-% % Parameters
-% wavelengthArray     = 350:5:900;
-% param.ref_medium	= "Air";
-% param.trn_medium	= "Air";
-% param.theta         = 0;
-% param.phi           = 0;
-% param.pTE           = 0.5;
-% param.pTM           = 0.5;
-% param.size_x       = 10000;
-% param.size_y       = 10000;
-% param.res_x        = 512;
-% param.res_y        = 512;
-% param.truncFactor  = 1;
-% param.Hmax         = 9;
-% param.tolerance    = 5e-3;
-%
-% % Booleans
-% param.plot_permfig     = false;
-% param.useSurfaceSize   = false;
-% param.truncfig         = false;
-% param.plotSurf         = false;
-
-
-% param.truncateHarm     = false;
-
-% param.calcAllRough     = false;
-
-% param.reverse          = false;
-% param.recalcRoughL     = false;
-% param.optimRough       = false;
-
-%options.dispTruncFig
-%options.dispPermeabilityFig
-%options.dispSurface
-%options.checkConvergence + which dimension
-%%
 
 function output = parseText(input)
 % If it contains ',', parse text as list, else as scalar
@@ -296,19 +233,15 @@ end
 
 function param = truncation(param)
 %%
-for i=1:numel(param)
-    M = -(param(i).P-1)/2:(param(i).P-1)/2;
-    N = -(param(i).Q-1)/2:(param(i).Q-1)/2;
-    [m,n] = meshgrid(M,N);
+for i = 1:numel(param)
+    M = - (param(i).P - 1) / 2:(param(i).P - 1) / 2;
+    N = - (param(i).Q - 1) / 2:(param(i).Q - 1) / 2;
+    [m, n] = meshgrid(M, N);
 
     if param(i).truncateHarm
         TMAP = abs(m/((param(i).P-1)/2)).^(2*param(i).truncFactor) + abs(n/((param(i).Q-1)/2)).^(2*param(i).truncFactor);
         TMAP(isnan(TMAP))=1;
         TMAP = (TMAP <= 1);
-        if param(i).truncfig
-            figure
-            imagesc(TMAP);
-        end
     else
         TMAP = ones(size(m));
     end

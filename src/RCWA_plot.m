@@ -158,7 +158,7 @@ hx = subplot(1,4,[1,2,3]);
 % pos(1) = 0.055;
 % pos(3) = 0.9;
 % set(hx, 'Position', pos)
-ar = area(x_grid, Sz, 'LineWidth', 2);%;,'EdgeColor','none');
+ar = plot(x_grid, Sz, 'LineWidth', 2);%;,'EdgeColor','none');
 
 title(titlestring, "FontSize", 18, "FontWeight", 'bold')
 xlim([param.wavelengthArray(1), param.wavelengthArray(end)])
@@ -167,10 +167,10 @@ xlabel("Wavelength (nm)", "FontSize", 16, "FontWeight", 'bold')
 ylabel("Absorption (a.u.)", "FontSize", 16, "FontWeight", 'bold')
 set(hx,'FontSize',14,'LineWidth', 2)
 
-legstring = pad(n) + sprintf(" Jsc: ") + pad(compose('%0.2f',string(jsc)),'left') + sprintf(" mA/cm^2");
-hx2 = subplot(1,4,4);
-hx2.Visible = 'off';
-[~,legend_h,~,~] = legendflex(ar, cellstr(legstring),'ref', hx2, 'anchor', [1 1], 'buffer', [0 0],'FontName','monospaced');
+% % % legstring = pad(n) + sprintf(" Jsc: ") + pad(compose('%0.2f',string(jsc)),'left') + sprintf(" mA/cm^2");
+% % % hx2 = subplot(1,4,4);
+% % % hx2.Visible = 'off';
+% % % [~,legend_h,~,~] = legendflex(ar, cellstr(legstring),'ref', hx2, 'anchor', [1 1], 'buffer', [0 0],'FontName','monospaced');
 
 %hold on
 %ar2 = area(x_grid,Sz);
@@ -178,14 +178,14 @@ hx2.Visible = 'off';
 hstyle = {'single','single','cross','single','single','cross'};
 hdir = {0,45,0,90,135,45};
 
-for i=1:numel(ar)
-h_ind = ceil(i/length(colors))-1;
-    if h_ind>0 && h_ind<length(colors)
-        j = mod(i-1,length(hstyle))+1;
-        hatchfill2(ar(i), hstyle{j},'HatchAngle',hdir{j},'HatchDensity',40,'HatchColor','k','HatchLineWidth',2)
-        hatchfill2(legend_h(length(ar)+i), hstyle{j},'HatchAngle',hdir{j},'HatchDensity',40,'HatchColor','k','HatchLineWidth',2)
-    end
-end
+% % % for i=1:numel(ar)
+% % % h_ind = ceil(i/length(colors))-1;
+% % %     if h_ind>0 && h_ind<length(colors)
+% % %         j = mod(i-1,length(hstyle))+1;
+% % %         hatchfill2(ar(i), hstyle{j},'HatchAngle',hdir{j},'HatchDensity',40,'HatchColor','k','HatchLineWidth',2)
+% % %         hatchfill2(legend_h(length(ar)+i), hstyle{j},'HatchAngle',hdir{j},'HatchDensity',40,'HatchColor','k','HatchLineWidth',2)
+% % %     end
+% % % end
 
 end
 
