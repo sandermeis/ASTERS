@@ -13,7 +13,7 @@ for i=1:length(materials)
   x{i} = csvread(FileName(1,1));
 end
 
-lam0=300:1000;
+lam0=300:5:1000;
 
 R=zeros(size(lam0));
 T=zeros(size(lam0));
@@ -135,6 +135,6 @@ end
 Abs(:,1)=J;
 Abs(:,2)=R;
 Abs(:,3)=T;
-pll=[300:1000';300:1000';300:1000']';
+pll=[300:5:1000';300:5:1000';300:5:1000']';
 area(pll,Abs)
 legend("GaAs","R","T")

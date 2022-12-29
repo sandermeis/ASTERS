@@ -3,7 +3,7 @@ close all
 tic
 
 n = ["GaAs","Ag"];
-shape = ["Grating","Uniform"];
+shape = ["Uniform","Uniform"];
 L = [0,300,100,0];
 
 %n=["MgF2","ZnS","Al03GaAs","GaAs","InGaP","Al03GaAs","Ag"];
@@ -31,8 +31,8 @@ wb = waitbar(0,'Please wait...');
 
 theta	= 0;
 phi     = 0;
-pte     = 1;
-ptm     = 0;
+pte     = 0.5;
+ptm     = 0.5;
 labda_x = 100;
 labda_y = 100;
 lenx    = 512;

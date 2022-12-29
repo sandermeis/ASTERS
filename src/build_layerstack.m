@@ -48,9 +48,7 @@ for i = 1:numel(layer)
                     end
                 %% Multiple surface inputs
                 else
-                    % something off, third index probs doesnt work with
-                    % discretize
-                    input(:,:,j) = layer(i).input{j}.surfMatrix;
+                    input(:, :, j) = layer(i).input{j}.surfMatrix;
                 end
 
                 % Discretize
@@ -64,19 +62,19 @@ for i = 1:numel(layer)
                     warning(sprintf("Recalculated %s layer thickness to %d nm", join(layer(i).material(:), ", "), Lrecalc))
                 end
 
-                if layer(i).optimRough
+                if param.optimRough
                     layer(i).L = Lnew' * sum(layer(i).L) / layer(i).roughdim;
                 end
             %% Already discretized input
             % Check if there is 1 input, and it is numeric, square and binary
-            elseif (numel(layer(i).input) == 1) && isnumeric(layer(i).input{1}) && (size(layer(i).input{1},1)==size(layer(i).input{1},2)) && all((layer(i).input{1}==0)|(layer(i).input{1}==1),'all')
+            elseif (numel(layer(i).input) == 1) && isnumeric(layer(i).input{1}) && (size(layer(i).input{1}, 1) == size(layer(i).input{1}, 2)) && all((layer(i).input{1} == 0) | (layer(i).input{1} == 1), 'all')
                 warning("Assuming binary input")
                 layer(i).geometry.eps_struc = layer(i).input{1};
-                layer(i).geometry.eps_struc(layer(i).geometry.eps_struc==1)=2;
-                layer(i).geometry.eps_struc(layer(i).geometry.eps_struc==0)=1;
+                layer(i).geometry.eps_struc(layer(i).geometry.eps_struc == 1) = 2;
+                layer(i).geometry.eps_struc(layer(i).geometry.eps_struc == 0) = 1;
 
-                if layer(i).roughdim ~= size(layer(i).input{j},3)
-                    layer(i).roughdim = size(layer(i).input{j},3);
+                if layer(i).roughdim ~= size(layer(i).input{j}, 3)
+                    layer(i).roughdim = size(layer(i).input{j}, 3);
                     layer(i).L = sum(layer(i).L) / layer(i).roughdim * ones(1, layer(i).roughdim);
                     warning("Input array does not match roughdim, overwriting roughdim")
                 end
@@ -125,64 +123,108 @@ end
 end
 
 
+function [dnew, Lnew, Lrecalc] = discretize_surface(Z, Zres, eps, rev, opt, fill, add)
+
+[Z_out, Lrecalc] = discretizeLayers(Z, Zres, fill, add);
+
+if rev
+    Z_out = flip(Z_out, 3);
+end
+% Optimize probably doesnt work with reverse
+if opt
+    [dnew, Lnew] = optim_discr(Z_out, eps);
+else
+    dnew = Z_out;
+    Lnew = 1;
+end
+
+end
 
 
+function [V, totmax] = discretizeLayers(input, Zres, fill, add)
 
-% function Z_out = create_shape(t,res_x,res_y)
-%
-% Z_in = zeros(res_x,res_y);
-%
-% if t==1
-%     % Grating
-%     pgon = polyshape([0 0 0.5*res_y 0.5*res_y], [0 res_x res_x 0]);
-% elseif t==2
-%     % Grating
-%     pgon = polyshape([0 0 res_y res_y], [0 0.5*res_x 0.5*res_x 0]);
-% elseif t==3
-%     % Grating
-%     pgon = polyshape([0 0 0.5*res_y 0.5*res_y], [0 0.5*res_x 0.5*res_x 0]);
-% elseif t==4
-%     % Triangle
-%     pgon = polyshape([0.1*res_y 0.5*res_y 0.9*res_y], [0.1*res_x 0.9*res_x 0.1*res_x]);
-% elseif t==5
-%     %Circle
-%     n=20;
-%     theta = (0:n-1)*(2*pi/n);
-%     r = 0.35*res_x;
-%     xc = 0.5*res_y;
-%     yc = 0.5*res_x;
-%     x = xc + r*cos(theta);
-%     y = yc + r*sin(theta);
-%     pgon = polyshape(x,y);
-% end
-% [colGrid,rowGrid] = meshgrid(1:size(Z_in,2),1:size(Z_in,1));
-% idx = isinterior(pgon,[colGrid(:),rowGrid(:)]);
-% idx = reshape(idx,size(Z_in));
-%
-% Z_out = Z_in;
-% Z_out(idx) = 1;
-% end
+[NX, NY, N3] = size(input);
 
-% function Z_out = roughsurf(Xres,Yres,Zres)
-%
-% rng(1337)
-% N = [Xres Yres];
-% F = 2;
-% [X,Y] = ndgrid(1:N(1),1:N(2));
-% i = min(X-1,N(1)-(X-1));
-% j = min(Y-1,N(2)-(Y-1));
-%
-% H = exp(-.5*(i.^2+j.^2)/F^2);
-% Z = real(ifft2(H.*fft2(randn(N))));
-%
-% %normalize
-% data=Z/max(max(abs(Z)));
-%
-% d=discretize(data,linspace(-1,1,Zres));
-%
-% Z_out=zeros(N(1),N(2),Zres);
-% for i=1:Zres
-%     Z_out(:,:,i)=i<=d;
-% end
-%
-% end
+% Multilayer numbering
+numLayers = N3 + 1;
+eps = 1:numLayers;
+
+y = zeros(NX, NY, N3);
+
+% Loop through multilayer surfaces
+for i = 1:N3
+    % Set minimum to zero
+    y(:, :, i) = input(:, :, i) - min(input(:, :, i), [], 'all');
+    % If multilayer
+    if i>1
+        % Get sum of underlying stack of layers
+        layersUpToNow = sum(y(:, :, 1:i - 1), 3);
+
+        % Interpolate
+        vq = interpLayerMax(layersUpToNow);
+
+        % Add/fill next layer
+        y(:, :, i) = add(i - 1) * input(:, :, i) + fill(i - 1) * max(vq - layersUpToNow, 0);
+    end
+end
+% Peak of multilayer
+totmax = max(sum(y, 3), [], 'all');
+
+% Z grid
+dz = totmax / Zres;
+z = linspace(dz, totmax, Zres);
+
+V = zeros(NX, NY, Zres);
+f_cond = zeros(NX, NY, numLayers);
+
+for i = 1:Zres
+    for j = 1:numLayers - 1
+        f_cond(:, :, j + 1) = (z(i) <= sum(y(:, :, 1:j), 3));
+
+        f(:, :, j) = eps(j) * (~f_cond(:, :, j) & f_cond(:, :, j + 1));
+    end
+    V(:, :, i) = sum(f, 3);
+end
+% Also assign "rest" surface
+V(V == 0) = eps(end);
+
+end
+
+
+function vq = interpLayerMax(v_in)
+
+[NX, NY] = size(v_in);
+
+superv = [v_in, v_in, v_in;...
+    v_in, v_in, v_in;...
+    v_in, v_in, v_in];
+supermaxima = islocalmax(superv, 1) & islocalmax(superv, 2);
+[X_in, Y_in] = ndgrid(1:size(supermaxima, 1), 1:size(supermaxima, 2));
+F = scatteredInterpolant(X_in(supermaxima), Y_in(supermaxima), superv(supermaxima));
+[Xnew, Ynew] = ndgrid(NX+1:2*NX, NY+1:2*NY);
+vq = F(Xnew, Ynew);
+
+end
+
+
+function [dnew, Lnew] = optim_discr(d, eps)
+[Nx, Ny, Nz] = size(d);
+sameEdges = zeros(1, Nz);
+sameEdges(1) = 1;
+k = 1;
+d_st = d(:, :, 1);
+for i = 2:length(sameEdges)
+
+    likeness = d(:, :, i) == d_st;
+    if (1 - sum(likeness(:)) / (Nx * Ny)) > eps %larger than margin, so doesnt match
+        k = k + 1;
+        d_st = d(:, :, i);
+    end
+    sameEdges(i) = k;
+end
+
+[~, ia, ic] = unique(sameEdges);
+dnew = d(:, :, ia);
+Lnew = accumarray(ic, 1);
+
+end

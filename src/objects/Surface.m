@@ -40,7 +40,7 @@ classdef Surface < handle
         %   Features is a list of structs .
         %
         %   See also SURFACE
-        Features (1,:) struct
+        Features (1, :) struct
     end
     properties (SetAccess = protected)
         %SURFSIZE - Size of the SURFACE in nanometers.
@@ -88,9 +88,9 @@ classdef Surface < handle
     
     methods
         function obj = Surface(varargin)
-            if nargin==1
+            if nargin == 1
                 obj.surfres = varargin{1};
-            elseif nargin>=2
+            elseif nargin >= 2
                 obj.surfres = varargin{1};
                 obj.surfsize = varargin{2};
             end
@@ -101,12 +101,12 @@ classdef Surface < handle
         end
         
         
-        function obj = addFeature(obj,fobj,xpos,ypos,PBC)
+        function obj = addFeature(obj, fobj, xpos, ypos, PBC)
             arguments
                 obj
                 fobj Feature
-                xpos (1,:) {mustBeInteger, mustBeEqualSize(xpos, fobj)}
-                ypos (1,:) {mustBeInteger, mustBeEqualSize(ypos, xpos)}
+                xpos (1, :) {mustBeInteger, mustBeEqualSize(xpos, fobj)}
+                ypos (1, :) {mustBeInteger, mustBeEqualSize(ypos, xpos)}
                 PBC logical = true
             end
             
@@ -120,14 +120,14 @@ classdef Surface < handle
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             for i = 1:numel(fobj)
-                if (fobj(i).resolution<=obj.surfres)
-                    if PBC||checkPlacement(obj,xpos(i),ypos(i),fobj(i).resolution,fobj(i).resolution)
+                if (fobj(i).resolution <= obj.surfres)
+                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj(i).resolution, fobj(i).resolution)
                         if isempty(obj.Features)
                             obj.Features(1).fobj = fobj(i);
                             obj.Features(1).xpos = xpos(i);
                             obj.Features(1).ypos = ypos(i);
                         else
-                            obj.Features(end+1).fobj = fobj(i);
+                            obj.Features(end + 1).fobj = fobj(i);
                             obj.Features(end).xpos = xpos(i);
                             obj.Features(end).ypos = ypos(i);
                         end
@@ -135,16 +135,16 @@ classdef Surface < handle
                         warning("Position is out of bounds, no object added")
                     end
                 else
-                    fobj(i).Z = fobj(i).Z(1:obj.surfres,1:obj.surfres);
+                    fobj(i).Z = fobj(i).Z(1:obj.surfres, 1:obj.surfres);
                     fobj(i).resolution = obj.surfres;
                     warning("Feature larger than surface, Feature sampled down to surface size")
-                    if PBC||checkPlacement(obj,xpos(i),ypos(i),fobj(i).resolution,fobj(i).resolution)
+                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj(i).resolution, fobj(i).resolution)
                         if isempty(obj.Features)
                             obj.Features(1).fobj(i) = fobj(i);
                             obj.Features(1).xpos = xpos(i);
                             obj.Features(1).ypos = ypos(i);
                         else
-                            obj.Features(end+1).fobj(i) = fobj(i);
+                            obj.Features(end + 1).fobj(i) = fobj(i);
                             obj.Features(end).xpos = xpos(i);
                             obj.Features(end).ypos = ypos(i);
                         end
@@ -162,16 +162,16 @@ classdef Surface < handle
             %
             %   See also: REPORT, ADDFEATURE
             if ~isempty(obj.Features)
-                fprintf("Surface ""%s"" consists of these Features:\n",inputname(1))
+                fprintf("Surface ""%s"" consists of these Features:\n", inputname(1))
                 fprintf("--------------------\n")
-                for i=1:numel(obj.Features)
+                for i = 1:numel(obj.Features)
                     %number
                     % coordinates
                     % type
                     nr = length(obj.Features(i).xpos);
                     fprintf("--------------------\n")
-                    fprintf("Feature %u\nType: ""%s""; Number: %u; Number density: %d num/um^2\nCoordinates: \n", i, obj.Features(i).fobj.shape, nr, nr/(obj.surfsize/1000)^2)
-                    fprintf("Copy %u: (%u, %u)\n",[1:length(obj.Features(i).xpos); obj.Features(i).xpos; obj.Features(i).ypos])
+                    fprintf("Feature %u\nType: ""%s""; Number: %u; Number density: %d num/um^2\nCoordinates: \n", i, obj.Features(i).fobj.shape, nr, nr / (obj.surfsize / 1000)^2)
+                    fprintf("Copy %u: (%u, %u)\n", [1:length(obj.Features(i).xpos); obj.Features(i).xpos; obj.Features(i).ypos])
                     fprintf("--------------------\n")
                 end
             else
@@ -187,56 +187,56 @@ classdef Surface < handle
             %
             %
             %   See also: CLEARFEATURES, CLEARSURFACE, ADDFEATURE
-            fprintf("Surface ""%s"" Report:\n",inputname(1))
+            fprintf("Surface ""%s"" Report:\n", inputname(1))
             fprintf("--------------------\n")
             meansurf = mean(obj.surfMatrix(:));
             %Mean roughness
-            fprintf("meansurf: %d\n",meansurf)
-            var = mean((obj.surfMatrix(:)-meansurf).^2);
-            fprintf("var: %d\n",var)
-            rms = sqrt(mean((obj.surfMatrix(:)-meansurf).^2));
-            fprintf("rms: %d\n",rms)
-            skew = mean((obj.surfMatrix(:)-meansurf).^3./rms.^3);
-            fprintf("skew: %d\n",skew)
-            kurt = mean((obj.surfMatrix(:)-meansurf).^4./rms.^4);
-            fprintf("kurt: %d\n",kurt)
+            fprintf("meansurf: %d\n", meansurf)
+            var = mean((obj.surfMatrix(:) - meansurf).^2);
+            fprintf("var: %d\n", var)
+            rms = sqrt(mean((obj.surfMatrix(:) - meansurf).^2));
+            fprintf("rms: %d\n", rms)
+            skew = mean((obj.surfMatrix(:) - meansurf).^3 ./ rms.^3);
+            fprintf("skew: %d\n", skew)
+            kurt = mean((obj.surfMatrix(:) - meansurf).^4 ./ rms.^4);
+            fprintf("kurt: %d\n", kurt)
             
             tiledlayout('flow')
             %Normalized height distribution
             nexttile
-            histogram(obj.surfMatrix(:)/numel(obj.surfMatrix),'EdgeColor', 'none');
+            histogram(obj.surfMatrix(:) / numel(obj.surfMatrix), 'EdgeColor', 'none');
             title("Height distribution")
 
             %Power spectral density
             nexttile
-            m=obj.surfres;
-            a=obj.surfsize/obj.surfres;
-            qx_1=zeros(m,1);
-            for k=0:m-1
-                qx_1(k+1)=(2*pi/m)*(k);
+            m = obj.surfres;
+            a = obj.surfsize / obj.surfres;
+            qx_1 = zeros(m, 1);
+            for k = 0:m - 1
+                qx_1(k + 1) = (2 * pi / m) * (k);
             end
             qx_2 = fftshift(qx_1);
-            qx_3 = unwrap(qx_2-2*pi);
-            qx = qx_3/a;
-            surf(qx,qx,fft2(obj.surfMatrix).*conj(fft2(obj.surfMatrix)),'EdgeColor', 'none');
+            qx_3 = unwrap(qx_2 - 2 * pi);
+            qx = qx_3 / a;
+            surf(qx, qx, fft2(obj.surfMatrix) .* conj(fft2(obj.surfMatrix)), 'EdgeColor', 'none');
             title("PSD")
 
             %Radially averaged power spectral density
             nexttile
-            [q , C, ~] = psd_2D(obj.surfMatrix , obj.surfsize/obj.surfres);
-            loglog(q,C)
+            [q , C, ~] = psd_2D(obj.surfMatrix, obj.surfsize / obj.surfres);
+            loglog(q, C)
             title("Radially averaged PSD")
             shading flat
 
             %Autocorrelation function
             nexttile
-            surf(abs(fftshift(ifft2(fft2(obj.surfMatrix).*conj(fft2(obj.surfMatrix)))))./(obj.surfres.^2))
+            surf(abs(fftshift(ifft2(fft2(obj.surfMatrix) .* conj(fft2(obj.surfMatrix))))) ./ (obj.surfres.^2))
             title("Autocorrelation function")
             shading interp
         end
         
         
-        function placeFeature(obj,i,xpos,ypos,PBC,mode)
+        function placeFeature(obj, i, xpos, ypos, PBC, mode)
             arguments
                 obj
                 i
@@ -260,27 +260,27 @@ classdef Surface < handle
             
             nx = obj.Features(i).fobj.resolution;
             ny = obj.Features(i).fobj.resolution;
-            for pos=1:numel(xpos)
+            for pos = 1:numel(xpos)
                 x = xpos(pos);
                 y = ypos(pos);
                 if PBC
-                    ind = ((y: y + ny-1).*ones(ny,1)-1)*obj.surfres*2+(x: x + nx-1)'.*ones(1,nx);
-                    k = Surface.toPBC(obj.surfres*2,obj.surfres,obj.surfres,ind(:));
+                    ind = ((y: y + ny - 1) .* ones(ny, 1) - 1) * obj.surfres * 2 + (x: x + nx - 1)' .* ones(1, nx);
+                    k = Surface.toPBC(obj.surfres * 2, obj.surfres, obj.surfres, ind(:));
                     temp = zeros(obj.surfres);
                     temp(k) = obj.Features(i).fobj.Z;
-                    if mode=="add"
+                    if mode == "add"
                         obj.surfMatrix = obj.surfMatrix + temp;
-                    elseif mode=="merge"
+                    elseif mode == "merge"
                         temp2 = temp - obj.surfMatrix;
-                        obj.surfMatrix = obj.surfMatrix + (temp2+abs(temp2))/2;
-                    elseif mode=="replace"
+                        obj.surfMatrix = obj.surfMatrix + (temp2 + abs(temp2)) / 2;
+                    elseif mode == "replace"
                         obj.surfMatrix(k) = obj.Features(i).fobj.Z;
                     else        %exclude mode?, only place when no other features in the way
                         error('wrong mode')
                     end
                 else
-                    if checkPlacement(obj,x,y,nx,ny)
-                        obj.surfMatrix(x: x + nx-1,y: y + ny-1) = obj.surfMatrix(x: x + nx-1,y: y + ny-1) + obj.Features(i).fobj.Z;
+                    if checkPlacement(obj, x, y, nx, ny)
+                        obj.surfMatrix(x:x + nx - 1, y:y + ny - 1) = obj.surfMatrix(x: x + nx - 1, y: y + ny - 1) + obj.Features(i).fobj.Z;
                     else
                         errorString = 'Placement of Feature ' + string(i) + ...
                             ' at position x = ' + string(x) + ' of ' + string(obj.surfres) + ...
@@ -293,7 +293,7 @@ classdef Surface < handle
         end
         
         
-        function placeFeatures(obj,options)
+        function placeFeatures(obj, options)
             arguments
                 obj
                 options.PBC logical = true
@@ -307,10 +307,10 @@ classdef Surface < handle
             %   'mode'      - "add", "merge" or "replace".
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
-            for i=1:numel(obj.Features)
+            for i = 1:numel(obj.Features)
                 x = obj.Features(i).xpos;
                 y = obj.Features(i).ypos;
-                placeFeature(obj,i,x,y,options.PBC,options.mode)
+                placeFeature(obj, i, x, y, options.PBC, options.mode)
             end
         end
         
@@ -338,14 +338,14 @@ classdef Surface < handle
             if ~options.PBC
                 nx = fobj.resolution;
                 ny = fobj.resolution;
-                maxx = size(obj.surfMatrix,1)-nx+1;
-                maxy = size(obj.surfMatrix,2)-ny+1;
+                maxx = size(obj.surfMatrix, 1) - nx + 1;
+                maxy = size(obj.surfMatrix, 2) - ny + 1;
                 
-                if numel(fobj.height)>1
+                if numel(fobj.height) > 1
                     for i = 1:numel(fobj.height)
                         fcopy = fobj;
                         fcopy.height = fobj.height(i);
-                        fcopy.Z = fcopy.height * fcopy.Z/max(fcopy.Z,[],'all');
+                        fcopy.Z = fcopy.height * fcopy.Z / max(fcopy.Z, [], 'all');
                         xpos = randi([1, maxx], 1, 1);
                         ypos = randi([1, maxy], 1, 1);
                         addFeature(obj, fcopy, xpos, ypos, options.PBC);
@@ -356,11 +356,11 @@ classdef Surface < handle
                     addFeature(obj, fobj, xpos, ypos, options.PBC);
                 end
             else
-                if numel(fobj.height)>1
+                if numel(fobj.height) > 1
                     for i = 1:numel(fobj.height)
                         fcopy = fobj;
                         fcopy.height = fobj.height(i);
-                        fcopy.Z = fcopy.height * fcopy.Z/max(fcopy.Z,[],'all');
+                        fcopy.Z = fcopy.height * fcopy.Z / max(fcopy.Z, [], 'all');
                         xpos = randi([1, obj.surfres], 1, 1);
                         ypos = randi([1, obj.surfres], 1, 1);
                         addFeature(obj, fcopy, xpos, ypos, options.PBC);
@@ -374,7 +374,7 @@ classdef Surface < handle
         end
         
         %%% Placeholder
-        function addRandomFeaturesMC(obj,fobj,tarRMS,number,options)
+        function addRandomFeaturesMC(obj, fobj, tarRMS, number, options)
             arguments
                 obj
                 fobj
@@ -386,24 +386,24 @@ classdef Surface < handle
             if ~options.PBC
                 nx = fobj.resolution;
                 ny = fobj.resolution;
-                maxx = size(obj.surfMatrix,1)-nx+1;
-                maxy = size(obj.surfMatrix,2)-ny+1;
+                maxx = size(obj.surfMatrix, 1) - nx + 1;
+                maxy = size(obj.surfMatrix, 2) - ny + 1;
                 
-                xpos = randi([1,maxx],1,number);
-                ypos = randi([1,maxy],1,number);
-                %placeFeature(obj,i,x,y,options.PBC,options.mode);
-                addFeature(obj,fobj,xpos,ypos,options.PBC);
+                xpos = randi([1, maxx], 1, number);
+                ypos = randi([1, maxy], 1, number);
+                %placeFeature(obj, i, x, y, options.PBC, options.mode);
+                addFeature(obj, fobj, xpos, ypos, options.PBC);
                 
             else
-                for i=1:number
-                xpos = randi([1,obj.surfres],1,number);
-                ypos = randi([1,obj.surfres],1,number);
-                %placeFeature(obj,i,x,y,options.PBC,options.mode);
-                surfmean=mean(obj.surfMatrix(:));
-                rms=sqrt(mean((obj.surfMatrix(:)-surfmean).^2));
-                delta_rms=tarRMS-rms;
-                if delta_rms>0
-                    addFeature(obj,fobj,xpos,ypos,options.PBC);
+                for i = 1:number
+                xpos = randi([1, obj.surfres], 1, number);
+                ypos = randi([1, obj.surfres], 1, number);
+                %placeFeature(obj, i, x, y, options.PBC, options.mode);
+                surfmean = mean(obj.surfMatrix(:));
+                rms = sqrt(mean((obj.surfMatrix(:) - surfmean).^2));
+                delta_rms = tarRMS - rms;
+                if delta_rms > 0
+                    addFeature(obj, fobj, xpos, ypos, options.PBC);
                 end
                 end
             end
@@ -461,7 +461,7 @@ classdef Surface < handle
         end
         
         
-        function hscale(obj,h)
+        function hscale(obj, h)
             %HSCALE Rescales the Surface.
             %   Input is HSCALE(h)
             %
@@ -469,8 +469,8 @@ classdef Surface < handle
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             omax = max(obj.surfMatrix(:));
-            if omax>0
-                obj.surfMatrix = h * obj.surfMatrix/omax;
+            if omax > 0
+                obj.surfMatrix = h * obj.surfMatrix / omax;
             else
                 warning("Can't rescale empty surface")
             end
@@ -490,16 +490,16 @@ classdef Surface < handle
         end
         
         
-        function obj = addRoughsurf(obj,options)
+        function obj = addRoughsurf(obj, options)
             arguments
                 obj
                 options.PBC logical = true
                 options.mode string = "Rough"
-                options.sigma (1,1) double = 100
-                options.hurst (1,1) double = 0.5
-                options.height (1,1) double = 100
-                options.x (1,1) {mustBeInteger} = 1
-                options.y (1,1) {mustBeInteger} = 1
+                options.sigma (1, 1) double = 100
+                options.hurst (1, 1) double = 0.5
+                options.height (1, 1) double = 100
+                options.x (1, 1) {mustBeInteger} = 1
+                options.y (1, 1) {mustBeInteger} = 1
             end
             %ADDROUGHSURF Adds a rough layer to the Surface as a Feature object.
             %   Input is ADDROUGHSURF(options)
@@ -515,17 +515,17 @@ classdef Surface < handle
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             if options.mode == "Artificial"
-                [Z , ~ , ~] = artificial_surf(options.sigma, options.hurst, obj.surfsize, obj.surfres, obj.surfres);
+                [Z, ~, ~] = artificial_surf(options.sigma, options.hurst, obj.surfsize, obj.surfres, obj.surfres);
             elseif options.mode == "Rough"
-                Z = Surface.roughsurf(obj.surfres,obj.surfres,options.height,1/options.hurst);
+                Z = Surface.roughsurf(obj.surfres, obj.surfres, options.height, 1 / options.hurst);
             else
                 error("Invalid mode selected")
             end
-            addFeature(obj,Feature(Z, obj.surfsize),options.x,options.y,options.PBC);
+            addFeature(obj, Feature(Z, obj.surfsize), options.x, options.y, options.PBC);
         end
 
 
-        function obj = addUniform(obj,t)
+        function obj = addUniform(obj, t)
 
             %ADDROUGHSURF Adds a uniform layer to the Surface as a Feature object.
             %   Input is ADDUNIFORM(t)
@@ -533,7 +533,7 @@ classdef Surface < handle
             %   't'    	    - Thickness.
             %
             %   See also: ADDROUGHSURF
-            addFeature(obj,Feature(t*ones(obj.surfres, obj.surfres), obj.surfsize), 1, 1);
+            addFeature(obj, Feature(t * ones(obj.surfres, obj.surfres), obj.surfsize), 1, 1);
         end
 
         
@@ -546,8 +546,8 @@ classdef Surface < handle
         
     end
     methods (Access = private)
-        function allowedPlacement = checkPlacement(obj,x,y,nx,ny)
-            if all(round(x)==x)&&all(round(y)==y)&&all(x>=1)&&all(y>=1)&&all(x+nx-1<=obj.surfres)&&all(y+ny-1<=obj.surfres)
+        function allowedPlacement = checkPlacement(obj, x, y, nx, ny)
+            if all(round(x) == x) && all(round(y) == y) && all(x >= 1) && all(y >= 1) && all(x + nx - 1 <= obj.surfres) && all(y + ny - 1 <= obj.surfres)
                 allowedPlacement = true;
             else
                 allowedPlacement = false;
@@ -555,35 +555,35 @@ classdef Surface < handle
         end
     end
     methods (Static)
-        function Z = roughsurf(Xres,Yres,height,F)
+        function Z = roughsurf(Xres, Yres, height, F)
             N = [Xres Yres];
-            [X,Y] = ndgrid(1:N(1),1:N(2));
-            i = min(X-1,N(1)-(X-1));
-            j = min(Y-1,N(2)-(Y-1));
+            [X, Y] = ndgrid(1:N(1), 1:N(2));
+            i = min(X - 1, N(1) - (X - 1));
+            j = min(Y - 1, N(2) - (Y - 1));
             
-            H = exp(-.5*(i.^2+j.^2)/F^2);
-            Z = real(ifft2(H.*fft2(randn(N))));
+            H = exp(-.5 * (i.^2 + j.^2) / F^2);
+            Z = real(ifft2(H .* fft2(randn(N))));
             
-            Z = Z-min(Z(:));
-            Z = height * Z/max(Z(:));
+            Z = Z - min(Z(:));
+            Z = height * Z / max(Z(:));
         end
 
 
-        function lind_pbc = toPBC(NX,NXnew,NYnew,ind)
-            r = mod(ind-1,NX)+1;
-            c = ceil(ind./NX);
-            r_pbc = mod(r-1,NXnew)+1;
-            c_pbc = mod(c-1,NYnew)+1;
-            lind_pbc = (c_pbc-1).*NXnew+r_pbc;
+        function lind_pbc = toPBC(NX, NXnew, NYnew, ind)
+            r = mod(ind - 1, NX) + 1;
+            c = ceil(ind ./ NX);
+            r_pbc = mod(r - 1, NXnew) + 1;
+            c_pbc = mod(c - 1, NYnew) + 1;
+            lind_pbc = (c_pbc - 1) .* NXnew + r_pbc;
         end
 
     end
 end
 
-function mustBeEqualSize(a,b)
+function mustBeEqualSize(a, b)
 if ~isequal(size(a), size(b))
     eid = 'Size:notEqual';
     msg = 'Size of inputs must be equal.';
-    throwAsCaller(MException(eid,msg))
+    throwAsCaller(MException(eid, msg))
 end
 end

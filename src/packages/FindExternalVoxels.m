@@ -1,29 +1,3 @@
-function displayDiscretized(V, numLayers, onlymiddle)
-arguments
-    V
-    numLayers
-    onlymiddle = true;
-end
-
-looparr = 1:numLayers;
-% if onlymiddle
-%     looparr = looparr(2:end-1);
-% end
-
-clrmap = hsv(numLayers);
-for i=looparr
-    figure
-    for j=1:i
-        patch(FindExternalVoxels(V == j), 'FaceColor', clrmap(j,:),'LineWidth',0.1,'FaceAlpha',1/j,'EdgeAlpha',0.5)
-        hold on
-    end
-    view(45,30)
-    grid on
-end
-
-end
-
-
 function [FV] = FindExternalVoxels(VoxelMat)
 % FindExternalVoxels scans VoxeLMat (a 3D matrix) and finds which voxels
 % are external by checking if they have nieghbors from all 6 sides

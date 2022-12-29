@@ -5,6 +5,7 @@ arguments
     sim_options.parallel = false;
     sim_options.onlinesave = false;
     sim_options.onlinePathName = '/run/user/1000/gvfs/smb-share:server=amsbackup-srv.science.ru.nl,share=amsbackup/Students/Sander/results/';
+    sim_options.mode {mustBeMember(sim_options.mode,["ET", "S"])} = "ET"
 end
 
 % Set simulation name based on date and time
@@ -17,6 +18,7 @@ end
 
 c = onCleanup(@() progressBar());
 
+mode = sim_options.mode;
 numRuns = numel(param);
 
 % Confirmation box
@@ -80,21 +82,20 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
 
     % Initialize progress bar
     [~] = progressBar(false, numel([param.wavelengthArray]));
-
+    
     % Simulation in parallel
     if sim_options.parallel
         progressTick = progressBar(sim_options.parallel);
         parfor n = 1:numRuns
             layer = fill_layer(param(n));
-            [Sz, fields, Kx, Ky, Kz] = RCWA_transmittance(layer, param(n), progressTick);
-            fom = Jsc(squeeze(sum(Sz,1)),param(n).wavelengthArray);
+            [Sz, fields, Kx, Ky, Kz] = run_RCWA(layer, param(n), mode, progressTick);
 
             fileName = "results/" + folderName + "/sim" + n + ".mat";
 
             if sim_options.onlinesave
-                parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
+                parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, n)
             else
-                parsave(fileName, [], Sz, fields, Kx, Ky, Kz, fom, n)
+                parsave(fileName, [], Sz, fields, Kx, Ky, Kz, n)
             end
         end
     % Simulation in series
@@ -107,18 +108,15 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             layer = fill_layer(param(n));
 
             % Run simulation
-            [Sz, fields, Kx, Ky, Kz] = RCWA_transmittance(layer, param(n), progressTick);
-            
-            % Calculate short circuit current
-            fom = Jsc(squeeze(sum(Sz, 1)), param(n).wavelengthArray);
+            [Sz, fields, Kx, Ky, Kz] = run_RCWA(layer, param(n), mode, progressTick);
 
             fileName = "results/" + folderName + "/sim" + n + ".mat";
 
             % Save these parameters as .mat in previously created folder
             if sim_options.onlinesave
-                parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
+                parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, n)
             else
-                parsave(fileName, [], Sz, fields, Kx, Ky, Kz, fom, n)
+                parsave(fileName, [], Sz, fields, Kx, Ky, Kz, n)
             end
         end
     end
@@ -128,10 +126,11 @@ end
 
 end
 
+
 % Progress bar which also works in parallel simulations
 function progressOut = progressBar(varargin)
 persistent iters wb tocArray maxIter;
-if nargin==2
+if nargin == 2
     isPar = varargin{1};
     maxIter = varargin{2};
 
@@ -147,7 +146,7 @@ if nargin==2
     else
         progressOut = @updateWaitbar;
     end
-elseif nargin==1
+elseif nargin == 1
     isPar=varargin{1};
     if isPar
         D = parallel.pool.DataQueue;
@@ -156,7 +155,7 @@ elseif nargin==1
     else
         progressOut = @updateWaitbar;
     end
-elseif nargin==0
+elseif nargin == 0
     close(wb);
     delete(wb);
     toc
@@ -164,19 +163,15 @@ elseif nargin==0
 end
 
     function updateWaitbar(~)
-        tocArray(end+1) = toc;
+        tocArray(end + 1) = toc;
 
-        iterRemaining = maxIter-iters;
+        iterRemaining = maxIter - iters;
 
-        %             if iters > 10
-        %                 t = tocArray(end-10:end);
-        %             else
         t = tocArray;
-        %             end
 
-        timeLeft = string(seconds(iterRemaining*mean(diff(t))),'hh:mm:ss');
+        timeLeft = string(seconds(iterRemaining * mean(diff(t))),'hh:mm:ss');
 
-        waitBarDuration = iters/maxIter;
+        waitBarDuration = iters / maxIter;
         waitBarString = {'Iteration ' + string(iters) + '/' + string(maxIter),...
             'Estimated time remaining: ' + timeLeft};
 
@@ -190,14 +185,11 @@ end
     end
 end
 
+
 % Save results during execution
-function parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, fom, n)
-% savefile = varargin{1}; % first input argument
-% for i=2:nargin
-%     savevar.(inputname(i)) = varargin{i}; % other input arguments
-% end
+function parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, n)
 warning("Saving to file")
-save(fileName, 'Sz', 'fields', 'Kx', 'Ky', 'Kz', 'fom', 'n')
+save(fileName, 'Sz', 'fields', 'Kx', 'Ky', 'Kz', 'n')
 if ~isempty(onlinePathName)
     try
         copyfile(onlinePathName, fileName)

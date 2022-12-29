@@ -3,7 +3,6 @@ function param = get_sinc(param, iter)
 % Phi is angle from x vector
 % Theta is angle from surface normal
 
-
 % Incoming wavevector
 n_inc = sqrt(param.eps_ref(iter) * param.mu_ref(iter));
 param.beta(1) = n_inc * sin(param.theta) * cos(param.phi);
@@ -40,7 +39,7 @@ h2 = 1i / param.mu_ref(iter) * (param.beta(1) * p(3) - param.beta(3) * p(1));
 % Electric field in Fourier space and set central harmonic to 1 which gives
 % a plane wave
 delta = zeros(param.num_H, 1);
-delta(ceil(end/2)) = 1;
+delta(ceil(end / 2)) = 1;
 
 % Incoming wave as: [Ex Ey Hx Hy]
 param.s_inc = [delta * p(1); delta * p(2); delta * h1; delta * h2];

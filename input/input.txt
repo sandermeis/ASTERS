@@ -1,3 +1,4 @@
+%% Track version to ensure compatibility of old results, do not change
 version         = v4.0.0
 
 %% Parameters
@@ -6,6 +7,8 @@ version         = v4.0.0
 % Add " + otherPar1" to a parameter to combine two parameters, analogously " + otherPar1, otherPar2" combines 3 parameters.
 % Add & to pass an array as a single parameter, e.g. "&1:100".
 % Add \ to combined parameters to vary parameters in tandem, e.g. "Par + \otherPar".
+% Parameter res must be at least 4 * nharm + 2.
+% Only choose 1 wavelength when calcFields is enabled.
 
 wavelengthArray = &[300:5:900]
 ref_medium      = Air
@@ -14,14 +17,12 @@ theta           = 0
 phi             = 0
 pTE             = 0.5
 pTM             = 0.5
-
-% Entering the same size as requested wavelength will produce a discontinuity at this point
 size            = 1565
-
-% res must be at least 2x Hmax
 res             = 33
+nharm           = 5
+
+truncateHarm    = false
 truncFactor     = 1
-Hmax            = 15
 
 %% Layer parameters
 recalcRoughL    = true
@@ -31,20 +32,17 @@ fill            = 0
 add             = 1
 
 %% Booleans
-% -------------------------------------------------------------------------
 calcAllRough    = false
 calcFields      = false
-truncateHarm    = false
 
 %% Source files
-% -------------------------------------------------------------------------
 % These are the layers.xlsx file tab and surface creation file respectively
 layerSheet      = Hirst
 surfaceFile     = createSurface
 
 %% Custom parameters
 % -------------------------------------------------------------------------
-% Add any of your own parameters
+% Add any of your own parameters, for example to modify layers or loop over input files
 %simit            = 1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 262144;
 %simit            = 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608
 %height          = 0
@@ -54,5 +52,5 @@ surfaceFile     = createSurface
 %featres         = 0
 %urbach          = 25
 %oxidethickness  = 0:20:180
-sh = 2
+sh = 1
 
