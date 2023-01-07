@@ -19,8 +19,10 @@ for j = 1:numel(layer)
     layer(j).material = string(strsplit(layer(j).material, {' ',','}));
     layer(j).input = string(strsplit(layer(j).input, {' ',','}));
 
+    if ismissing(layer(j).input)
+        error("Wrong layer input")
     % If input is numbers
-    if all(ismember(char(layer(j).input), '123456789'))
+    elseif all(ismember(char(layer(j).input), '123456789'))
         layer(j).input = num2cell(str2double(layer(j).input));
     % If input is uniform
     elseif layer(j).input == "u" || layer(j).input == "uniform" || layer(j).input == "Uniform"

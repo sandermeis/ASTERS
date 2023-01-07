@@ -22,7 +22,17 @@ for i = 1:numel(layer)
                 if numel(layer(i).input) == 1
                     input(:, :, 1) = layer(i).input{1}.surfMatrix;
                     numLay = numel(layer(i).material);
-                    if numLay > 2
+                    % if number of materials smaller than number of multilayers
+                    if numLay == 1
+                        warning("Multilayer has 2 components, however only 1 material(s) are specified, setting to previous layer material")
+                        if i == 1 % Possibly need to add something for reverse
+                            layer(i).material(2) = layer(i).material(1);
+                            layer(i).material(1) = param.ref_medium;
+                        else
+                            layer(i).material(2) = layer(i).material(1);
+                            layer(i).material(1) = layer(i - 1).material(end);
+                        end
+                    elseif numLay > 2
                         warning("Layer is a multilayer but only in the first layer the surface is specified. Proceeding with other layers set to constant thickness.")
                         sz = size(layer(i).input{1}.surfMatrix);
                         firstlaymax = max(layer(i).input{1}.surfMatrix, [], 'all');
@@ -195,12 +205,18 @@ function vq = interpLayerMax(v_in)
 
 [NX, NY] = size(v_in);
 
+% Extend boundaries to account for PBC
 superv = [v_in, v_in, v_in;...
-    v_in, v_in, v_in;...
-    v_in, v_in, v_in];
+        v_in, v_in, v_in;...
+        v_in, v_in, v_in];
+
+% Maximum in both rows and columns
 supermaxima = islocalmax(superv, 1) & islocalmax(superv, 2);
+% Grid with size of superv
 [X_in, Y_in] = ndgrid(1:size(supermaxima, 1), 1:size(supermaxima, 2));
+% Interpolate just between the maxima
 F = scatteredInterpolant(X_in(supermaxima), Y_in(supermaxima), superv(supermaxima));
+% Recover old size grid
 [Xnew, Ynew] = ndgrid(NX+1:2*NX, NY+1:2*NY);
 vq = F(Xnew, Ynew);
 

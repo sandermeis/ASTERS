@@ -105,8 +105,8 @@ classdef Surface < handle
             arguments
                 obj
                 fobj Feature
-                xpos (1, :) {mustBeInteger, mustBeEqualSize(xpos, fobj)}
-                ypos (1, :) {mustBeInteger, mustBeEqualSize(ypos, xpos)}
+                xpos (1, :) {mustBeInteger}
+                ypos (1, :) {mustBeInteger}
                 PBC logical = true
             end
             
@@ -119,15 +119,15 @@ classdef Surface < handle
             %   PBC     - Periodic boundary conditions (0 or 1)
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
-            for i = 1:numel(fobj)
-                if (fobj(i).resolution <= obj.surfres)
-                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj(i).resolution, fobj(i).resolution)
+            for i = 1:numel(xpos)
+                if (fobj.resolution <= obj.surfres)
+                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj.resolution, fobj.resolution)
                         if isempty(obj.Features)
-                            obj.Features(1).fobj = fobj(i);
+                            obj.Features(1).fobj = fobj;
                             obj.Features(1).xpos = xpos(i);
                             obj.Features(1).ypos = ypos(i);
                         else
-                            obj.Features(end + 1).fobj = fobj(i);
+                            obj.Features(end + 1).fobj = fobj;
                             obj.Features(end).xpos = xpos(i);
                             obj.Features(end).ypos = ypos(i);
                         end
@@ -135,16 +135,16 @@ classdef Surface < handle
                         warning("Position is out of bounds, no object added")
                     end
                 else
-                    fobj(i).Z = fobj(i).Z(1:obj.surfres, 1:obj.surfres);
-                    fobj(i).resolution = obj.surfres;
+                    fobj.Z = fobj.Z(1:obj.surfres, 1:obj.surfres);
+                    fobj.resolution = obj.surfres;
                     warning("Feature larger than surface, Feature sampled down to surface size")
-                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj(i).resolution, fobj(i).resolution)
+                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj.resolution, fobj.resolution)
                         if isempty(obj.Features)
-                            obj.Features(1).fobj(i) = fobj(i);
+                            obj.Features(1).fobj = fobj;
                             obj.Features(1).xpos = xpos(i);
                             obj.Features(1).ypos = ypos(i);
                         else
-                            obj.Features(end + 1).fobj(i) = fobj(i);
+                            obj.Features(end + 1).fobj = fobj;
                             obj.Features(end).xpos = xpos(i);
                             obj.Features(end).ypos = ypos(i);
                         end
@@ -201,6 +201,7 @@ classdef Surface < handle
             kurt = mean((obj.surfMatrix(:) - meansurf).^4 ./ rms.^4);
             fprintf("kurt: %d\n", kurt)
             
+            figure
             tiledlayout('flow')
             %Normalized height distribution
             nexttile
@@ -500,6 +501,7 @@ classdef Surface < handle
                 options.height (1, 1) double = 100
                 options.x (1, 1) {mustBeInteger} = 1
                 options.y (1, 1) {mustBeInteger} = 1
+                options.seed (1, 1) = 1
             end
             %ADDROUGHSURF Adds a rough layer to the Surface as a Feature object.
             %   Input is ADDROUGHSURF(options)
@@ -517,7 +519,7 @@ classdef Surface < handle
             if options.mode == "Artificial"
                 [Z, ~, ~] = artificial_surf(options.sigma, options.hurst, obj.surfsize, obj.surfres, obj.surfres);
             elseif options.mode == "Rough"
-                Z = Surface.roughsurf(obj.surfres, obj.surfres, options.height, 1 / options.hurst);
+                Z = Surface.roughsurf(obj.surfres, obj.surfres, options.height, 1 / options.hurst, options.seed);
             else
                 error("Invalid mode selected")
             end
@@ -555,7 +557,8 @@ classdef Surface < handle
         end
     end
     methods (Static)
-        function Z = roughsurf(Xres, Yres, height, F)
+        function Z = roughsurf(Xres, Yres, height, F, seed)
+            rng(seed)
             N = [Xres Yres];
             [X, Y] = ndgrid(1:N(1), 1:N(2));
             i = min(X - 1, N(1) - (X - 1));

@@ -1,8 +1,14 @@
 .DS_Store
 results/
 src/side_projects/
+src/data_daan/
+src/data_maarten/
+src/data_tom/
 src/halfway presentation/
+src/QRanalysis_5to37_32matrixsizeFF6.xls
+input/layers_old.xlsx
 *.mat
 *.asv
 *.fig
 *.png
+RCWA old/

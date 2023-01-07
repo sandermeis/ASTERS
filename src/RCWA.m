@@ -53,7 +53,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
     save(offlinePathName + "/param.mat", "param")
     copyfile("input/input.txt", offlinePathName)
     copyfile("input/layers.xlsx", offlinePathName)
-    surfaceFiles = [param.surfaceFile];
+    surfaceFiles = unique([param.surfaceFile]);
     for sf = 1:numel(surfaceFiles)
         copyfile("input/" + surfaceFiles(sf) + ".m", offlinePathName)
     end
@@ -93,7 +93,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
             fileName = "results/" + folderName + "/sim" + n + ".mat";
 
             if sim_options.onlinesave
-                parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, n)
+                parsave(fileName, sim_options.onlinePathName, Sz, fields, Kx, Ky, Kz, n)
             else
                 parsave(fileName, [], Sz, fields, Kx, Ky, Kz, n)
             end
@@ -114,7 +114,7 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
 
             % Save these parameters as .mat in previously created folder
             if sim_options.onlinesave
-                parsave(fileName, onlinePathName, Sz, fields, Kx, Ky, Kz, n)
+                parsave(fileName, sim_options.onlinePathName, Sz, fields, Kx, Ky, Kz, n)
             else
                 parsave(fileName, [], Sz, fields, Kx, Ky, Kz, n)
             end

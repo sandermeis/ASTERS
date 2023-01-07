@@ -1,9 +1,10 @@
-function [eps_lab] = import_permittivities(materials, wavelengthArray, display, sim_nr)
+function [eps_lab] = import_permittivities(materials, wavelengthArray, display, sim_nr, clrmap)
 arguments
     materials (1,:) cell
     wavelengthArray = []
     display = false
     sim_nr = []
+    clrmap = []
 end
 
 eps_lab = cell(size(materials));
@@ -35,9 +36,10 @@ end
 % Plot permittivities
 if display
     figure
-    t = tiledlayout(1, 2);
-    title(t, "Material properties of layer stack, sim " + sim_nr)
 
+    t = tiledlayout(1, 2);
+    title(t, "Material properties of layer stack, sim " + sim_nr, "FontSize", 16, "FontWeight", "normal")
+    
     nexttile
     hold on
     k = 1;
@@ -48,8 +50,11 @@ if display
             k = k + 1;
         end
     end
-    xlabel('Wavelength (nm)')
-    ylabel('Refractive index')
+    if ~isempty(clrmap)
+        colororder(clrmap(round(linspace(1, 1024, k-1)), :))
+    end
+    xlabel('Wavelength (nm)', "FontSize", 14)
+    ylabel('Refractive index', "FontSize", 14)
     xlim([wavelengthArray(1), wavelengthArray(end)])
 
     nexttile
@@ -59,8 +64,8 @@ if display
             plot(wavelengthArray, ip{i}{j}(:, 2), "LineWidth", 2)
         end
     end
-    xlabel('Wavelength (nm)')
-    ylabel('Extinction coefficient')
+    xlabel('Wavelength (nm)', "FontSize", 14)
+    ylabel('Extinction coefficient', "FontSize", 14)
     xlim([wavelengthArray(1), wavelengthArray(end)])
     legend(leg,'location','eastoutside');
 

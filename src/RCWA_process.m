@@ -16,6 +16,7 @@ arguments
 end
 
 jsc_plot = [];
+mymap = readmatrix("src/data/cm_coldwarm.csv");
 
 for j = 1:numel(folderName)
 
@@ -43,9 +44,6 @@ for j = 1:numel(folderName)
             end
         end
 
-
-        % displayDiscretized(layer(1).geometry.eps_struc, 2)
-
         if lower(plot_options.which_plot) == "abs"
             pl = 1;
         elseif lower(plot_options.which_plot) == "haze"
@@ -58,47 +56,49 @@ for j = 1:numel(folderName)
             error("Wrong input")
         end
 
+        % Plot absorption, haze and harmonics
         if isempty(plot_options.whichsims) || ismember(i, plot_options.whichsims)
-            RCWA_plot(param(i), A.Sz, layer, "Sim " + string(i), pl)
+            RCWA_plot(param(i), A.Sz, layer, "Sim " + string(i), pl, mymap)
+        end
 
-            % Plot permittivity
-            if ismember(i, plot_options.disp_permittivity)
-                [~] = import_permittivities({layer.material}, param(i).wavelengthArray, true, i);
-            end
+        % Plot permittivity
+        if ismember(i, plot_options.disp_permittivity)
+            [~] = import_permittivities({layer.material}, param(i).wavelengthArray, true, i, mymap);
+        end
 
-            % Display truncation scheme
-            if ismember(i, plot_options.disp_truncation)
-                disp_trunc(param(i).Hmax, param(i).tr_ind, i)
-            end
+        % Display truncation scheme
+        if ismember(i, plot_options.disp_truncation)
+            disp_trunc(param(i).Hmax, param(i).tr_ind, i)
+        end
 
-            % Plot of fields
-            if param(i).calcFields
-                show_fields(param, A.fields, plot_options.field_direc, plot_options.field_slice, plot_options.field_bars)
-            end
+        % Plot of fields
+        if param(i).calcFields
+            show_fields(param, A.fields, plot_options.field_direc, plot_options.field_slice, plot_options.field_bars)
+        end
 
-            % Plot non discretized surface
-            if ismember(i, plot_options.plot_surface)
-                for jj = 1:numel(layer)
-                    if iscell(layer(jj).input)
-                        plotLayer(layer, jj)
-                    end
+        % Plot surface as surf
+        if ismember(i, plot_options.plot_surface)
+            for jj = 1:numel(layer)
+                if iscell(layer(jj).input)
+                    plotLayer(param, layer, jj, mymap)
                 end
-            end
-
-            % Plot discretized surface
-            if ismember(i, plot_options.plot_discretized)
-                for jj = 1:numel(layer)
-                    if iscell(layer(jj).input)
-                        displayDiscretized(layer(jj).geometry.eps_struc)
-                    end
-                end
-            end
-
-            % Plot 4d harmonics
-            if ismember(i, plot_options.plot_4d)
-                tile_harmonics4d(param, Sz{i}, layer, "Sim " + string(i))
             end
         end
+
+        % Plot surface as blocks
+        if ismember(i, plot_options.plot_discretized)
+            for jj = 1:numel(layer)
+                if iscell(layer(jj).input)
+                    displayDiscretized(param, layer, jj, mymap)
+                end
+            end
+        end
+
+        % Plot 4d harmonics
+        if ismember(i, plot_options.plot_4d)
+            tile_harmonics4d(param, Sz{i}, layer, "Absorption per harmonic per wavelength, Sim " + string(i), mymap)
+        end
+
 
     end
 
@@ -111,12 +111,12 @@ for j = 1:numel(folderName)
                 val(k) = param(1).bk(i).val(k);
             end
             nexttile
-            plot(val, jsk_bk)
-            title("Jsc per simulation", "FontWeight", 'bold')
+            plot(val, jsk_bk, "Color", "k", LineWidth=2)
             xname = param(1).bk(i).name;
             xname = string([upper(xname{1}(1)), xname{1}(2:end)]);
-            xlabel(xname, "FontWeight", 'bold')
-            ylabel("Jsc (mA/cm^2)", "FontWeight", 'bold')
+            title("Jsc per " + xname, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
+            xlabel(xname, "FontSize", 14, "Interpreter", "none")
+            ylabel("Jsc (mA/cm^2)", "FontSize", 14)
         end
 
         if ~isempty(plot_options.avg)
@@ -128,7 +128,7 @@ for j = 1:numel(folderName)
             end
             avg_sz = avg_sz / numel(avg_sz_cell);
 
-            RCWA_plot(param(param(1).bk(avg_list_nr).list(1)), avg_sz, layer, "Average over parameter " + plot_options.avg, pl)
+            RCWA_plot(param(param(1).bk(avg_list_nr).list(1)), avg_sz, layer, "averaged over parameter " + plot_options.avg, pl, mymap)
         end
     end
 
@@ -140,9 +140,10 @@ function n = fixLayerString(n)
 % Add R and T to layer string
 n(end+1) = {"R"};
 n(end+1) = {"T"};
-for j=1:numel(n)
-    n{j} = [n{j}{:}];
+for j = 1:numel(n)
+    n{j} = strjoin(n{j}, ", ");
 end
+n = cellstr(n);
 end
 
 
@@ -153,42 +154,80 @@ TMAP = zeros(Hmax, Hmax);
 TMAP(tr_ind) = 1;
 
 figure
-imagesc(TMAP);
-title("Truncation scheme, sim " + sim_nr)
+colormap(gray)
+imagesc(~TMAP);
+title("Truncation scheme, sim " + sim_nr, "FontSize", 16, "FontWeight", "normal")
 xticks(1:Hmax)
 yticks(1:Hmax)
 xticklabels(M)
 yticklabels(N)
+xlabel("M", "FontSize", 14)
+ylabel("N", "FontSize", 14)
 end
 
 
-function plotLayer(layer,i)
+function plotLayer(param, layer, i, mymap)
 figure
+grid = linspace(0, param.size, param.res);
+colormap(mymap)
+[X, Y] = ndgrid(grid);
 if layer(i).reverse
-    mesh(sum(layer(i).geometry.eps_struc .* reshape(layer(i).L, 1, 1, []), 3))
+    surf(X, Y, sum((layer(i).geometry.eps_struc == 1) .* reshape(layer(i).L, 1, 1, []), 3), 'FaceColor', 'interp', 'EdgeColor', 'interp')
     set(gca, 'zdir', 'reverse')
     zt = get(gca, 'ZTick');
     set(gca, 'ZTickLabel', fliplr(zt))
 else
-    mesh(sum(layer(i).geometry.eps_struc .* reshape(layer(i).L, 1, 1, []), 3))
+    surf(X, Y, sum((layer(i).geometry.eps_struc == 1) .* reshape(layer(i).L, 1, 1, []), 3), 'FaceColor', 'interp', 'EdgeColor', 'interp')
 end
-title("Layer " + i + ": " + layer(i).material)
-zlabel("-Z")
+title("Layer " + i + ": " + layer(i).material(1), "FontSize", 16, "FontWeight", "normal")
+xlim('tight'); ylim('tight'); zlim('tight')
+colorbar
+axis equal
+xlabel("X", "FontSize", 14)
+ylabel("Y", "FontSize", 14)
+zlabel("Z", "FontSize", 14)
 end
 
 
-function RCWA_plot(param, Sz, layer, titlestring, whichdisp)
+function displayDiscretized(param, layer, jj, mymap)
+V = layer(jj).geometry.eps_struc;
+% Displays discretized layer in blocks
+numLayers = max(V, [], 'all');
+clrmap = mymap(round(linspace(1, 1024, numLayers)), :);
+for i = 1:numLayers
+    f = figure;
+    title("Layer " + jj + ": " + strjoin("" + layer(jj).material, ", "), "FontSize", 16, "FontWeight", "normal")
+    xlabel("X", "FontSize", 14)
+    ylabel("Y", "FontSize", 14)
+    zlabel("Z", "FontSize", 14)
+    for j = 1:i
+        patch(FindExternalVoxels(V == j), 'FaceColor', clrmap(j,:), 'LineWidth', 0.1, 'FaceAlpha', 1/j, 'EdgeAlpha', 0.5)
+        hold on
+    end
+    if layer(jj).reverse
+        f.CurrentAxes.ZDir = 'Reverse';
+    end
+    xlim('tight'); ylim('tight'); zlim('tight')
+    axis equal
+    view(45, 30)
+    grid on
+end
+end
+
+
+function RCWA_plot(param, Sz, layer, titlestring, whichdisp, mymap)
+
 switch whichdisp
     case 1
-        plot_results(param, Sz, layer, titlestring);
+        plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
     case 2
-        plothaze(param, Sz, layer, titlestring);
+        plothaze(param, Sz, layer, "Haze per layer, " + titlestring, mymap);
     case 3
-        jsc_harmonics(param, Sz, layer, titlestring);
+        jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
     case 4
-        plot_results(param, Sz, layer, titlestring);
-        plothaze(param, Sz, layer, titlestring);
-        jsc_harmonics(param, Sz, layer, titlestring);
+        plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
+        plothaze(param, Sz, layer, "Haze per material, " + titlestring, mymap);
+        jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
 end
 end
 
@@ -260,9 +299,9 @@ switch slice
             set(gca, 'YDir','normal')
             set(gca, 'XTick', [0:0.1:1] * size(d, 3), 'XTickLabel', [0:0.1:1] * sum(boundaries)) % 10 ticks
             set(gca, 'YTick', [0:0.1 * param.res:param.res], 'YTickLabel', [0:0.1 * param.size / param.res:param.size / param.res] * param.res) % 20 ticks
-            xlabel("z (nm)")
-            ylabel(slice + " (nm)")
-            title(title_text + ", " + slice + " = " + (ii - 1) + " nm")
+            xlabel("z (nm)", "FontSize", 14)
+            ylabel(slice + " (nm)", "FontSize", 14)
+            title(title_text + ", " + slice + " = " + (ii - 1) + " nm", "FontSize", 16, "FontWeight", "normal")
             for iii = 1:numel(layer)
                 h{iii} = text(sum([layer(1:iii).L]) - sum(layer(iii).L) / 2, 0.01 * param.res, layer(iii).material);
                 set(h{iii}, 'Rotation', 90);
@@ -287,9 +326,9 @@ switch slice
             set(gca, 'YDir','normal')
             set(gca, 'XTick', [0:0.1 * param.res:param.res], 'XTickLabel', [0:0.1 * param.size / param.res:param.size / param.res] * param.res)
             set(gca, 'YTick', [0:0.1 * param.res:param.res], 'YTickLabel', [0:0.1 * param.size / param.res:param.size / param.res] * param.res) % 20 ticks
-            xlabel("x (nm)")
-            ylabel("y (nm)")
-            title(title_text + ", z = " + (ii-1) + " nm")
+            xlabel("x (nm)", "FontSize", 14)
+            ylabel("y (nm)", "FontSize", 14)
+            title(title_text + ", z = " + (ii-1) + " nm", "FontSize", 16, "FontWeight", "normal")
 
             drawnow
             pause(0.1)
@@ -298,7 +337,7 @@ end
 end
 
 
-function plothaze(param, Sz, layer, titlestring)
+function plothaze(param, Sz, layer, titlestring, mymap)
 
 centralH = squeeze(abs(Sz((end + 1) / 2, :, :)));
 sumH = squeeze(sum(abs(Sz), 1));
@@ -308,19 +347,19 @@ haze = arrayfun(@(a, b) a / b * (b > 1e-12), diffH, sumH);
 n = fixLayerString({layer.material});
 
 figure
-colororder(parula(size(haze, 1)))
+colororder(mymap(round(linspace(1, 1024, size(haze, 1))), :))
 for i = 1:size(haze, 1)
     hold on
     plot(param.wavelengthArray, abs(haze(i, :)).', 'LineWidth', 2)
 end
-xlabel('Wavelength (nm)')
-ylabel('Haze')
+xlabel('Wavelength (nm)', "FontSize", 14)
+ylabel('Haze', "FontSize", 14)
 legend(n, 'location', 'eastoutside')
-title(titlestring, "FontSize", 16, "FontWeight", 'bold')
+title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
 end
 
 
-function plot_results(param, Sz_in, layer, titlestring)
+function plot_results(param, Sz_in, layer, titlestring, mymap)
 
 plot_type = "area";
 Sz = squeeze(sum(Sz_in, 1)).';
@@ -343,33 +382,39 @@ end
 
 h = figure('Color', 'w', 'Position', [100 100 1300 600]);
 
-colors = [76, 144, 186; 43, 194, 194; 244, 184, 17; 222, 102, 62; 255, 145, 43] / 255;
+%colors = [76, 144, 186;...
+%          43, 194, 194;...
+%          244, 184, 17;...
+%          222, 102, 62;...
+%          255, 145, 43] / 255;
+
+colors = mymap([128, 320, 512, 704, 896], :);
 
 colororder(colors);
 hx = subplot(1, 4, [1, 2, 3]);
 
 if plot_type=="lines"
     ar = plot(x_grid, Sz, 'LineWidth', 2);
-    title(titlestring, "FontSize", 18, "FontWeight", 'bold')
+    title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
     xlim([param.wavelengthArray(1), param.wavelengthArray(end)])
     ylim([0, 1])
-    xlabel("Wavelength (nm)", "FontSize", 16, "FontWeight", 'bold')
-    ylabel("Absorption (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+    xlabel("Wavelength (nm)", "FontSize", 14)
+    ylabel("Absorption (a.u.)", "FontSize", 14)
     set(hx,'FontSize', 14, 'LineWidth', 2)
 else
     ar = area(x_grid, Sz, 'LineWidth', 2);
-    title(titlestring, "FontSize", 18, "FontWeight", 'bold')
+    title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
     xlim([param.wavelengthArray(1), param.wavelengthArray(end)])
     ylim([0, 1])
-    xlabel("Wavelength (nm)", "FontSize", 16, "FontWeight", 'bold')
-    ylabel("Absorption (a.u.)", "FontSize", 16, "FontWeight", 'bold')
+    xlabel("Wavelength (nm)", "FontSize", 14)
+    ylabel("Absorption (a.u.)", "FontSize", 14)
     set(hx, 'FontSize', 14, 'LineWidth', 2)
 
     % Jsc box
     legstring = pad(n) + sprintf(" Jsc: ") + pad(compose('%0.2f', string(jsc_plot)), 'left') + sprintf(" mA/cm^2");
     hx2 = subplot(1, 4, 4);
     hx2.Visible = 'off';
-    [~,legend_h,~,~] = legendflex(ar, cellstr(legstring), 'ref', hx2, 'anchor', [1 1], 'buffer', [0 0], 'FontName', 'monospaced');
+    [~,legend_h,~,~] = legendflex(ar, cellstr(legstring), 'ref', hx2, 'anchor', [1 1], 'buffer', [-55 -5], 'FontName', 'monospaced');
 
 
     % Hatched area for many layers
@@ -390,14 +435,14 @@ end
 end
 
 
-function jsc_harmonics(param, Sz, layer, titlestring)
+function jsc_harmonics(param, Sz, layer, titlestring, mymap)
 % Plot jsc contribution for every harmonic
 n = fixLayerString({layer.material});
 
 num_lay = size(Sz, 2);
 h = figure;
 t = tiledlayout(h, 'flow');
-title(t, "Jsc per harmonic per material, " + titlestring, "FontSize", 16, "FontWeight", 'bold')
+title(t, titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
 cmin_old = 0;
 cmax_old = 0;
 for i = 1:num_lay
@@ -405,7 +450,7 @@ for i = 1:num_lay
     h(i) = nexttile;
     jsc_empty(param.tr_ind) = jsc(squeeze(Sz(:, i, :)), param.wavelengthArray);
     im = imagesc(jsc_empty);
-    title(n(i))
+    title(n(i), "FontSize", 14, "FontWeight", "normal")
     set(h(i), "Color", "none", 'YDir', 'normal', 'TickLength', [0 0])
     im.AlphaData = jsc_empty ~= 0;
     xticks(1:param.P)
@@ -432,14 +477,14 @@ for i = 1:num_lay
     cmin_old = max(cmin_old, cmin_new);
     cmax_old = max(cmax_old, cmax_new);
 end
-set(h, 'Colormap', jet, 'CLim', [cmin_old cmax_old])
+set(h, 'Colormap', mymap, 'CLim', [cmin_old cmax_old])
 cbh = colorbar(h(end));
 cbh.Layout.Tile = 'east';
 
 end
 
 
-function tile_harmonics4d(param, Sz, layer, titlestring)
+function tile_harmonics4d(param, Sz, layer, titlestring, mymap)
 % Display all harmonics for every wavelength
 P = param.P;
 Q = param.Q;
@@ -449,26 +494,30 @@ n = fixLayerString({layer.material});
 
 h = figure;
 t = tiledlayout(h, 'flow', 'TileSpacing', 'Compact');
-title(t, titlestring)
-cmax = max(Sz(:));
-cmin = 0;
+title(t, titlestring, "FontSize", 16, "FontWeight", "normal")
+colormap(mymap)
 a = repair_harmonics(Sz, P, Q, tr_ind);
+a(round(P/2), round(Q/2), :, :) = 0;
+a = abs(a);
+a(a < 1 / (P * Q)) = 0;
+a = a / max(a(:));
 
 [X, Y, Z] = ndgrid(-((P - 1) / 2):((P - 1) / 2),-((Q - 1) / 2):((Q - 1) / 2), param.wavelengthArray);
 
 for i = 1:size(Sz, 2)
     D = squeeze(a(:, :, i, :));
     nexttile
-    scatter3(Z(:), X(:), Y(:), 400, D(:), 'filled');
-    xlabel("Wavelength (nm)")
-    ylabel("P")
-    zlabel("Q")
-    title(n(i))
+    scatter3(Z(:), X(:), Y(:), 200, D(:), 'filled');
+    xlabel("Wavelength (nm)", "FontSize", 14)
+    ylabel("P", "FontSize", 14)
+    zlabel("Q", "FontSize", 14)
+    title(n(i), "FontSize", 14, "FontWeight", "normal")
     axis ij
     caxis manual
-    caxis([cmin cmax]);
+    caxis([0 1]);
     alpha color
     alpha scaled
+    alpha('none')
 end
 cb = colorbar;
 cb.Layout.Tile = 'east';
@@ -487,21 +536,5 @@ for i = 1:num_lay
         c(tr_ind) = Sz(:, i, j);
         a(:, :, i, j) = c;
     end
-end
-end
-
-
-function displayDiscretized(V)
-% Displays discretized layer in blocks
-numLayers = max(V, [], 'all');
-clrmap = hsv(numLayers);
-for i = 1:numLayers
-    figure
-    for j = 1:i
-        patch(FindExternalVoxels(V == j), 'FaceColor', clrmap(j,:), 'LineWidth', 0.1, 'FaceAlpha', 1/j, 'EdgeAlpha', 0.5)
-        hold on
-    end
-    view(45, 30)
-    grid on
 end
 end
