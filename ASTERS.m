@@ -16,4 +16,4 @@ param = load_parameters();
 folderName = RCWA(param);
 
 %% Process results
-RCWA_process(folderName)
+batch = RCWA_process(folderName);

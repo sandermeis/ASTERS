@@ -1,4 +1,4 @@
-function RCWA_process(folderName, plot_options)
+function batch = RCWA_process(folderName, plot_options)
 arguments
     folderName (1,:) string
     plot_options.whichsims (1,:) {mustBeInteger} = []
@@ -15,11 +15,12 @@ arguments
     plot_options.field_bars = true;
 end
 
+batch = struct;
 jsc_plot = [];
 mymap = readmatrix("src/data/cm_coldwarm.csv");
 
 for j = 1:numel(folderName)
-
+    
     % Loads parameter set
     p = load("results/" + folderName(j) + "/param.mat", "param");
     param = p.param;
@@ -58,7 +59,13 @@ for j = 1:numel(folderName)
 
         % Plot absorption, haze and harmonics
         if isempty(plot_options.whichsims) || ismember(i, plot_options.whichsims)
-            RCWA_plot(param(i), A.Sz, layer, "Sim " + string(i), pl, mymap)
+            plot_out = RCWA_plot(param(i), A.Sz, layer, "Sim " + string(i), pl, mymap);
+
+             f = fieldnames(plot_out);
+             for fi = 1:length(f)
+                batch(j).data(i).(f{fi}) = plot_out.(f{fi});
+             end
+             
         end
 
         % Plot permittivity
@@ -74,6 +81,7 @@ for j = 1:numel(folderName)
         % Plot of fields
         if param(i).calcFields
             show_fields(param, A.fields, plot_options.field_direc, plot_options.field_slice, plot_options.field_bars)
+            batch(j).data(i).fields = A.fields;
         end
 
         % Plot surface as surf
@@ -99,7 +107,11 @@ for j = 1:numel(folderName)
             tile_harmonics4d(param, Sz{i}, layer, "Absorption per harmonic per wavelength, Sim " + string(i), mymap)
         end
 
-
+    % Return data
+    batch(j).data(i).param = param(i);
+    batch(j).data(i).layer = layer;
+    batch(j).data(i).Sz = A.Sz;
+    batch(j).data(i).jsc = fom;
     end
 
     if numel(param) > 1
@@ -117,24 +129,33 @@ for j = 1:numel(folderName)
             title("Jsc per " + xname, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
             xlabel(xname, "FontSize", 14, "Interpreter", "none")
             ylabel("Jsc (mA/cm^2)", "FontSize", 14)
+
+            batch(j).("series_" + xname).x = val;
+            batch(j).("series_" + xname).y = jsk_bk;
         end
 
         if ~isempty(plot_options.avg)
             avg_list_nr = find(plot_options.avg==[param(1).bk.name]);
-            avg_sz_cell = Sz(param(1).bk(avg_list_nr).list);
-            avg_sz = avg_sz_cell{1};
-            for items = 2:numel(avg_sz_cell)
-                avg_sz = avg_sz + avg_sz_cell{items};
+            if ~isempty(avg_list_nr)
+                avg_sz_cell = Sz(param(1).bk(avg_list_nr).list);
+                avg_sz = avg_sz_cell{1};
+                for items = 2:numel(avg_sz_cell)
+                    avg_sz = avg_sz + avg_sz_cell{items};
+                end
+                avg_sz = avg_sz / numel(avg_sz_cell);
+    
+                batch(j).("avg_" + plot_options.avg) = RCWA_plot(param(param(1).bk(avg_list_nr).list(1)), avg_sz, layer, "averaged over parameter " + plot_options.avg, pl, mymap);
+                batch(j).("avg_" + plot_options.avg).Sz = avg_sz;
+            else
+                error("Unable to find parameter " + plot_options.avg)
             end
-            avg_sz = avg_sz / numel(avg_sz_cell);
-
-            RCWA_plot(param(param(1).bk(avg_list_nr).list(1)), avg_sz, layer, "averaged over parameter " + plot_options.avg, pl, mymap)
         end
     end
 
 end
 
 end
+
 
 function n = fixLayerString(n)
 % Add R and T to layer string
@@ -215,19 +236,19 @@ end
 end
 
 
-function RCWA_plot(param, Sz, layer, titlestring, whichdisp, mymap)
+function data = RCWA_plot(param, Sz, layer, titlestring, whichdisp, mymap)
 
 switch whichdisp
     case 1
-        plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
+        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
     case 2
-        plothaze(param, Sz, layer, "Haze per layer, " + titlestring, mymap);
+        data.haze = plothaze(param, Sz, layer, "Haze per layer, " + titlestring, mymap);
     case 3
-        jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
+        data.jsc_harm = jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
     case 4
-        plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
-        plothaze(param, Sz, layer, "Haze per material, " + titlestring, mymap);
-        jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
+        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
+        data.haze = plothaze(param, Sz, layer, "Haze per material, " + titlestring, mymap);
+        data.jsc_harm = jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
 end
 end
 
@@ -337,7 +358,7 @@ end
 end
 
 
-function plothaze(param, Sz, layer, titlestring, mymap)
+function haze = plothaze(param, Sz, layer, titlestring, mymap)
 
 centralH = squeeze(abs(Sz((end + 1) / 2, :, :)));
 sumH = squeeze(sum(abs(Sz), 1));
@@ -359,7 +380,7 @@ title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none"
 end
 
 
-function plot_results(param, Sz_in, layer, titlestring, mymap)
+function Sz = plot_results(param, Sz_in, layer, titlestring, mymap)
 
 plot_type = "area";
 Sz = squeeze(sum(Sz_in, 1)).';
@@ -435,7 +456,7 @@ end
 end
 
 
-function jsc_harmonics(param, Sz, layer, titlestring, mymap)
+function output = jsc_harmonics(param, Sz, layer, titlestring, mymap)
 % Plot jsc contribution for every harmonic
 n = fixLayerString({layer.material});
 
@@ -450,6 +471,7 @@ for i = 1:num_lay
     h(i) = nexttile;
     jsc_empty(param.tr_ind) = jsc(squeeze(Sz(:, i, :)), param.wavelengthArray);
     im = imagesc(jsc_empty);
+    output{i} = jsc_empty;
     title(n(i), "FontSize", 14, "FontWeight", "normal")
     set(h(i), "Color", "none", 'YDir', 'normal', 'TickLength', [0 0])
     im.AlphaData = jsc_empty ~= 0;

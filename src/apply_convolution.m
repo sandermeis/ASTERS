@@ -24,35 +24,39 @@ end
 
 
 function C = conv_mat(A, P, Q)
+% Create the convolution matrix
+
+p_r = -floor((P - 1) / 2) : floor((P - 1) / 2);
+q_r = -floor((Q - 1) / 2) : floor((Q - 1) / 2);
 
 [Nx, Ny, zdim] = size(A);
 
-C=zeros(P, Q, zdim);
+% Resize FFT if resolution is lower than 2x harmonics
+FFT_resize_x = max(2 * P, Nx);
+FFT_resize_y = max(2 * Q, Ny);
 
-for v=1:zdim
+C = zeros(P * Q, P * Q, zdim);
 
-    p = -floor(P / 2):floor(P / 2);
-    q = -floor(Q / 2):floor(Q / 2);
+% Middle of array
+c0 = floor(P * Q / 2) + 1;
+p0 = floor(FFT_resize_x / 2) + 1;
+q0 = floor(FFT_resize_y / 2) + 1;
 
-    B = fftshift(fft2(A(:, :, v))) / (Nx * Ny);
+for v = 1:zdim
 
-    p0 = floor(Nx / 2) + 1;
-    q0 = floor(Ny / 2) + 1;
+    B = fftshift(fft2(A(:, :, v), FFT_resize_x, FFT_resize_y)) / (Nx * Ny);
 
-    for qrow = 1:Q
-        for prow = 1:P
-            row = (qrow - 1) * P + prow;
-            for qcol = 1:Q
-                for pcol = 1:P
-                    col =  (qcol - 1) * P + pcol;
-                    pfft = p(prow) - p(pcol);
-                    qfft = q(qrow) - q(qcol);
-
-                    C(row,col,v) = B(p0 + pfft, q0 + qfft);
+    for p_acc = p_r %p'
+        for q_acc = q_r %q'
+            for p_ast = p_r %p
+                for q_ast = q_r %q
+                    C(c0 + q_acc * P + p_acc, c0 + q_ast * P + p_ast, v) = ...
+                        B(p0 + p_acc - p_ast, q0 + q_acc - q_ast);
                 end
             end
         end
     end
+
 end
 end
 
