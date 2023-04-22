@@ -11,7 +11,7 @@ end
 % Set simulation name based on date and time
 dt = datestr(datetime,'dd_mm_yy_HH_MM_SS');
 if ~isempty(sim_options.simulationName)
-    folderName = sim_options.simulationName + "_" + dt;
+    folderName = dt + "_" + sim_options.simulationName;
 else
     folderName = "sim_" + dt;
 end
@@ -23,7 +23,7 @@ numRuns = numel(param);
 
 % Confirmation box
 fig = uifigure;
-numSimWarning = uiconfirm(fig, sprintf("About to do %d simulations", numRuns), "Start simulations");
+numSimWarning = uiconfirm(fig, sprintf("About to do %d simulations", numRuns), "Start simulations",'CloseFcn',@(h,e) close(fig));
 numCoreWarning = '';
 if sim_options.parallel
     numCores = feature('numCores');
@@ -41,7 +41,6 @@ end
 
 % Proceed
 if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
-    close(fig)
     
     % Create path in results folder
     offlinePathName = "results/";
@@ -121,7 +120,9 @@ if numSimWarning == "OK" && ~(numCoreWarning == "Cancel")
         end
     end
 else
-    close(fig)
+    if ishandle(fig)
+        close(fig)
+    end
 end
 
 end

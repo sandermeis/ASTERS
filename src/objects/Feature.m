@@ -48,6 +48,7 @@ classdef Feature
     %   Feature methods:
     %                  rotate - Rotates the FEATURE matrix 90 degrees anticlockwise.
     %                    plot - Displays the FEATURE.
+    %                  resize - Resamples FEATURE size.
     %
     
     %   Copyright 2022 Sander Meis.
@@ -176,7 +177,7 @@ classdef Feature
             
             x = linspace(0, obj.size, obj.resolution);
             y = linspace(0, obj.size, obj.resolution);
-            [obj.X, obj.Y] = meshgrid(x, y);
+            [obj.X, obj.Y] = ndgrid(x, y);
             
             if numel(obj.height) > 1
                 h = 1;
@@ -237,12 +238,33 @@ classdef Feature
         function obj = rotate(obj)
             %ROTATE Rotates FEATURE object 90 degrees anticlockwise.
             %   Function has no input
+            %   See also: RESIZE, PLOT
             obj.Z = rot90(obj.Z);
+        end
+
+        function obj = resize(obj, res_new, size_new)
+            %RESIZE Resamples Surface to new resolution and size.
+            %   Input is RESIZE(res, size)
+            %
+            %   res     - New resolution.
+            %   size    - New size in nm.
+            %
+            %   See also: ROTATE, PLOT
+            x_new = linspace(0, size_new, res_new);
+            y_new = linspace(0, size_new, res_new);
+            [X_new, Y_new] = ndgrid(x_new, y_new);
+            F = griddedInterpolant(obj.X, obj.Y, obj.Z);
+            obj.Z = F({x_new, y_new});
+            obj.resolution = res_new;
+            obj.size = size_new;
+            obj.X = X_new;
+            obj.Y = Y_new;
         end
         
         function plot(obj)
             %PLOT Displays FEATURE object.
             %   Function has no input
+            %   See also: ROTATE, RESIZE
             mesh(obj.X, obj.Y, obj.Z)
             xlabel('x')
             ylabel('y')

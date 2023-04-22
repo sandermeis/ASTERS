@@ -25,12 +25,20 @@ for i = 1:numel(layer)
                     % if number of materials smaller than number of multilayers
                     if numLay == 1
                         warning("Multilayer has 2 components, however only 1 material(s) are specified, setting to previous layer material")
-                        if i == 1 % Possibly need to add something for reverse
-                            layer(i).material(2) = layer(i).material(1);
-                            layer(i).material(1) = param.ref_medium;
+                        if i == 1
+                            if layer(i).reverse
+                                layer(i).material(2) = param.ref_medium;
+                            else
+                                layer(i).material(2) = layer(i).material(1);
+                                layer(i).material(1) = param.ref_medium;
+                            end
                         else
-                            layer(i).material(2) = layer(i).material(1);
-                            layer(i).material(1) = layer(i - 1).material(end);
+                            if layer(i).reverse
+                                layer(i).material(2) = layer(i - 1).material(end);
+                            else
+                                layer(i).material(2) = layer(i).material(1);
+                                layer(i).material(1) = layer(i - 1).material(end);
+                            end
                         end
                     elseif numLay > 2
                         warning("Layer is a multilayer but only in the first layer the surface is specified. Proceeding with other layers set to constant thickness.")
@@ -123,7 +131,7 @@ for i = 1:numel(layer)
         warning("Multilayer has no surface profile assigned, resetting to evenly spaced uniform multilayer")
         num_mat = numel(layer(i).material);
         layer(i).geometry.eps_struc = ones(1, 1, num_mat);
-        layer(i).geometry.mu  = ones(1, 1, num_mat);
+        layer(i).geometry.mu  = 1;
         layer(i).L = sum(layer(i).L) / num_mat * ones(1, num_mat);
     else
         error("Invalid layer input.")

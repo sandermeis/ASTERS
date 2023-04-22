@@ -1,5 +1,11 @@
 function param = get_sinc(param, iter)
 
+% Jones vector
+J = [param.pTM; param.pTE; 0];
+
+% Force unity when pTE and pTM do not sum to 1
+J = J / norm(J);
+
 % Phi is angle from x vector
 % Theta is angle from surface normal
 
@@ -9,27 +15,33 @@ param.beta(1) = n_inc * sin(param.theta) * cos(param.phi);
 param.beta(2) = n_inc * sin(param.theta) * sin(param.phi);
 param.beta(3) = n_inc * cos(param.theta);
 
-% Normal vector
-normal = [0, 0, -1];
+%% Vector way
+% % Normal vector
+% normal = [0, 0, -1];
+% 
+% % Unit vector for TE polarization, perpendicular to plane of incidence
+% TE_direction = cross(param.beta, normal) / norm(cross(param.beta, normal));
+% 
+% % Check for NaN when which occurs when vector is parallel to normal
+% nancheck = all(isnan(TE_direction));
+% TE_direction(isnan(TE_direction)) = 0;
+% 
+% % When vector is parallel to normal, TE direction is defined as +y
+% a_TE = TE_direction + nancheck * [0, 1, 0];
+% 
+% % TM polarization is defined
+% a_TM = cross(a_TE, param.beta) / norm(cross(a_TE, param.beta));
+% 
+% % Electric field defined in surface coordinates
+% p = J(1) * a_TM + J(2)* a_TE;
 
-% Unit vector for TE polarization, perpendicular to plane of incidence
-TE_direction = cross(param.beta, normal) / norm(cross(param.beta, normal));
+%% Rotation matrix
 
-% Check for NaN when which occurs when vector is parallel to normal
-nancheck = all(isnan(TE_direction));
-TE_direction(isnan(TE_direction)) = 0;
+RotMat = [cos(param.theta) * cos(param.phi), -sin(param.phi), 0;...
+          cos(param.theta) * sin(param.phi),  cos(param.phi), 0;...
+         -sin(param.theta),                   0,              0];
 
-% When vector is parallel to normal, TE direction is defined as +y
-a_TE = TE_direction + nancheck * [0, 1, 0];
-
-% TM polarization is defined
-a_TM = cross(a_TE, param.beta) / norm(cross(a_TE, param.beta));
-
-% Electric field defined in surface coordinates
-p = param.pTE * a_TE + param.pTM * a_TM;
-
-% Force unity when pTE and pTM do not sum to 1
-p = p / norm(p);
+p = RotMat * J;
 
 % Magnetic fields: Hx = i*inv(mu)*(kz*Ey-ky*Ez), Hy = i*inv(mu)*(kx*Ez-kz*Ex)
 h1 = 1i / param.mu_ref(iter) * (param.beta(3) * p(2) - param.beta(2) * p(3));

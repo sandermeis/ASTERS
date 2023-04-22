@@ -7,13 +7,13 @@ close all
 clc
 
 %% Add folders to path
-addpath("src", "input", "src/objects", genpath("src/packages"), "src/refractive_indices");
+addpath("src", "input", "src/objects", genpath("src/packages"), "src/refractive_indices", "src/data");
 
 %% Load simulation parameters
 param = load_parameters();
 
 %% Run simulation
-folderName = RCWA(param);
+folderName = RCWA(param, simulationName="FullSolarCell");
 
 %% Process results
 batch = RCWA_process(folderName);

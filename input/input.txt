@@ -1,5 +1,5 @@
 %% Track version to ensure compatibility of old results, do not change
-version         = v4.0.1
+version         = v4.0.2
 
 %% Parameters
 % -------------------------------------------------------------------------
@@ -17,19 +17,19 @@ theta           = 0
 phi             = 0
 pTE             = 0.5
 pTM             = 0.5
-size            = 2500
-res             = 128
-nharm           = 3
+size            = 1000
+res             = 256
+nharm           = 8
 
 %% Truncation
 truncateHarm    = true
 truncFactor     = 1
 
 %% Layer parameters
-recalcRoughL    = false
+recalcRoughL    = true
 optimRough      = false
 tolerance       = 0.005
-fill            = 0.5
+fill            = 1
 add             = 0
 
 %% Booleans

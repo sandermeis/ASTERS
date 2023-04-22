@@ -9,6 +9,8 @@ arguments
     plot_options.disp_truncation (1,:) {mustBeInteger} = []
     plot_options.plot_surface (1,:) {mustBeInteger} = []
     plot_options.plot_discretized (1,:) {mustBeInteger} = []
+    plot_options.plot_disc_which_layer (1,:) {mustBeInteger} = []
+    plot_options.plot_disc_ml (1,1) = false
     plot_options.avg = []
     plot_options.field_direc {mustBeMember(plot_options.field_direc,["x", "y", "z", "norm", "abs"])} = "norm"
     plot_options.field_slice {mustBeMember(plot_options.field_slice,["x", "y", "z"])} = "x"
@@ -53,6 +55,8 @@ for j = 1:numel(folderName)
             pl = 3;
         elseif lower(plot_options.which_plot) == "all"
             pl = 4;
+        elseif lower(plot_options.which_plot) == "lines"
+            pl = 5;
         else
             error("Wrong input")
         end
@@ -80,7 +84,7 @@ for j = 1:numel(folderName)
 
         % Plot of fields
         if param(i).calcFields
-            show_fields(param, A.fields, plot_options.field_direc, plot_options.field_slice, plot_options.field_bars)
+            show_fields(param(i), A.fields, plot_options.field_direc, plot_options.field_slice, plot_options.field_bars)
             batch(j).data(i).fields = A.fields;
         end
 
@@ -88,23 +92,24 @@ for j = 1:numel(folderName)
         if ismember(i, plot_options.plot_surface)
             for jj = 1:numel(layer)
                 if iscell(layer(jj).input)
-                    plotLayer(param, layer, jj, mymap)
+                    plotLayer(param(i), layer, jj, mymap)
                 end
             end
         end
 
         % Plot surface as blocks
         if ismember(i, plot_options.plot_discretized)
-            for jj = 1:numel(layer)
-                if iscell(layer(jj).input)
-                    displayDiscretized(param, layer, jj, mymap)
-                end
+            if isempty(plot_options.plot_disc_which_layer)
+                which_layers = 1:numel(layer);
+            else
+                which_layers = plot_options.plot_disc_which_layer;
             end
+            displayDiscretized(param(i), layer, which_layers, plot_options.plot_disc_ml, mymap)
         end
 
         % Plot 4d harmonics
         if ismember(i, plot_options.plot_4d)
-            tile_harmonics4d(param, Sz{i}, layer, "Absorption per harmonic per wavelength, Sim " + string(i), mymap)
+            tile_harmonics4d(param(i), Sz{i}, layer, "Absorption per harmonic per wavelength, Sim " + string(i), mymap)
         end
 
     % Return data
@@ -123,7 +128,10 @@ for j = 1:numel(folderName)
                 val(k) = param(1).bk(i).val(k);
             end
             nexttile
-            plot(val, jsk_bk, "Color", "k", LineWidth=2)
+            if isstring(val)
+                val = categorical(val);
+            end
+            plot(val, jsk_bk, "Color", "k", "LineWidth",2)
             xname = param(1).bk(i).name;
             xname = string([upper(xname{1}(1)), xname{1}(2:end)]);
             title("Jsc per " + xname, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
@@ -210,28 +218,50 @@ zlabel("Z", "FontSize", 14)
 end
 
 
-function displayDiscretized(param, layer, jj, mymap)
-V = layer(jj).geometry.eps_struc;
+function displayDiscretized(param, layer, which_layers, ml_disp, mymap)
 % Displays discretized layer in blocks
-numLayers = max(V, [], 'all');
+
+numLayers = numel(layer);
 clrmap = mymap(round(linspace(1, 1024, numLayers)), :);
-for i = 1:numLayers
-    f = figure;
-    title("Layer " + jj + ": " + strjoin("" + layer(jj).material, ", "), "FontSize", 16, "FontWeight", "normal")
-    xlabel("X", "FontSize", 14)
-    ylabel("Y", "FontSize", 14)
-    zlabel("Z", "FontSize", 14)
-    for j = 1:i
-        patch(FindExternalVoxels(V == j), 'FaceColor', clrmap(j,:), 'LineWidth', 0.1, 'FaceAlpha', 1/j, 'EdgeAlpha', 0.5)
+f = figure;
+
+for jj = which_layers
+    V = layer(jj).geometry.eps_struc;
+    %f = figure;
+    
+    xlabel("X (nm)", "FontSize", 14)
+    ylabel("Y (nm)", "FontSize", 14)
+    zlabel("Z (nm)", "FontSize", 14)
+
+    if ml_disp
+        j_max = max(V, [], 'all');
+    else
+        j_max = 1;
+    end
+
+    for j = 1:j_max
+        vx = FindExternalVoxels(V == j);
+        if ~iscell(layer(jj).input)
+            vx.vertices(:,1) = param.size * (vx.vertices(:,1)-0.5);
+            vx.vertices(:,2) = param.size * (vx.vertices(:,2)-0.5);
+            vx.vertices(:,3) = sum([layer(1:jj-1).L]) + sum(layer(jj).L) * (vx.vertices(:,3)-0.5);
+        else
+            vx.vertices(:,1) = param.size / param.res * vx.vertices(:,1);
+            vx.vertices(:,2) = param.size / param.res * vx.vertices(:,2);
+            vx.vertices(:,3) = sum([layer(1:jj-1).L]) + sum(layer(jj).L) / layer(jj).roughdim * vx.vertices(:,3);
+        end
+        patch(vx, 'FaceColor', clrmap(j,:), 'LineWidth', 0.1, 'FaceAlpha', 1/j, 'EdgeAlpha', 0.5)
         hold on
     end
-    if layer(jj).reverse
-        f.CurrentAxes.ZDir = 'Reverse';
-    end
+    % if ~layer(jj).reverse
+    %     f.CurrentAxes.ZDir = 'Reverse';
+    % end
     xlim('tight'); ylim('tight'); zlim('tight')
     axis equal
-    view(45, 30)
-    grid on
+    view(-45,15)
+    camroll(270)
+    %title("Layer " + jj + ": " + strjoin("" + layer(jj).material, ", "), "FontSize", 16, "FontWeight", "normal")
+    axis off%grid on
 end
 end
 
@@ -240,15 +270,17 @@ function data = RCWA_plot(param, Sz, layer, titlestring, whichdisp, mymap)
 
 switch whichdisp
     case 1
-        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
+        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, 1, mymap);
     case 2
         data.haze = plothaze(param, Sz, layer, "Haze per layer, " + titlestring, mymap);
     case 3
         data.jsc_harm = jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
     case 4
-        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, mymap);
+        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, 1, mymap);
         data.haze = plothaze(param, Sz, layer, "Haze per material, " + titlestring, mymap);
         data.jsc_harm = jsc_harmonics(param, Sz, layer, "Jsc per harmonic per layer, " + titlestring, mymap);
+    case 5
+        data.absorption = plot_results(param, Sz, layer, "Absorption per layer, " + titlestring, 2, mymap);
 end
 end
 
@@ -380,9 +412,15 @@ title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none"
 end
 
 
-function Sz = plot_results(param, Sz_in, layer, titlestring, mymap)
+function Sz = plot_results(param, Sz_in, layer, titlestring, pl_type, mymap)
 
-plot_type = "area";
+switch pl_type
+    case 1
+        plot_type = "area";
+    case 2
+        plot_type = "lines";
+end
+
 Sz = squeeze(sum(Sz_in, 1)).';
 N = size(Sz, 2);
 x_grid = repmat(param.wavelengthArray', 1, N);
@@ -422,6 +460,7 @@ if plot_type=="lines"
     xlabel("Wavelength (nm)", "FontSize", 14)
     ylabel("Absorption (a.u.)", "FontSize", 14)
     set(hx,'FontSize', 14, 'LineWidth', 2)
+    legend(n)
 else
     ar = area(x_grid, Sz, 'LineWidth', 2);
     title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
@@ -499,9 +538,11 @@ for i = 1:num_lay
     cmin_old = max(cmin_old, cmin_new);
     cmax_old = max(cmax_old, cmax_new);
 end
+if cmax_old>0
 set(h, 'Colormap', mymap, 'CLim', [cmin_old cmax_old])
 cbh = colorbar(h(end));
 cbh.Layout.Tile = 'east';
+end
 
 end
 

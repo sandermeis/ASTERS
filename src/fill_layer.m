@@ -34,8 +34,13 @@ for j = 1:numel(layer)
     % Add Surfaces from the 'surfaces' cell array, based on the index entered in input
     if iscell(layer(j).input)
         if exist('surfaces', 'var')
+            num_surfaces = numel(surfaces);
             for k = 1:numel(layer(j).input)
-                layer(j).input{k} = surfaces{layer(j).input{k}};
+                if layer(j).input{k}<=num_surfaces
+                    layer(j).input{k} = surfaces{layer(j).input{k}};
+                else
+                    error("Requested surface does not exist in 'surfaces' cell array.")
+                end
             end
         else
             error("Missing 'surfaces' cell array.")

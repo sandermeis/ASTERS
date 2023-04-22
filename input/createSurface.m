@@ -9,8 +9,8 @@
 % Example: Add two surfaces ("surf_oxide" and "surf_algaas") to the list,
 % which can be accessed in layers.xlsx by entering 1 or 2 for surf_oxide
 % and surf_algaas respectively.
-% surfaces{1} = surf_oxide
-% surfaces{2} = surf_algaas
+% surfaces{1} = surf_oxide;
+% surfaces{2} = surf_algaas;
 % -------------------------------------------------------------------------
 
 

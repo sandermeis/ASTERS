@@ -90,13 +90,15 @@ classdef Surface < handle
         function obj = Surface(varargin)
             if nargin == 1
                 obj.surfres = varargin{1};
-            elseif nargin >= 2
+            elseif nargin == 2
                 obj.surfres = varargin{1};
                 obj.surfsize = varargin{2};
+            else
+                error("Too many input arguments")
             end
             obj.surfx = linspace(0, obj.surfsize, obj.surfres);
             obj.surfy = linspace(0, obj.surfsize, obj.surfres);
-            [obj.surfX, obj.surfY] = meshgrid(obj.surfx, obj.surfy);
+            [obj.surfX, obj.surfY] = ndgrid(obj.surfx, obj.surfy);
             obj.surfMatrix = zeros(obj.surfres, obj.surfres);
         end
         
@@ -120,14 +122,19 @@ classdef Surface < handle
             %
             %   See also: ADDFEATURE, PLACEFEATURE, ADDRANDOMFEATURES
             for i = 1:numel(xpos)
-                if (fobj.resolution <= obj.surfres)
-                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj.resolution, fobj.resolution)
+                if numel(fobj)==numel(xpos)
+                    fobj_index = i;
+                else
+                    fobj_index = 1;
+                end
+                if (fobj(fobj_index).resolution <= obj.surfres)
+                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj(fobj_index).resolution, fobj(fobj_index).resolution)
                         if isempty(obj.Features)
-                            obj.Features(1).fobj = fobj;
+                            obj.Features(1).fobj = fobj(fobj_index);
                             obj.Features(1).xpos = xpos(i);
                             obj.Features(1).ypos = ypos(i);
                         else
-                            obj.Features(end + 1).fobj = fobj;
+                            obj.Features(end + 1).fobj = fobj(fobj_index);
                             obj.Features(end).xpos = xpos(i);
                             obj.Features(end).ypos = ypos(i);
                         end
@@ -135,16 +142,16 @@ classdef Surface < handle
                         warning("Position is out of bounds, no object added")
                     end
                 else
-                    fobj.Z = fobj.Z(1:obj.surfres, 1:obj.surfres);
-                    fobj.resolution = obj.surfres;
+                    fobj(fobj_index).Z = fobj(fobj_index).Z(1:obj.surfres, 1:obj.surfres);
+                    fob(fobj_index).resolution = obj.surfres;
                     warning("Feature larger than surface, Feature sampled down to surface size")
-                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj.resolution, fobj.resolution)
+                    if PBC || checkPlacement(obj, xpos(i), ypos(i), fobj(fobj_index).resolution, fobj(fobj_index).resolution)
                         if isempty(obj.Features)
-                            obj.Features(1).fobj = fobj;
+                            obj.Features(1).fobj = fobj(fobj_index);
                             obj.Features(1).xpos = xpos(i);
                             obj.Features(1).ypos = ypos(i);
                         else
-                            obj.Features(end + 1).fobj = fobj;
+                            obj.Features(end + 1).fobj = fobj(fobj_index);
                             obj.Features(end).xpos = xpos(i);
                             obj.Features(end).ypos = ypos(i);
                         end
@@ -450,7 +457,7 @@ classdef Surface < handle
             clearFeatures(obj)
             surfx_new = linspace(0, surfsize_new, surfres_new);
             surfy_new = linspace(0, surfsize_new, surfres_new);
-            [surfX_new, surfY_new] = meshgrid(surfx_new, surfy_new);
+            [surfX_new, surfY_new] = ndgrid(surfx_new, surfy_new);
             F = griddedInterpolant({obj.surfx, obj.surfy}, obj.surfMatrix);
             obj.surfMatrix = F({surfx_new, surfy_new});
             obj.surfres = surfres_new;

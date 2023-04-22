@@ -159,9 +159,9 @@ for f = 1:numel(param)
 
     for i = 1:dim
         param(f).bk(i).name = ListCells{i, 1};
-        aaa = [param.(param(f).bk(i).name)];
+        aaa = string([param.(param(f).bk(i).name)]);
         for j = 1:numel(ListCells{i, 2})
-            temp_list(j) = find(aaa == ListCells{i, 2}(j), 1);
+            temp_list(j) = find(aaa == string(ListCells{i, 2}(j)), 1);
         end
         param(f).bk(i).val = [param(temp_list).(param(f).bk(i).name)];
         param(f).bk(i).list = temp_list;

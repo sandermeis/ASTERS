@@ -1,6 +1,7 @@
 .DS_Store
 results/
 src/side_projects/
+src/tools/QR_optimization/generated_surfaces/*.txt
 src/data_daan/
 src/data_maarten/
 src/data_tom/
