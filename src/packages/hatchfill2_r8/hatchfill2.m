@@ -205,10 +205,10 @@ try
       commonprops = [commonprops {'Color',opts.HatchColor,'MarkerFaceColor',opts.HatchColor}];
    end
    if isempty(regexp(opts.HatchStyle,'speckle$','once'))
-      H = line(X,Y,Z,commonprops{:},'LineStyle',opts.HatchLineStyle','LineWidth',opts.HatchLineWidth);
+      H = line(X,Y,Z,commonprops{:},'LineStyle',opts.HatchLineStyle','LineWidth',opts.HatchLineWidth, 'LineSmoothing','on');
    else
       H = line(X,Y,Z,commonprops{:},'LineStyle','none','Marker',opts.SpeckleMarkerStyle,...
-         'MarkerSize',opts.SpeckleSize,'Parent',A.Parent,'DisplayName',A.DisplayName);
+         'MarkerSize',opts.SpeckleSize,'Parent',A.Parent,'DisplayName',A.DisplayName, 'LineSmoothing','on');
    end
    
    if strcmp(opts.HatchColor,'auto')

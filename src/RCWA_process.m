@@ -19,7 +19,10 @@ end
 
 batch = struct;
 jsc_plot = [];
-mymap = readmatrix("src/data/cm_coldwarm.csv");
+%mymap = readmatrix("src/data/cm_coldwarm.csv");
+
+dope=["#F6A961", "#E56B5E", "#BB405C","#843660", "#583168"];
+mymap = validatecolor(dope, 'multiple');
 
 for j = 1:numel(folderName)
     
@@ -165,6 +168,20 @@ end
 end
 
 
+function color_grad = getcolorgradient(mymap, n)
+
+sz = size(mymap,1);
+if n>=sz
+    [X,Y] = meshgrid(1:3,1:n);
+    iv = round(linspace(1,n,sz));
+    color_grad = interp2(X(iv,:),Y(iv,:),mymap,X,Y);
+else
+    error("Requested number of colors should be larger than, or equal to input colormap.")
+end
+
+end
+
+
 function n = fixLayerString(n)
 % Add R and T to layer string
 n(end+1) = {"R"};
@@ -222,7 +239,9 @@ function displayDiscretized(param, layer, which_layers, ml_disp, mymap)
 % Displays discretized layer in blocks
 
 numLayers = numel(layer);
-clrmap = mymap(round(linspace(1, 1024, numLayers)), :);
+
+color_grad = getcolorgradient(mymap, numLayers);
+colororder(color_grad)
 f = figure;
 
 for jj = which_layers
@@ -400,10 +419,11 @@ haze = arrayfun(@(a, b) a / b * (b > 1e-12), diffH, sumH);
 n = fixLayerString({layer.material});
 
 figure
-colororder(mymap(round(linspace(1, 1024, size(haze, 1))), :))
+color_grad = getcolorgradient(mymap, size(haze, 1));
+colororder(color_grad)
 for i = 1:size(haze, 1)
     hold on
-    plot(param.wavelengthArray, abs(haze(i, :)).', 'LineWidth', 2)
+    plot(param.wavelengthArray, abs(haze(i, :)).', 'LineWidth', 2, 'LineSmoothing','on')
 end
 xlabel('Wavelength (nm)', "FontSize", 14)
 ylabel('Haze', "FontSize", 14)
@@ -447,13 +467,14 @@ h = figure('Color', 'w', 'Position', [100 100 1300 600]);
 %          222, 102, 62;...
 %          255, 145, 43] / 255;
 
-colors = mymap([128, 320, 512, 704, 896], :);
+%colors = mymap([128, 320, 512, 704, 896], :);
 
-colororder(colors);
+color_grad = getcolorgradient(mymap, 5);
+colororder(color_grad)
 hx = subplot(1, 4, [1, 2, 3]);
 
 if plot_type=="lines"
-    ar = plot(x_grid, Sz, 'LineWidth', 2);
+    ar = plot(x_grid, Sz, 'LineWidth', 2, 'LineSmoothing','on');
     title(titlestring, "FontSize", 16, "FontWeight", "normal", "Interpreter", "none")
     xlim([param.wavelengthArray(1), param.wavelengthArray(end)])
     ylim([0, 1])
@@ -483,8 +504,8 @@ else
     hdir = {0, 45, 0, 90, 135, 45};
 
     for i = 1:numel(ar)
-        h_ind = ceil(i / length(colors)) - 1;
-        if h_ind > 0 && h_ind < length(colors)
+        h_ind = ceil(i / length(color_grad)) - 1;
+        if h_ind > 0 && h_ind < length(color_grad)
             j = mod(i - 1, length(hstyle)) + 1;
             hatchfill2(ar(i), hstyle{j}, 'HatchAngle', hdir{j}, 'HatchDensity', 40, 'HatchColor', 'k', 'HatchLineWidth', 2)
             hatchfill2(legend_h(length(ar) + i), hstyle{j}, 'HatchAngle', hdir{j}, 'HatchDensity', 40, 'HatchColor', 'k', 'HatchLineWidth', 2)
